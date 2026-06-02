@@ -177,21 +177,34 @@
                 <hr class="border-stone-100">
 
                 <!-- 3. 사진 업로드 -->
-                <section class="flex-1">
+                <section class="flex-1 flex flex-col">
                     <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
                         <i data-lucide="images" class="w-4 h-4 text-stone-400"></i> 사진 담기
                     </h2>
                     
-                    <label for="image-upload" class="cursor-pointer w-full aspect-[4/3] rounded-2xl border-[1.5px] border-dashed border-stone-300 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-stone-400 hover:bg-stone-50 group bg-white mx-auto shadow-sm">
-                        <div class="flex flex-col items-center gap-3 transition-transform duration-500 group-hover:scale-105 relative z-10 pointer-events-none">
+                    <!-- 업로드 영역을 더 클릭하기 쉽고 안정적인 구조로 변경 -->
+                    <div class="w-full aspect-[4/3] rounded-2xl border-[1.5px] border-dashed border-stone-300 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-stone-400 hover:bg-stone-50 group bg-white mx-auto shadow-sm">
+                        <!-- 실제 표시되는 UI 부분 -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-500 group-hover:scale-105 pointer-events-none">
                             <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-sm bg-stone-100 group-hover:bg-white transition-colors">
                                 <i data-lucide="image-plus" class="w-6 h-6 text-stone-500"></i>
                             </div>
                             <div class="text-stone-700 font-serif-kr text-lg">터치하여 사진 선택</div>
                             <div class="text-stone-400 font-gowun text-xs tracking-wide bg-stone-100/80 px-3 py-1 rounded-full">최대 5분 분량까지 추가 가능</div>
                         </div>
-                        <input id="image-upload" type="file" multiple accept="image/*" class="hidden" />
-                    </label>
+                        <!-- 전체 영역을 덮는 투명한 input (터치 인식 향상) -->
+                        <input id="image-upload" type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                    </div>
+
+                    <!-- 선택된 사진 목록 UI 추가 -->
+                    <div id="photo-list-container" class="mt-4 hidden flex-col">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-serif-kr text-stone-700 font-bold">선택된 사진 (<span id="photo-count-text">0</span>)</span>
+                        </div>
+                        <ul id="photo-list" class="bg-stone-50 border border-stone-200 rounded-lg p-2 max-h-36 overflow-y-auto text-[12px] text-stone-600 font-gowun space-y-1">
+                            <!-- JS를 통해 동적 생성됨 -->
+                        </ul>
+                    </div>
                 </section>
                 
                 <!-- 4. 추출 버튼 -->
@@ -270,6 +283,13 @@
         // Lucide 아이콘 초기화
         lucide.createIcons();
 
+        // 시간 포맷 유틸리티 함수 정의 (추가된 부분)
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
         // 감성 문구 배열 (사용자 테마에 맞춘 서정적인 문구)
         const healingPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
@@ -323,13 +343,18 @@
             renderProgress: document.getElementById('render-progress'),
             renderTimeText: document.getElementById('render-time-text'),
             
-            // BGM 관련 요소 추가
+            // BGM 관련 요소
             bgmSelect: document.getElementById('bgm-select'),
             customBgmInput: document.getElementById('custom-bgm-input'),
             customBgmInfo: document.getElementById('custom-bgm-info'),
             customBgmName: document.getElementById('custom-bgm-name'),
             customBgmRemove: document.getElementById('custom-bgm-remove'),
-            bgmAudio: document.getElementById('bgm-audio')
+            bgmAudio: document.getElementById('bgm-audio'),
+
+            // 사진 목록 UI 관련 요소
+            photoListContainer: document.getElementById('photo-list-container'),
+            photoList: document.getElementById('photo-list'),
+            photoCountText: document.getElementById('photo-count-text')
         };
 
         // BGM 캡처를 위한 오디오 컨텍스트 변수
@@ -422,44 +447,61 @@
             elements.customBgmInfo.classList.add('hidden');
         }
 
-        function handleImageUpload(e) {
+        // 안정적으로 개선된 비동기 이미지 업로드 로직
+        async function handleImageUpload(e) {
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
 
             let addedCount = 0;
             const maxDuration = 300; // 최대 5분 (300초)
+            const loadPromises = [];
 
-            files.forEach(file => {
+            for (const file of files) {
                 // 5분 초과 방지 로직
                 if ((state.images.length + addedCount + 1) * state.durationPerSlide > maxDuration) {
                     if (addedCount === 0) alert(`최대 5분(${maxDuration}초) 분량까지만 제작할 수 있습니다. 일부 사진은 제외되었습니다.`);
-                    return;
+                    break;
                 }
                 addedCount++;
 
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const randomPhrase = healingPhrases[Math.floor(Math.random() * healingPhrases.length)];
-                        const randomEffect = effectTypes[Math.floor(Math.random() * effectTypes.length)];
-                        
-                        state.images.push({
-                            id: Date.now() + Math.random(),
-                            imgElement: img,
-                            src: event.target.result,
-                            phrase: randomPhrase,
-                            effect: randomEffect // 다양한 연출 효과 할당
-                        });
-                        updateDurations();
-                        renderTimeline();
-                        updateUI();
-                        if (state.images.length === 1) drawFrame(0);
+                const promise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            resolve({
+                                id: Date.now() + Math.random(),
+                                imgElement: img,
+                                src: event.target.result,
+                                phrase: healingPhrases[Math.floor(Math.random() * healingPhrases.length)],
+                                effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
+                                fileName: file.name // 파일 이름 저장
+                            });
+                        };
+                        img.src = event.target.result;
                     };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
+                    reader.readAsDataURL(file);
+                });
+                loadPromises.push(promise);
+            }
+
+            if (loadPromises.length > 0) {
+                // 병렬로 이미지 모두 로드
+                const loadedImages = await Promise.all(loadPromises);
+                state.images = [...state.images, ...loadedImages];
+                
+                updateDurations();
+                renderTimeline();
+                renderPhotoList(); // 텍스트 목록 업데이트
+                updateUI();
+                
+                // 첫 사진 등록 시 바로 캔버스에 그리기
+                if (state.images.length > 0 && !state.isPlaying) {
+                    drawFrame(state.currentTime);
+                }
+            }
+            
+            // 동일한 파일을 다시 선택할 수 있도록 초기화
             e.target.value = '';
         }
 
@@ -467,6 +509,34 @@
             state.totalDuration = state.images.length * state.durationPerSlide;
             elements.totalTimeDisplay.textContent = formatTime(state.totalDuration);
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
+        }
+
+        // 새 기능: 사진 이름 텍스트 목록 렌더링
+        function renderPhotoList() {
+            if (state.images.length === 0) {
+                elements.photoListContainer.classList.add('hidden');
+                elements.photoListContainer.classList.remove('flex');
+            } else {
+                elements.photoListContainer.classList.remove('hidden');
+                elements.photoListContainer.classList.add('flex');
+                elements.photoCountText.textContent = state.images.length;
+                
+                elements.photoList.innerHTML = '';
+                
+                state.images.forEach((imgObj, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-white border border-stone-100 rounded px-2 py-1.5 shadow-sm';
+                    
+                    // 파일명 자르기 및 X(삭제) 버튼 아이콘 SVG 삽입
+                    li.innerHTML = `
+                        <span class="truncate pr-2 text-stone-600 flex-1">${index + 1}. ${imgObj.fileName || '사진.jpg'}</span>
+                        <button onclick="removeImage(${index})" class="text-stone-300 hover:text-red-500 transition-colors shrink-0 p-1" title="삭제">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    `;
+                    elements.photoList.appendChild(li);
+                });
+            }
         }
 
         function renderTimeline() {
@@ -518,6 +588,7 @@
             state.images.splice(index, 1);
             updateDurations();
             renderTimeline();
+            renderPhotoList(); // 목록도 같이 업데이트
             updateUI();
             
             if (state.currentTime >= state.totalDuration) {
@@ -526,10 +597,14 @@
             if(state.images.length > 0) {
                 drawFrame(state.currentTime);
             } else {
+                // 이미지가 하나도 없으면 캔버스 완전히 비우기
                 elements.ctx.clearRect(0,0, elements.canvas.width, elements.canvas.height);
+                elements.ctx.fillStyle = '#1c1917';
+                elements.ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
             }
         }
 
+        // UI 상태 업데이트
         function updateUI() {
             const hasImages = state.images.length > 0;
             elements.emptyState.style.display = hasImages ? 'none' : 'flex';
@@ -615,7 +690,7 @@
             state.animationFrameId = requestAnimationFrame(animationLoop);
         }
 
-        // 고급스러운 테마의 프레임 렌더링 (기존 유지)
+        // 고급스러운 테마의 프레임 렌더링
         function drawFrame(timeInSeconds) {
             const ctx = elements.ctx;
             const width = elements.canvas.width;
