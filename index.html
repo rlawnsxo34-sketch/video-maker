@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>숲체원 영상 제작소</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- 고급 폰트 설정 -->
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #e7e5e4; 
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-serif-kr { font-family: 'Noto Serif KR', serif; }
+        .font-gowun { font-family: 'Gowun Dodum', sans-serif; }
+        .keep-all { word-break: keep-all; overflow-wrap: break-word; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { height: 6px; width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+        
+        #timeline-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+        
+        .timeline-item {
+            flex: 0 0 auto;
+            width: 100px;
+            height: 70px;
+            margin-right: 12px;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f4;
+        }
+        
+        .timeline-item.active {
+            border-color: #57534e; /* stone-600 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .timeline-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(28, 25, 23, 0.7); /* stone-900 */
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(2px);
+        }
+        
+        .timeline-item:hover .delete-btn { opacity: 1; }
+
+        /* 비디오 영역 섀도우 */
+        .video-container {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-0 sm:p-4 md:p-8 relative">
+
+    <!-- 메인 컨테이너 -->
+    <div class="w-full max-w-[1400px] bg-white sm:rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col min-h-screen sm:min-h-[85vh] border-0 sm:border border-stone-200 relative animate-fade-up">
+        
+        <!-- 상단 헤더 -->
+        <div class="px-5 sm:px-10 py-4 flex justify-between items-center border-b border-stone-100 bg-white/90 backdrop-blur-md z-20">
+            <div class="flex items-center gap-2 text-stone-800 font-serif-kr text-xl font-bold">
+                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 sm:h-10 object-contain">
+                <span class="hidden sm:inline border-l border-stone-300 pl-2 ml-1 text-lg">영상 제작소</span>
+            </div>
+            <div class="text-xs sm:text-sm font-gowun text-stone-400 flex items-center gap-2">
+                <i data-lucide="film" class="w-4 h-4"></i> 추억을 동영상으로 간직하세요
+            </div>
+        </div>
+
+        <!-- 콘텐츠 영역 (좌우 분할) -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
+            
+            <!-- 왼쪽: 설정 패널 -->
+            <aside class="w-full lg:w-[380px] bg-white border-r border-stone-100 p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+                
+                <!-- 1. 텍스트 설정 -->
+                <section>
+                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
+                        <i data-lucide="pen-line" class="w-4 h-4 text-stone-400"></i> 앨범 제목
+                    </h2>
+                    <input type="text" id="video-title" value="우리가 머문 찬란했던 계절" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base" placeholder="영상 하단에 표시될 제목">
+                    
+                    <div class="mt-4 flex items-center justify-between">
+                        <label class="text-sm text-stone-500 font-gowun">사진 전환 속도</label>
+                        <select id="slide-duration" class="bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 text-stone-700 font-gowun text-sm focus:outline-none focus:border-stone-400">
+                            <option value="2">빠르게 (2초)</option>
+                            <option value="3" selected>보통 (3초)</option>
+                            <option value="4">여유롭게 (4초)</option>
+                        </select>
+                    </div>
+                </section>
+
+                <hr class="border-stone-100">
+
+                <!-- 2. BGM (배경음악) 설정 -->
+                <section>
+                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
+                        <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
+                    </h2>
+                    <div class="space-y-3">
+                        <select id="bgm-select" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base cursor-pointer">
+                            <option value="">음악 없음 (무음)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=nature-calls-114569.mp3">숲의 속삭임 (잔잔한 힐링)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2db17dc312.mp3?filename=acoustic-guitars-ambient-113069.mp3">따스한 햇살 (어쿠스틱)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/05/16/audio_b2512f1f50.mp3?filename=relaxing-mountains-rivers-streams-113785.mp3">계곡의 물소리 (자연의 소리)</option>
+                            <option value="custom">🎧 내 음원 파일 업로드...</option>
+                        </select>
+                        
+                        <!-- 커스텀 오디오 업로드용 (숨김) -->
+                        <input type="file" id="custom-bgm-input" accept="audio/*, .mp3, .wav, .m4a, .ogg, .flac" class="hidden">
+                        
+                        <!-- 업로드된 음원 정보 표시 영역 -->
+                        <div id="custom-bgm-info" class="hidden flex items-center justify-between bg-stone-100 rounded-xl px-4 py-3 border border-stone-200">
+                            <div class="flex items-center gap-2 overflow-hidden">
+                                <i data-lucide="file-audio" class="w-4 h-4 text-stone-500 shrink-0"></i>
+                                <span id="custom-bgm-name" class="text-sm text-stone-600 font-gowun truncate">음원.mp3</span>
+                            </div>
+                            <button id="custom-bgm-remove" class="text-stone-400 hover:text-stone-600 shrink-0 transition-colors" title="음원 삭제">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        
+                        <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
+                        <p class="text-[11px] text-stone-400 font-gowun keep-all leading-tight">
+                            * 기본 제공 음원이나 직접 보유하신 오디오 파일을 영상과 함께 합성할 수 있습니다. 미리보기 시 자동으로 재생됩니다.
+                        </p>
+                    </div>
+                </section>
+
+                <hr class="border-stone-100">
+
+                <!-- 3. 사진 업로드 -->
+                <section class="flex-1">
+                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
+                        <i data-lucide="images" class="w-4 h-4 text-stone-400"></i> 사진 담기
+                    </h2>
+                    
+                    <label for="image-upload" class="cursor-pointer w-full aspect-[4/3] rounded-2xl border-[1.5px] border-dashed border-stone-300 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-stone-400 hover:bg-stone-50 group bg-white mx-auto shadow-sm">
+                        <div class="flex flex-col items-center gap-3 transition-transform duration-500 group-hover:scale-105 relative z-10 pointer-events-none">
+                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-sm bg-stone-100 group-hover:bg-white transition-colors">
+                                <i data-lucide="image-plus" class="w-6 h-6 text-stone-500"></i>
+                            </div>
+                            <div class="text-stone-700 font-serif-kr text-lg">터치하여 사진 선택</div>
+                            <div class="text-stone-400 font-gowun text-xs tracking-wide bg-stone-100/80 px-3 py-1 rounded-full">최대 5분 분량까지 추가 가능</div>
+                        </div>
+                        <input id="image-upload" type="file" multiple accept="image/*" class="hidden" />
+                    </label>
+                </section>
+                
+                <!-- 4. 추출 버튼 -->
+                <section class="mt-auto pt-4 border-t border-stone-100">
+                    <div class="flex justify-between text-sm mb-3 font-gowun">
+                        <span class="text-stone-500">예상 영상 길이</span>
+                        <span id="estimated-time" class="font-bold text-stone-800">00:00</span>
+                    </div>
+                    <button id="export-btn" class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-serif-kr text-lg text-white bg-stone-800 hover:bg-stone-900 transition-all duration-300 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="download" class="w-5 h-5"></i> 영상 만들기 (BGM 포함)
+                    </button>
+                    <p class="text-[11px] text-stone-400 mt-2 text-center font-gowun keep-all">추출이 완료될 때까지 브라우저 창을 유지해 주세요.</p>
+                </section>
+            </aside>
+
+            <!-- 오른쪽: 캔버스 및 플레이어 영역 -->
+            <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden">
+                
+                <!-- 렌더링 상태 오버레이 -->
+                <div id="loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
+                    <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
+                    <h3 class="text-2xl font-bold mb-3 text-stone-800 font-serif-kr">기억을 영상으로 엮는 중입니다</h3>
+                    <p class="text-stone-500 font-gowun mb-8">오디오와 영상을 병합 중입니다. 잠시만 기다려주세요.</p>
+                    
+                    <div class="w-80 bg-stone-200 rounded-full h-2 mb-2 overflow-hidden">
+                      <div id="render-progress" class="bg-stone-800 h-full rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                    </div>
+                    <p id="render-time-text" class="text-sm font-mono text-stone-500">00:00 / 00:00</p>
+                </div>
+
+                <!-- 플레이어 캔버스 영역 -->
+                <div class="flex-1 flex items-center justify-center p-4 sm:p-8">
+                    <div class="relative w-full max-w-4xl aspect-video bg-stone-900 rounded-2xl sm:rounded-[2rem] overflow-hidden video-container">
+                        <canvas id="preview-canvas" width="1920" height="1080" class="w-full h-full object-contain"></canvas>
+                        
+                        <!-- 사진 없을 때 빈 상태 -->
+                        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800">
+                            <i data-lucide="film" class="w-16 h-16 mb-4 opacity-50 stroke-[1]"></i>
+                            <p class="text-lg font-serif-kr text-stone-300">왼쪽에서 사진을 추가하여 영상을 미리보세요</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 플레이어 컨트롤 -->
+                <div class="px-6 pb-6 pt-2 flex flex-col gap-4 max-w-4xl w-full mx-auto">
+                    <!-- 타임라인 썸네일 -->
+                    <div id="timeline-container" class="w-full pb-2 no-scrollbar">
+                        <!-- 동적 생성 -->
+                    </div>
+
+                    <!-- 컨트롤 바 -->
+                    <div class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-stone-200 flex items-center gap-4">
+                        <button id="play-btn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
+                            <i data-lucide="play" class="w-5 h-5 ml-1"></i>
+                        </button>
+                        <button id="stop-btn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-500 transition active:scale-95 disabled:opacity-50">
+                            <i data-lucide="square" class="w-4 h-4"></i>
+                        </button>
+                        
+                        <div class="flex-1 flex items-center gap-4 px-2">
+                            <span id="current-time-display" class="text-xs sm:text-sm font-mono text-stone-500">00:00</span>
+                            <div class="flex-1 h-2 sm:h-3 bg-stone-100 rounded-full cursor-pointer relative overflow-hidden border border-stone-200/50 group" id="progress-bar-container">
+                                <div id="progress-bar" class="absolute top-0 left-0 h-full bg-stone-400 group-hover:bg-stone-500 rounded-full pointer-events-none transition-colors" style="width: 0%;"></div>
+                            </div>
+                            <span id="total-time-display" class="text-xs sm:text-sm font-mono text-stone-400">00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript 로직 -->
+    <script>
+        // Lucide 아이콘 초기화
+        lucide.createIcons();
+
+        // 감성 문구 배열 (사용자 테마에 맞춘 서정적인 문구)
+        const healingPhrases = [
+            "따스한 햇살 아래, 오롯이 나를 만나는 시간",
+            "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
+            "바람이 들려주는 고요하고 다정한 이야기",
+            "한 걸음 느리게, 찬란했던 계절과 동화되는 순간",
+            "나무 사이로 스며든 눈부신 숲의 활기",
+            "햇살이 머무는 곳, 자연이 내어준 포근한 휴식",
+            "마음의 무거운 짐을 잠시 내려놓습니다",
+            "우리 함께 걸었던 깊고 따뜻한 정취",
+            "나뭇잎 사이로 부서지는 맑은 에너지",
+            "고요한 숲의 정적 속에서 되찾는 마음의 평화"
+        ];
+
+        // 영상 연출 효과 배열 (다양한 카메라 무빙)
+        const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
+
+        // 로고 이미지 로드 (워터마크용)
+        const watermarkLogo = new Image();
+        watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
+
+        const state = {
+            images: [],
+            durationPerSlide: 3,
+            isPlaying: false,
+            isRecording: false,
+            currentTime: 0,
+            totalDuration: 0,
+            animationFrameId: null,
+            lastTimestamp: 0,
+            title: "우리가 머문 찬란했던 계절"
+        };
+
+        const elements = {
+            imageUpload: document.getElementById('image-upload'),
+            timelineContainer: document.getElementById('timeline-container'),
+            canvas: document.getElementById('preview-canvas'),
+            ctx: document.getElementById('preview-canvas').getContext('2d'),
+            emptyState: document.getElementById('empty-state'),
+            playBtn: document.getElementById('play-btn'),
+            stopBtn: document.getElementById('stop-btn'),
+            exportBtn: document.getElementById('export-btn'),
+            progressBar: document.getElementById('progress-bar'),
+            progressContainer: document.getElementById('progress-bar-container'),
+            currentTimeDisplay: document.getElementById('current-time-display'),
+            totalTimeDisplay: document.getElementById('total-time-display'),
+            estimatedTimeDisplay: document.getElementById('estimated-time'),
+            slideDurationInput: document.getElementById('slide-duration'),
+            videoTitleInput: document.getElementById('video-title'),
+            loadingOverlay: document.getElementById('loading-overlay'),
+            renderProgress: document.getElementById('render-progress'),
+            renderTimeText: document.getElementById('render-time-text'),
+            
+            // BGM 관련 요소 추가
+            bgmSelect: document.getElementById('bgm-select'),
+            customBgmInput: document.getElementById('custom-bgm-input'),
+            customBgmInfo: document.getElementById('custom-bgm-info'),
+            customBgmName: document.getElementById('custom-bgm-name'),
+            customBgmRemove: document.getElementById('custom-bgm-remove'),
+            bgmAudio: document.getElementById('bgm-audio')
+        };
+
+        // BGM 캡처를 위한 오디오 컨텍스트 변수
+        let audioCtx = null;
+        let audioDest = null;
+        let audioSource = null;
+
+        function setupAudioRouting() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioDest = audioCtx.createMediaStreamDestination();
+                    audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
+                    audioSource.connect(audioDest);
+                    audioSource.connect(audioCtx.destination); // 스피커로 출력
+                } catch(e) {
+                    console.error("Audio routing error:", e);
+                }
+            }
+        }
+
+        function init() {
+            elements.imageUpload.addEventListener('change', handleImageUpload);
+            elements.slideDurationInput.addEventListener('change', (e) => {
+                state.durationPerSlide = parseInt(e.target.value) || 3;
+                updateDurations();
+            });
+            elements.videoTitleInput.addEventListener('input', (e) => {
+                state.title = e.target.value;
+                if(!state.isPlaying) drawFrame(state.currentTime);
+            });
+            
+            // BGM 선택 이벤트
+            elements.bgmSelect.addEventListener('change', handleBgmChange);
+            elements.customBgmInput.addEventListener('change', handleCustomBgmUpload);
+            elements.customBgmRemove.addEventListener('click', removeCustomBgm);
+
+            elements.playBtn.addEventListener('click', togglePlay);
+            elements.stopBtn.addEventListener('click', stopPlayback);
+            elements.exportBtn.addEventListener('click', exportVideo);
+            elements.progressContainer.addEventListener('click', seekTime);
+
+            updateUI();
+            
+            // 폰트 로드를 위해 초기 텍스트 렌더링
+            document.fonts.ready.then(() => {
+                elements.ctx.font = '10px "Noto Serif KR"';
+                elements.ctx.fillText('.', 0, 0);
+                elements.ctx.font = '10px "Gowun Dodum"';
+                elements.ctx.fillText('.', 0, 0);
+            });
+        }
+
+        // BGM 변경 처리
+        function handleBgmChange(e) {
+            const val = e.target.value;
+            if (val === 'custom') {
+                elements.customBgmInput.click();
+            } else if (val === '') {
+                elements.bgmAudio.src = '';
+                elements.bgmAudio.pause();
+                elements.customBgmInfo.classList.add('hidden');
+            } else {
+                elements.bgmAudio.src = val;
+                elements.customBgmInfo.classList.add('hidden');
+            }
+            
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // 사용자 BGM 업로드 처리
+        function handleCustomBgmUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                elements.bgmAudio.src = url;
+                elements.customBgmName.textContent = file.name;
+                elements.customBgmInfo.classList.remove('hidden');
+                elements.bgmSelect.value = 'custom';
+            } else {
+                elements.bgmSelect.value = '';
+                elements.customBgmInfo.classList.add('hidden');
+            }
+        }
+
+        function removeCustomBgm() {
+            elements.bgmSelect.value = '';
+            elements.bgmAudio.src = '';
+            elements.customBgmInput.value = '';
+            elements.customBgmInfo.classList.add('hidden');
+        }
+
+        function handleImageUpload(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            let addedCount = 0;
+            const maxDuration = 300; // 최대 5분 (300초)
+
+            files.forEach(file => {
+                // 5분 초과 방지 로직
+                if ((state.images.length + addedCount + 1) * state.durationPerSlide > maxDuration) {
+                    if (addedCount === 0) alert(`최대 5분(${maxDuration}초) 분량까지만 제작할 수 있습니다. 일부 사진은 제외되었습니다.`);
+                    return;
+                }
+                addedCount++;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const randomPhrase = healingPhrases[Math.floor(Math.random() * healingPhrases.length)];
+                        const randomEffect = effectTypes[Math.floor(Math.random() * effectTypes.length)];
+                        
+                        state.images.push({
+                            id: Date.now() + Math.random(),
+                            imgElement: img,
+                            src: event.target.result,
+                            phrase: randomPhrase,
+                            effect: randomEffect // 다양한 연출 효과 할당
+                        });
+                        updateDurations();
+                        renderTimeline();
+                        updateUI();
+                        if (state.images.length === 1) drawFrame(0);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        function updateDurations() {
+            state.totalDuration = state.images.length * state.durationPerSlide;
+            elements.totalTimeDisplay.textContent = formatTime(state.totalDuration);
+            elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
+        }
+
+        function renderTimeline() {
+            elements.timelineContainer.innerHTML = '';
+            
+            state.images.forEach((imgObj, index) => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.onclick = () => {
+                    state.currentTime = index * state.durationPerSlide;
+                    if(!state.isPlaying) drawFrame(state.currentTime);
+                    highlightTimelineItem(index);
+                    
+                    // 오디오도 해당 위치로 이동
+                    if (elements.bgmAudio.src) {
+                        elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+                    }
+                };
+
+                const img = document.createElement('img');
+                img.src = imgObj.src;
+                
+                const delBtn = document.createElement('div');
+                delBtn.className = 'delete-btn';
+                delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeImage(index);
+                };
+
+                div.appendChild(img);
+                div.appendChild(delBtn);
+                elements.timelineContainer.appendChild(div);
+            });
+        }
+
+        function highlightTimelineItem(index) {
+            document.querySelectorAll('.timeline-item').forEach((el, i) => {
+                if (i === index) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+            const activeEl = document.querySelectorAll('.timeline-item')[index];
+            if(activeEl) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
+        function removeImage(index) {
+            state.images.splice(index, 1);
+            updateDurations();
+            renderTimeline();
+            updateUI();
+            
+            if (state.currentTime >= state.totalDuration) {
+                state.currentTime = Math.max(0, state.totalDuration - 0.1);
+            }
+            if(state.images.length > 0) {
+                drawFrame(state.currentTime);
+            } else {
+                elements.ctx.clearRect(0,0, elements.canvas.width, elements.canvas.height);
+            }
+        }
+
+        function updateUI() {
+            const hasImages = state.images.length > 0;
+            elements.emptyState.style.display = hasImages ? 'none' : 'flex';
+            elements.playBtn.disabled = !hasImages;
+            elements.stopBtn.disabled = !hasImages;
+            elements.exportBtn.disabled = !hasImages;
+            
+            elements.playBtn.innerHTML = state.isPlaying 
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' 
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        }
+
+        function togglePlay() {
+            if (state.images.length === 0) return;
+            
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
+            if (state.isPlaying) {
+                state.isPlaying = false;
+                cancelAnimationFrame(state.animationFrameId);
+                elements.bgmAudio.pause();
+            } else {
+                state.isPlaying = true;
+                state.lastTimestamp = performance.now();
+                if (state.currentTime >= state.totalDuration) state.currentTime = 0;
+                
+                // 음악 재생 동기화
+                if(elements.bgmAudio.src) {
+                    elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+                    elements.bgmAudio.play().catch(e => console.log("오디오 재생 정책에 의해 막힘:", e));
+                }
+
+                animationLoop(performance.now());
+            }
+            updateUI();
+        }
+
+        function stopPlayback() {
+            state.isPlaying = false;
+            cancelAnimationFrame(state.animationFrameId);
+            state.currentTime = 0;
+            
+            elements.bgmAudio.pause();
+            elements.bgmAudio.currentTime = 0;
+            
+            drawFrame(0);
+            updateUI();
+        }
+
+        function seekTime(e) {
+            if (state.images.length === 0) return;
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+            const rect = elements.progressContainer.getBoundingClientRect();
+            const percentage = (e.clientX - rect.left) / rect.width;
+            state.currentTime = Math.max(0, Math.min(percentage * state.totalDuration, state.totalDuration));
+            
+            if (elements.bgmAudio.src) {
+                 elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+            }
+            
+            drawFrame(state.currentTime);
+        }
+
+        function animationLoop(timestamp) {
+            if (!state.isPlaying) return;
+            
+            const deltaTime = (timestamp - state.lastTimestamp) / 1000;
+            state.lastTimestamp = timestamp;
+            
+            state.currentTime += deltaTime;
+
+            if (state.currentTime >= state.totalDuration) {
+                state.currentTime = state.totalDuration;
+                drawFrame(state.currentTime);
+                stopPlayback();
+                return;
+            }
+
+            drawFrame(state.currentTime);
+            state.animationFrameId = requestAnimationFrame(animationLoop);
+        }
+
+        // 고급스러운 테마의 프레임 렌더링 (기존 유지)
+        function drawFrame(timeInSeconds) {
+            const ctx = elements.ctx;
+            const width = elements.canvas.width;
+            const height = elements.canvas.height;
+            
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(0, 0, width, height);
+
+            if (state.images.length === 0) return;
+
+            let currentIndex = Math.floor(timeInSeconds / state.durationPerSlide);
+            if (currentIndex >= state.images.length) currentIndex = state.images.length - 1;
+            
+            const currentImgObj = state.images[currentIndex];
+            const timeInCurrentSlide = timeInSeconds % state.durationPerSlide;
+            
+            let opacity = 1;
+            const fadeTime = 1.0;
+            if (timeInCurrentSlide < fadeTime && currentIndex > 0) {
+                opacity = timeInCurrentSlide / fadeTime;
+            }
+
+            ctx.globalAlpha = opacity;
+            ctx.filter = 'blur(60px) brightness(0.35) sepia(0.2)';
+            drawCoverImage(ctx, currentImgObj.imgElement, width, height);
+            
+            ctx.filter = 'none';
+            
+            // 다양한 영상 연출 효과 (Ken Burns 무빙)
+            const p = timeInCurrentSlide / state.durationPerSlide; // 0.0 ~ 1.0 진행률
+            let scale = 1.0;
+            let transX = 0;
+            let transY = 0;
+            const effect = currentImgObj.effect || 'zoom-in';
+            const drift = 50; // 패닝 이동 반경(픽셀)
+
+            switch(effect) {
+                case 'zoom-in':
+                    scale = 1.0 + (p * 0.05); // 5% 확대
+                    break;
+                case 'zoom-out':
+                    scale = 1.05 - (p * 0.05); // 5% 축소
+                    break;
+                case 'pan-left':
+                    scale = 1.03;
+                    transX = (drift / 2) - (p * drift); // 오른쪽에서 왼쪽으로
+                    break;
+                case 'pan-right':
+                    scale = 1.03;
+                    transX = -(drift / 2) + (p * drift); // 왼쪽에서 오른쪽으로
+                    break;
+                case 'pan-up':
+                    scale = 1.03;
+                    transY = (drift / 2) - (p * drift); // 아래에서 위로
+                    break;
+                case 'pan-down':
+                    scale = 1.03;
+                    transY = -(drift / 2) + (p * drift); // 위에서 아래로
+                    break;
+            }
+            
+            ctx.save();
+            ctx.translate(width/2 + transX, height/2 + transY);
+            ctx.scale(scale, scale);
+            ctx.translate(-width/2, -height/2);
+            
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 50;
+            ctx.shadowOffsetY = 20;
+            drawContainImageWithPolaroidFrame(ctx, currentImgObj.imgElement, width, height);
+            ctx.restore();
+
+            ctx.globalAlpha = 1.0;
+            const gradient = ctx.createLinearGradient(0, height - 300, 0, height);
+            gradient.addColorStop(0, 'rgba(28, 25, 23, 0)');
+            gradient.addColorStop(0.6, 'rgba(28, 25, 23, 0.7)');
+            gradient.addColorStop(1, 'rgba(28, 25, 23, 0.95)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, height - 300, width, 300);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            if (state.title.trim() !== '') {
+                ctx.fillStyle = '#f5f5f4';
+                ctx.font = '600 36px "Noto Serif KR", serif';
+                ctx.letterSpacing = '1px';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 10;
+                ctx.fillText(state.title, width / 2, height - 170);
+                
+                ctx.beginPath();
+                ctx.moveTo(width / 2 - 30, height - 130);
+                ctx.lineTo(width / 2 + 30, height - 130);
+                ctx.strokeStyle = '#a8a29e';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = '#d6d3d1';
+            ctx.font = '400 48px "Gowun Dodum", sans-serif';
+            ctx.shadowBlur = 10;
+            ctx.fillText(currentImgObj.phrase, width / 2, height - 80);
+            
+            // 상단 우측 로고 워터마크 (업로드된 공식 이미지 사용)
+            if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
+                const logoW = 280;
+                const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
+                ctx.globalAlpha = 0.85;
+                ctx.drawImage(watermarkLogo, width - logoW - 50, 45, logoW, logoH);
+            } else {
+                ctx.globalAlpha = 0.4;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '24px "Pretendard", sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText('숲체원 기억 보관소', width - 50, 50);
+            }
+
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+
+            updateProgressUI(timeInSeconds, currentIndex);
+        }
+
+        function drawCoverImage(ctx, img, cw, ch) {
+            const imgRatio = img.width / img.height;
+            const canvasRatio = cw / ch;
+            let drawW = cw, drawH = ch, offsetX = 0, offsetY = 0;
+            if (imgRatio > canvasRatio) {
+                drawW = ch * imgRatio;
+                offsetX = (cw - drawW) / 2;
+            } else {
+                drawH = cw / imgRatio;
+                offsetY = (ch - drawH) / 2;
+            }
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        }
+
+        function drawContainImageWithPolaroidFrame(ctx, img, cw, ch) {
+            const paddingX = 180;
+            const paddingY = 120;
+            const availW = cw - (paddingX * 2);
+            const availH = ch - (paddingY * 2) - 100;
+            
+            const imgRatio = img.width / img.height;
+            const availRatio = availW / availH;
+            
+            let drawW = availW, drawH = availH;
+            
+            if (imgRatio > availRatio) {
+                drawH = availW / imgRatio;
+            } else {
+                drawW = availH * imgRatio;
+            }
+            
+            const offsetX = (cw - drawW) / 2;
+            const offsetY = (ch - drawH) / 2 - 30;
+
+            ctx.fillStyle = '#fafaf9';
+            const borderSize = 12;
+            ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize*2), drawH + (borderSize*2) + 15);
+            
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(offsetX, offsetY, drawW, drawH);
+            
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        }
+
+        function updateProgressUI(time, currentIndex) {
+            if (state.totalDuration > 0) {
+                const percent = (time / state.totalDuration) * 100;
+                elements.progressBar.style.width = `${percent}%`;
+                elements.currentTimeDisplay.textContent = formatTime(time);
+            }
+            if(Math.floor(time) % state.durationPerSlide === 0 || time === 0) {
+                highlightTimelineItem(currentIndex);
+            }
+        }
+
+        // WebM 비디오 + 오디오 병합 추출 로직
+        async function exportVideo() {
+            if (state.images.length === 0 || state.isRecording) return;
+            
+            if(state.isPlaying) stopPlayback();
+            
+            state.isRecording = true;
+            elements.loadingOverlay.style.display = 'flex';
+            elements.exportBtn.disabled = true;
+            
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+            const canvas = elements.canvas;
+            const fps = 30;
+            
+            if (!canvas.captureStream) {
+                alert("현재 브라우저에서는 영상 추출을 지원하지 않습니다. 크롬(Chrome) 브라우저를 이용해주세요.");
+                elements.loadingOverlay.style.display = 'none';
+                state.isRecording = false;
+                elements.exportBtn.disabled = false;
+                return;
+            }
+
+            // 1. 캔버스에서 비디오 스트림 캡처
+            const canvasStream = canvas.captureStream(fps);
+            let tracks = [...canvasStream.getVideoTracks()];
+            
+            // 2. 오디오 트랙이 설정되어 있다면 합치기
+            if (audioDest && elements.bgmAudio.src) {
+                const audioTracks = audioDest.stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    tracks = [...tracks, ...audioTracks];
+                }
+            }
+
+            // 최종 병합된 스트림
+            const combinedStream = new MediaStream(tracks);
+
+            // MP4 및 H.264 코덱 우선 지원 시도
+            let options = { mimeType: 'video/mp4' };
+            let fileExtension = 'mp4';
+
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                options = { mimeType: 'video/webm; codecs=h264' }; // H.264 코덱을 사용해 MP4 호환성 높임
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'video/webm; codecs=vp9' };
+                    fileExtension = 'webm'; // MP4나 H.264를 전혀 지원하지 않는 브라우저면 webm으로 폴백
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        options = { mimeType: 'video/webm; codecs=vp8' };
+                    }
+                }
+            }
+            
+            const recorder = new MediaRecorder(combinedStream, options);
+            const chunks = [];
+            
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+            
+            recorder.onstop = () => {
+                // 녹화 종료 시 오디오 정지
+                if(elements.bgmAudio.src) {
+                    elements.bgmAudio.pause();
+                    elements.bgmAudio.currentTime = 0;
+                }
+
+                const blob = new Blob(chunks, { type: options.mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `숲체원_${state.title || '기억보관소'}.${fileExtension}`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                state.isRecording = false;
+                elements.loadingOverlay.style.display = 'none';
+                elements.exportBtn.disabled = false;
+                drawFrame(0);
+            };
+            
+            // 녹화 시작 시 오디오 재생을 동기화
+            if(elements.bgmAudio.src) {
+                elements.bgmAudio.currentTime = 0;
+                elements.bgmAudio.play().catch(e => console.error("Export audio error:", e));
+            }
+            
+            recorder.start();
+            
+            let renderTime = 0;
+            const timeStep = 1 / fps;
+            const total = state.totalDuration;
+            
+            function renderNextFrame() {
+                if (renderTime > total) {
+                    recorder.stop();
+                    return;
+                }
+                
+                drawFrame(renderTime);
+                
+                const percent = (renderTime / total) * 100;
+                elements.renderProgress.style.width = `${percent}%`;
+                elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(total)}`;
+                
+                renderTime += timeStep;
+                setTimeout(renderNextFrame, 1000 / fps);
+            }
+            
+            renderNextFrame();
+        }
+
+        init();
+    </script>
+</body>
+</html>
