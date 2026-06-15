@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>숲체원 프리미엄 영상 보관소</title>
+    <title>숲체원 프리미엄 영상 제작소</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -169,22 +169,34 @@
                         
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
                         <p class="text-[11px] text-stone-400 font-gowun keep-all leading-tight">
-                            * 기본 제공 음원이나 직접 보유하신 오디오 파일을 영상과 함께 합성할 수 있습니다. 미리보기 시 자동으로 재생됩니다.
+                            * 기본 제공 음원이나 직접 보유하신 오디오 파일을 영상과 함께 합성할 수 있습니다.
                         </p>
                     </div>
                 </section>
 
                 <hr class="border-stone-100">
 
-                <!-- 3. 사진 업로드 -->
+                <!-- 3. 감성 문구 관리 -->
+                <section>
+                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
+                        <i data-lucide="quote" class="w-4 h-4 text-stone-400"></i> 감성 문구 관리
+                    </h2>
+                    <div class="space-y-2">
+                        <p class="text-[11px] text-stone-500 font-gowun keep-all">사진 순서대로 아래 문구가 교차하며 표시됩니다. 원하시는 문구로 자유롭게 추가/수정해 보세요.</p>
+                        <textarea id="phrases-input" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base resize-y leading-relaxed whitespace-pre-wrap" rows="4"></textarea>
+                    </div>
+                </section>
+
+                <hr class="border-stone-100">
+
+                <!-- 4. 사진 업로드 -->
                 <section class="flex-1 flex flex-col">
                     <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
                         <i data-lucide="images" class="w-4 h-4 text-stone-400"></i> 사진 담기
                     </h2>
                     
-                    <!-- 업로드 영역을 더 클릭하기 쉽고 안정적인 구조로 변경 -->
+                    <!-- 업로드 영역 -->
                     <div class="w-full aspect-[4/3] rounded-2xl border-[1.5px] border-dashed border-stone-300 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-stone-400 hover:bg-stone-50 group bg-white mx-auto shadow-sm">
-                        <!-- 실제 표시되는 UI 부분 -->
                         <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-500 group-hover:scale-105 pointer-events-none">
                             <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-sm bg-stone-100 group-hover:bg-white transition-colors">
                                 <i data-lucide="image-plus" class="w-6 h-6 text-stone-500"></i>
@@ -192,11 +204,10 @@
                             <div class="text-stone-700 font-serif-kr text-lg">터치하여 사진 선택</div>
                             <div class="text-stone-400 font-gowun text-xs tracking-wide bg-stone-100/80 px-3 py-1 rounded-full">최대 5분 분량까지 추가 가능</div>
                         </div>
-                        <!-- 전체 영역을 덮는 투명한 input (터치 인식 향상) -->
                         <input id="image-upload" type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
                     </div>
 
-                    <!-- 선택된 사진 목록 UI 추가 -->
+                    <!-- 선택된 사진 목록 UI -->
                     <div id="photo-list-container" class="mt-4 hidden flex-col">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-sm font-serif-kr text-stone-700 font-bold">선택된 사진 (<span id="photo-count-text">0</span>)</span>
@@ -207,7 +218,7 @@
                     </div>
                 </section>
                 
-                <!-- 4. 추출 버튼 -->
+                <!-- 5. 추출 버튼 -->
                 <section class="mt-auto pt-4 border-t border-stone-100">
                     <div class="flex justify-between text-sm mb-3 font-gowun">
                         <span class="text-stone-500">예상 영상 길이</span>
@@ -283,15 +294,15 @@
         // Lucide 아이콘 초기화
         lucide.createIcons();
 
-        // 시간 포맷 유틸리티 함수 정의
+        // 시간 포맷 유틸리티 함수
         function formatTime(seconds) {
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = Math.floor(seconds % 60).toString().padStart(2, '0');
             return `${m}:${s}`;
         }
 
-        // 감성 문구 배열 (사용자 테마에 맞춘 서정적인 문구)
-        const healingPhrases = [
+        // 초기 감성 문구 (상태 변수로 분리하여 수정 가능하도록)
+        let healingPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
             "바람이 들려주는 고요하고 다정한 이야기",
@@ -323,7 +334,7 @@
 
         const state = {
             images: [],
-            durationPerSlide: 4, // 기본값 시네마틱(4초)로 변경
+            durationPerSlide: 4,
             isPlaying: false,
             isRecording: false,
             currentTime: 0,
@@ -349,6 +360,7 @@
             estimatedTimeDisplay: document.getElementById('estimated-time'),
             slideDurationInput: document.getElementById('slide-duration'),
             videoTitleInput: document.getElementById('video-title'),
+            phrasesInput: document.getElementById('phrases-input'), // 문구 입력창
             loadingOverlay: document.getElementById('loading-overlay'),
             renderProgress: document.getElementById('render-progress'),
             renderTimeText: document.getElementById('render-time-text'),
@@ -365,7 +377,6 @@
             photoCountText: document.getElementById('photo-count-text')
         };
 
-        // BGM 캡처를 위한 오디오 컨텍스트
         let audioCtx = null;
         let audioDest = null;
         let audioSource = null;
@@ -385,6 +396,19 @@
         }
 
         function init() {
+            // 문구 입력창 초기화 및 이벤트 연결
+            elements.phrasesInput.value = healingPhrases.join('\n');
+            elements.phrasesInput.addEventListener('input', (e) => {
+                const lines = e.target.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length > 0) {
+                    healingPhrases = lines;
+                } else {
+                    healingPhrases = [""]; // 문구가 전부 지워졌을 때 대비
+                }
+                // 미리보기 즉시 갱신
+                if (!state.isPlaying) drawFrame(state.currentTime);
+            });
+
             elements.imageUpload.addEventListener('change', handleImageUpload);
             elements.slideDurationInput.addEventListener('change', (e) => {
                 state.durationPerSlide = parseInt(e.target.value) || 4;
@@ -474,7 +498,6 @@
                                 id: Date.now() + Math.random(),
                                 imgElement: img,
                                 src: event.target.result,
-                                phrase: healingPhrases[Math.floor(Math.random() * healingPhrases.length)],
                                 effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
                                 fileName: file.name
                             });
@@ -682,19 +705,16 @@
         }
 
         // ==========================================
-        // 핵심: 렌더링 엔진 업그레이드 (시네마틱)
+        // 핵심: 렌더링 엔진 (시네마틱)
         // ==========================================
 
-        // 단일 사진 씬(Scene)을 그리는 함수
         function renderScene(ctx, imgObj, cw, ch, elapsed, alpha) {
             ctx.globalAlpha = alpha;
 
-            // 배경 블러 처리 (어둡고 은은하게)
             ctx.filter = 'blur(50px) brightness(0.3) sepia(0.2)';
             drawCoverImage(ctx, imgObj.imgElement, cw, ch);
             ctx.filter = 'none';
             
-            // 켄번스(Ken Burns) 무빙 계산 (여유 프레임을 위해 duration을 조금 길게 잡음)
             const p = elapsed / (state.durationPerSlide + 1.5); 
             let scale = 1.0;
             let transX = 0;
@@ -716,12 +736,10 @@
             ctx.scale(scale, scale);
             ctx.translate(-cw/2, -ch/2);
             
-            // 파인아트 스타일의 섬세한 그림자 효과
             ctx.shadowColor = 'rgba(0,0,0,0.6)';
             ctx.shadowBlur = 60;
             ctx.shadowOffsetY = 25;
             
-            // 얇고 고급스러운 갤러리 액자 형태의 렌더링
             drawFineArtFrame(ctx, imgObj.imgElement, cw, ch);
             ctx.restore();
         }
@@ -741,26 +759,22 @@
             
             const timeInCurrentSlide = timeInSeconds % state.durationPerSlide;
             
-            // 1. 크로스페이드(Crossfade) 트랜지션 로직
-            const fadeDuration = 1.2; // 전환에 걸리는 시간 (1.2초)
+            // 1. 크로스페이드(Crossfade) 트랜지션
+            const fadeDuration = 1.2; 
             let isFading = (timeInCurrentSlide < fadeDuration && currentIndex > 0);
             
             if (isFading) {
                 const prevIndex = currentIndex - 1;
-                const progress = timeInCurrentSlide / fadeDuration; // 0.0 ~ 1.0
+                const progress = timeInCurrentSlide / fadeDuration; 
                 
-                // 이전 씬 그리기 (서서히 사라짐)
                 const prevElapsed = state.durationPerSlide + timeInCurrentSlide;
                 renderScene(ctx, state.images[prevIndex], width, height, prevElapsed, 1 - progress);
-                
-                // 현재 씬 그리기 (서서히 나타남)
                 renderScene(ctx, state.images[currentIndex], width, height, timeInCurrentSlide, progress);
             } else {
-                // 단일 씬 그리기 (전환 종료 후)
                 renderScene(ctx, state.images[currentIndex], width, height, timeInCurrentSlide, 1.0);
             }
 
-            // 2. 비네팅(Vignette) 효과: 가장자리를 어둡게 하여 사진 집중도 향상
+            // 2. 비네팅 효과
             ctx.globalAlpha = 1.0;
             const vignette = ctx.createRadialGradient(width/2, height/2, height/2.5, width/2, height/2, width/1.2);
             vignette.addColorStop(0, 'rgba(0,0,0,0)');
@@ -768,7 +782,7 @@
             ctx.fillStyle = vignette;
             ctx.fillRect(0, 0, width, height);
 
-            // 3. 파티클(Dust) 애니메이션 오버레이
+            // 3. 파티클 애니메이션
             ctx.globalAlpha = 1.0;
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             particles.forEach(p => {
@@ -782,7 +796,7 @@
                 ctx.fill();
             });
 
-            // 4. 하단 텍스트 및 그라데이션 영역
+            // 4. 하단 텍스트 영역
             const gradient = ctx.createLinearGradient(0, height - 350, 0, height);
             gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
             gradient.addColorStop(0.6, 'rgba(15, 15, 15, 0.8)');
@@ -802,7 +816,6 @@
                 ctx.shadowBlur = 15;
                 ctx.fillText(state.title, width / 2, height - 190);
                 
-                // 우아한 장식선
                 ctx.beginPath();
                 ctx.moveTo(width / 2 - 40, height - 140);
                 ctx.lineTo(width / 2 + 40, height - 140);
@@ -811,23 +824,38 @@
                 ctx.stroke();
             }
 
-            // 서정적인 감성 문구
-            // 페이드 인/아웃 동기화 처리를 위해 텍스트 투명도 조정
-            let textAlpha = 1.0;
-            if (isFading) textAlpha = timeInCurrentSlide / fadeDuration;
+            // 동적 문구 매칭 및 페이드 크로스오버 처리
+            const currentPhrase = healingPhrases[currentIndex % healingPhrases.length] || "";
+            const prevPhrase = currentIndex > 0 ? (healingPhrases[(currentIndex - 1) % healingPhrases.length] || "") : "";
 
-            ctx.globalAlpha = textAlpha;
             ctx.fillStyle = '#e7e5e4';
             ctx.font = '400 52px "Gowun Dodum", sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
             ctx.shadowBlur = 10;
-            ctx.fillText(state.images[currentIndex].phrase, width / 2, height - 80);
+
+            if (isFading && prevPhrase !== currentPhrase) {
+                // 이전 문구 (사라짐)
+                ctx.globalAlpha = 1 - (timeInCurrentSlide / fadeDuration);
+                ctx.fillText(prevPhrase, width / 2, height - 80);
+                // 현재 문구 (나타남)
+                ctx.globalAlpha = timeInCurrentSlide / fadeDuration;
+                ctx.fillText(currentPhrase, width / 2, height - 80);
+            } else {
+                // 일반 노출
+                ctx.globalAlpha = 1.0;
+                ctx.fillText(currentPhrase, width / 2, height - 80);
+            }
             
-            // 5. 우측 상단 로고 (워터마크)
-            ctx.globalAlpha = 1.0;
+            // 5. 로고 워터마크 (선명도 및 가독성 대폭 향상)
+            ctx.globalAlpha = 1.0; // 투명도 100%로 설정
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = 320; // 큼직하게 배치
+                const logoW = 320;
                 const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
-                ctx.globalAlpha = 0.85;
+                
+                // 로고 주변에 뚜렷한 흰색 글로우(Glow) 효과를 주어 배경색상에 구애받지 않고 잘 보이도록 함
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.7)'; 
+                ctx.shadowBlur = 15;
+                
                 ctx.drawImage(watermarkLogo, width - logoW - 60, 50, logoW, logoH);
             }
 
@@ -837,7 +865,6 @@
             updateProgressUI(timeInSeconds, currentIndex);
         }
 
-        // 이미지 그리기 유틸 (배경 블러용)
         function drawCoverImage(ctx, img, cw, ch) {
             const imgRatio = img.width / img.height;
             const canvasRatio = cw / ch;
@@ -852,7 +879,6 @@
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
-        // 고급 파인아트 프레임 그리기 유틸
         function drawFineArtFrame(ctx, img, cw, ch) {
             const paddingX = 220;
             const paddingY = 160;
@@ -873,12 +899,10 @@
             const offsetX = (cw - drawW) / 2;
             const offsetY = (ch - drawH) / 2 - 40;
 
-            // 화이트 매트 보드(Matte Board) 느낌의 프레임
             ctx.fillStyle = '#fefefe';
             const borderSize = 16;
             ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize*2), drawH + (borderSize*2));
             
-            // 사진 경계의 미세한 그림자 라인
             ctx.strokeStyle = 'rgba(0,0,0,0.15)';
             ctx.lineWidth = 1;
             ctx.strokeRect(offsetX, offsetY, drawW, drawH);
@@ -897,7 +921,6 @@
             }
         }
 
-        // WebM / MP4 호환 영상 추출 로직
         async function exportVideo() {
             if (state.images.length === 0 || state.isRecording) return;
             
@@ -933,7 +956,6 @@
 
             const combinedStream = new MediaStream(tracks);
 
-            // MP4 포맷 최우선 적용
             let options = { mimeType: 'video/mp4' };
             let fileExtension = 'mp4';
 
