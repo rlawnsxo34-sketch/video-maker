@@ -3,271 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>숲체원 프리미엄 영상 제작소</title>
+    <title>숲체원 프리미엄 릴스 제작소</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- 고급 폰트 설정 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
 
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #e7e5e4; 
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        body { font-family: 'Pretendard', sans-serif; background-color: #e7e5e4; margin: 0; padding: 0; }
         .font-serif-kr { font-family: 'Noto Serif KR', serif; }
         .font-gowun { font-family: 'Gowun Dodum', sans-serif; }
-        .keep-all { word-break: keep-all; overflow-wrap: break-word; }
 
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-up {
-            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
         
-        #timeline-container {
-            display: flex;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-        }
-        
-        .timeline-item {
-            flex: 0 0 auto;
-            width: 100px;
-            height: 70px;
-            margin-right: 12px;
-            position: relative;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f5f5f4;
-        }
-        
-        .timeline-item.active {
-            border-color: #57534e;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
+        .video-container { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3); }
 
-        .timeline-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(28, 25, 23, 0.7);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-            backdrop-filter: blur(2px);
-        }
-        
-        .timeline-item:hover .delete-btn { opacity: 1; }
-        .video-container { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        /* 드래그 앤 드롭 UI 스타일 */
+        .storyboard-item.dragging { opacity: 0.5; border: 2px dashed #a8a29e; }
+        .storyboard-item { transition: transform 0.2s, box-shadow 0.2s; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-0 sm:p-4 md:p-8 relative">
+<body class="min-h-screen flex items-center justify-center p-0 md:p-6 relative">
 
-    <div class="w-full max-w-[1400px] bg-white sm:rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col min-h-screen sm:min-h-[85vh] border-0 sm:border border-stone-200 relative animate-fade-up">
+    <div class="w-full max-w-[1500px] bg-white md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-[90vh] md:max-h-[95vh] border border-stone-200 animate-fade-up">
         
-        <!-- 상단 헤더 -->
-        <div class="px-5 sm:px-10 py-4 flex justify-between items-center border-b border-stone-100 bg-white/90 backdrop-blur-md z-20">
-            <div class="flex items-center gap-2 text-stone-800 font-serif-kr text-xl font-bold">
-                <!-- 로고 이미지 에러 처리 추가 -->
-                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 sm:h-10 object-contain" onerror="this.style.display='none'">
-                <span class="hidden sm:inline border-l border-stone-300 pl-2 ml-1 text-lg">영상 제작소</span>
+        <!-- 헤더 -->
+        <header class="px-6 py-4 flex justify-between items-center border-b border-stone-100 bg-white z-20">
+            <div class="flex items-center gap-3 text-stone-800 font-serif-kr text-xl font-bold">
+                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 object-contain" onerror="this.style.display='none'">
+                <span class="border-l border-stone-300 pl-3 text-lg">인스타 릴스 제작소</span>
             </div>
-            <div class="text-xs sm:text-sm font-gowun text-stone-400 flex items-center gap-2">
-                <i data-lucide="film" class="w-4 h-4"></i> 기억을 시네마틱 영상으로 간직하세요
+            <div class="text-sm font-gowun text-stone-400 hidden sm:flex items-center gap-2">
+                <i data-lucide="smartphone" class="w-4 h-4"></i> 세로형 9:16 영상 최적화
             </div>
-        </div>
+        </header>
 
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
             
-            <!-- 왼쪽: 설정 패널 -->
-            <aside class="w-full lg:w-[380px] bg-white border-r border-stone-100 p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-                
-                <!-- 1. 텍스트 & 방문 정보 설정 -->
-                <section>
-                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
-                        <i data-lucide="pen-line" class="w-4 h-4 text-stone-400"></i> 기본 정보 (오버레이)
-                    </h2>
-                    <div class="space-y-3">
-                        <input type="text" id="video-title" value="우리가 머문 찬란했던 계절" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base" placeholder="영상 메인 제목">
-                        
-                        <div class="flex gap-2">
-                            <input type="text" id="visit-date" value="" class="w-1/2 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm" placeholder="날짜 (예: 2026.07.02)">
-                            <input type="text" id="visit-info" value="숲체원 힐링캠프" class="w-1/2 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm" placeholder="단체명/기록">
-                        </div>
-                    </div>
+            <!-- 왼쪽: 에디터 패널 -->
+            <aside class="w-full lg:w-[480px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+                <div class="flex-1 overflow-y-auto p-6 space-y-6">
                     
-                    <div class="mt-4 flex items-center justify-between">
-                        <label class="text-sm text-stone-500 font-gowun">사진 전환 속도</label>
-                        <select id="slide-duration" class="bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 text-stone-700 font-gowun text-sm focus:outline-none focus:border-stone-400">
-                            <option value="2">빠르게 (2초)</option>
-                            <option value="4" selected>시네마틱 (4초)</option>
-                            <option value="6">여유롭게 (6초)</option>
-                        </select>
-                    </div>
-                </section>
-
-                <hr class="border-stone-100">
-
-                <!-- 2. BGM (배경음악) 설정 -->
-                <section>
-                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
-                        <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
-                    </h2>
-                    <div class="space-y-3">
-                        <select id="bgm-select" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base cursor-pointer">
-                            <option value="">음악 없음 (무음)</option>
-                            <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=nature-calls-114569.mp3">숲의 속삭임 (잔잔한 힐링)</option>
+                    <!-- 1. BGM 업로드 -->
+                    <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                        <h2 class="text-base font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
+                            <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
+                        </h2>
+                        <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm">
+                            <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=nature-calls-114569.mp3" selected>숲의 속삭임 (기본)</option>
                             <option value="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2db17dc312.mp3?filename=acoustic-guitars-ambient-113069.mp3">따스한 햇살 (어쿠스틱)</option>
-                            <option value="https://cdn.pixabay.com/download/audio/2022/05/16/audio_b2512f1f50.mp3?filename=relaxing-mountains-rivers-streams-113785.mp3">계곡의 물소리 (자연의 소리)</option>
-                            <option value="custom">🎧 내 음원 파일 업로드...</option>
+                            <option value="custom">🎧 내 음원 직접 업로드...</option>
+                            <option value="">소리 없음</option>
                         </select>
-                        
-                        <input type="file" id="custom-bgm-input" accept="audio/*, .mp3, .wav, .m4a, .ogg, .flac" class="hidden">
-                        
-                        <div id="custom-bgm-info" class="hidden flex items-center justify-between bg-stone-100 rounded-xl px-4 py-3 border border-stone-200">
-                            <div class="flex items-center gap-2 overflow-hidden">
-                                <i data-lucide="file-audio" class="w-4 h-4 text-stone-500 shrink-0"></i>
-                                <span id="custom-bgm-name" class="text-sm text-stone-600 font-gowun truncate">음원.mp3</span>
-                            </div>
-                            <button id="custom-bgm-remove" class="text-stone-400 hover:text-stone-600 shrink-0 transition-colors" title="음원 삭제">
-                                <i data-lucide="x-circle" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        
+                        <input type="file" id="custom-bgm-input" accept="audio/*" class="hidden">
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
-                    </div>
-                </section>
+                    </section>
 
-                <hr class="border-stone-100">
-
-                <!-- 3. 감성 문구 관리 -->
-                <section>
-                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
-                        <i data-lucide="quote" class="w-4 h-4 text-stone-400"></i> 감성 문구 관리
-                    </h2>
-                    <div class="space-y-2">
-                        <p class="text-[11px] text-stone-500 font-gowun keep-all">각 사진마다 아래 문구들이 번갈아가며 표시됩니다.</p>
-                        <textarea id="phrases-input" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base resize-y leading-relaxed whitespace-pre-wrap" rows="4"></textarea>
-                    </div>
-                </section>
-
-                <hr class="border-stone-100">
-
-                <!-- 4. 사진 업로드 -->
-                <section class="flex-1 flex flex-col">
-                    <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
-                        <i data-lucide="images" class="w-4 h-4 text-stone-400"></i> 사진 담기
-                    </h2>
-                    
-                    <div class="w-full aspect-[4/3] rounded-2xl border-[1.5px] border-dashed border-stone-300 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-stone-400 hover:bg-stone-50 group bg-white mx-auto shadow-sm">
-                        <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-500 group-hover:scale-105 pointer-events-none">
-                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-sm bg-stone-100 group-hover:bg-white transition-colors">
-                                <i data-lucide="image-plus" class="w-6 h-6 text-stone-500"></i>
+                    <!-- 2. 사진 업로드 버튼 -->
+                    <section>
+                        <label class="cursor-pointer w-full py-6 rounded-2xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center transition-all hover:bg-stone-50 group bg-white shadow-sm">
+                            <div class="w-12 h-12 rounded-full bg-stone-100 group-hover:bg-white flex items-center justify-center mb-2 transition-colors">
+                                <i data-lucide="image-plus" class="w-5 h-5 text-stone-600"></i>
                             </div>
-                            <div class="text-stone-700 font-serif-kr text-lg">터치하여 사진 선택</div>
-                            <div class="text-stone-400 font-gowun text-xs tracking-wide bg-stone-100/80 px-3 py-1 rounded-full">여러 장 선택 가능</div>
-                        </div>
-                        <input id="image-upload" type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
-                    </div>
+                            <span class="text-stone-700 font-serif-kr font-bold">터치하여 숲체원 사진 추가</span>
+                            <span class="text-stone-400 font-gowun text-xs mt-1">드래그 앤 드롭으로 순서 변경 가능</span>
+                            <input id="image-upload" type="file" multiple accept="image/*" class="hidden" />
+                        </label>
+                    </section>
 
-                    <div id="photo-list-container" class="mt-4 hidden flex-col">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-serif-kr text-stone-700 font-bold">선택된 사진 (<span id="photo-count-text">0</span>)</span>
+                    <!-- 3. 통합 스토리보드 에디터 -->
+                    <section>
+                        <div class="flex justify-between items-end mb-3">
+                            <h2 class="text-base font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
+                                <i data-lucide="clapperboard" class="w-4 h-4 text-stone-400"></i> 스토리보드 편집
+                            </h2>
                         </div>
-                        <ul id="photo-list" class="bg-stone-50 border border-stone-200 rounded-lg p-2 max-h-36 overflow-y-auto text-[12px] text-stone-600 font-gowun space-y-1"></ul>
-                    </div>
-                </section>
-                
-                <!-- 5. 추출 버튼 -->
-                <section class="mt-auto pt-4 border-t border-stone-100">
-                    <div class="flex justify-between text-sm mb-3 font-gowun">
-                        <span class="text-stone-500">시네마틱 영상 길이</span>
-                        <span id="estimated-time" class="font-bold text-stone-800">00:00</span>
-                    </div>
-                    <button id="export-btn" class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-serif-kr text-lg text-white bg-stone-800 hover:bg-stone-900 transition-all duration-300 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i data-lucide="download" class="w-5 h-5"></i> 고화질 영상 추출
-                    </button>
-                </section>
-            </aside>
+                        
+                        <div id="storyboard-container" class="space-y-3 pb-4">
+                            <!-- JS 동적 렌더링 영역 -->
+                        </div>
+                    </section>
 
-            <!-- 오른쪽: 캔버스 및 플레이어 -->
-            <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden">
-                
-                <div id="loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
-                    <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
-                    <h3 class="text-2xl font-bold mb-3 text-stone-800 font-serif-kr">프리미엄 렌더링 진행 중...</h3>
-                    <p class="text-stone-500 font-gowun mb-8 text-center px-4">
-                        인트로, 파티클 효과, 오디오를 병합하고 있습니다.<br/>오류 방지를 위해 브라우저 창을 닫거나 최소화하지 마세요.
-                    </p>
-                    <div class="w-80 bg-stone-200 rounded-full h-2 mb-2 overflow-hidden">
-                      <div id="render-progress" class="bg-stone-800 h-full rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
-                    </div>
-                    <p id="render-time-text" class="text-sm font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <div class="flex-1 flex items-center justify-center p-4 sm:p-8">
-                    <div class="relative w-full max-w-4xl aspect-video bg-stone-900 rounded-2xl sm:rounded-[2rem] overflow-hidden video-container">
-                        <canvas id="preview-canvas" width="1920" height="1080" class="w-full h-full object-contain"></canvas>
-                        
-                        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800">
-                            <i data-lucide="clapperboard" class="w-16 h-16 mb-4 opacity-50 stroke-[1]"></i>
-                            <p class="text-lg font-serif-kr text-stone-300">왼쪽에서 사진을 추가하여 시네마틱 영상을 감상하세요</p>
-                        </div>
+                <!-- 하단 추출 버튼 영역 -->
+                <div class="p-6 border-t border-stone-100 bg-white">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm font-gowun text-stone-500">총 재생 시간</span>
+                        <span id="estimated-time" class="text-lg font-bold text-stone-800 font-mono">00:00</span>
+                    </div>
+                    <button id="export-btn" class="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-serif-kr text-lg text-white bg-stone-800 hover:bg-stone-900 transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="instagram" class="w-5 h-5"></i> 인스타 릴스용 추출 (1080x1920)
+                    </button>
+                </div>
+            </aside>
+
+            <!-- 오른쪽: 플레이어 영역 (9:16 세로) -->
+            <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden items-center justify-center p-4">
+                
+                <div id="loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center w-full h-full">
+                    <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
+                    <h3 class="text-xl font-bold mb-3 text-stone-800 font-serif-kr">프리미엄 세로 영상 렌더링 중...</h3>
+                    <p class="text-stone-500 font-gowun mb-6 text-center text-sm">브라우저 창을 유지해 주세요.</p>
+                    <div class="w-64 bg-stone-200 rounded-full h-2 overflow-hidden">
+                      <div id="render-progress" class="bg-stone-800 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="render-time-text" class="text-xs mt-2 font-mono text-stone-500">00:00 / 00:00</p>
+                </div>
+
+                <!-- 9:16 컨테이너 (최대 높이 제한으로 화면에 맞춤) -->
+                <div class="relative h-[70vh] sm:h-[80vh] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0">
+                    <!-- 실제 내부 렌더링은 1080x1920 -->
+                    <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-cover"></canvas>
+                    
+                    <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800">
+                        <i data-lucide="clapperboard" class="w-12 h-12 mb-3 opacity-50 stroke-[1]"></i>
+                        <p class="text-sm font-serif-kr text-stone-300">사진을 추가하여 미리보세요</p>
                     </div>
                 </div>
 
                 <!-- 플레이어 컨트롤 -->
-                <div class="px-6 pb-6 pt-2 flex flex-col gap-4 max-w-4xl w-full mx-auto">
-                    <div id="timeline-container" class="w-full pb-2 no-scrollbar"></div>
-
-                    <div class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-stone-200 flex items-center gap-4">
-                        <button id="play-btn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
-                            <i data-lucide="play" class="w-5 h-5 ml-1"></i>
-                        </button>
-                        <button id="stop-btn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-500 transition active:scale-95 disabled:opacity-50">
-                            <i data-lucide="square" class="w-4 h-4"></i>
-                        </button>
-                        
-                        <div class="flex-1 flex items-center gap-4 px-2">
-                            <span id="current-time-display" class="text-xs sm:text-sm font-mono text-stone-500">00:00</span>
-                            <div class="flex-1 h-2 sm:h-3 bg-stone-100 rounded-full cursor-pointer relative overflow-hidden border border-stone-200/50 group" id="progress-bar-container">
-                                <div id="progress-bar" class="absolute top-0 left-0 h-full bg-stone-400 group-hover:bg-stone-500 rounded-full pointer-events-none transition-colors" style="width: 0%;"></div>
-                            </div>
-                            <span id="total-time-display" class="text-xs sm:text-sm font-mono text-stone-400">00:00</span>
+                <div class="mt-6 w-full max-w-sm bg-white rounded-2xl p-3 shadow-sm border border-stone-200 flex items-center gap-3">
+                    <button id="play-btn" class="w-10 h-10 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
+                        <i data-lucide="play" class="w-4 h-4 ml-1"></i>
+                    </button>
+                    <button id="stop-btn" class="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-500 transition active:scale-95 disabled:opacity-50">
+                        <i data-lucide="square" class="w-3 h-3"></i>
+                    </button>
+                    
+                    <div class="flex-1 flex items-center gap-3 px-1">
+                        <span id="current-time-display" class="text-[10px] font-mono text-stone-500">00:00</span>
+                        <div class="flex-1 h-1.5 bg-stone-100 rounded-full cursor-pointer relative overflow-hidden" id="progress-bar-container">
+                            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-stone-500 pointer-events-none transition-colors" style="width: 0%;"></div>
                         </div>
+                        <span id="total-time-display" class="text-[10px] font-mono text-stone-400">00:00</span>
                     </div>
                 </div>
 
@@ -278,75 +155,64 @@
     <script>
         lucide.createIcons();
 
-        // 1. 유틸리티 함수 (안정성 확보)
+        // 유틸: 시간 포맷
         function formatTime(seconds) {
-            if (isNaN(seconds) || seconds < 0) seconds = 0;
+            if(isNaN(seconds)) return "00:00";
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = Math.floor(seconds % 60).toString().padStart(2, '0');
             return `${m}:${s}`;
         }
 
-        // 안전한 모서리 둥근 사각형 그리기 함수 (구형 브라우저 roundRect 오류 방지)
-        function safeRoundRect(ctx, x, y, width, height, radius) {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // 2. 상태 및 데이터 초기화
-        let healingPhrases = [
+        // 프리미엄 감성 문구 풀 (랜덤 추천용)
+        const premiumPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
             "바람이 들려주는 고요하고 다정한 이야기",
             "한 걸음 느리게, 찬란했던 계절과 동화되는 순간",
-            "나무 사이로 스며든 눈부신 숲의 활기"
+            "나무 사이로 스며든 눈부신 숲의 활기",
+            "햇살이 머무는 곳, 자연이 내어준 포근한 휴식",
+            "마음의 무거운 짐을 잠시 내려놓습니다",
+            "우리 함께 걸었던 깊고 따뜻한 정취",
+            "나뭇잎 사이로 부서지는 맑은 에너지",
+            "고요한 숲의 정적 속에서 되찾는 마음의 평화",
+            "당신과 함께여서 더 빛났던 숲에서의 하루",
+            "발길 닿는 곳마다 스며든 치유의 기운"
         ];
+        function getRandomPhrase() { return premiumPhrases[Math.floor(Math.random() * premiumPhrases.length)]; }
 
+        // 영상 켄번스 효과 풀
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
-        
-        // 자연스러운 숲속 먼지 파티클 생성
-        const particles = Array.from({length: 45}, () => ({
-            x: Math.random() * 1920,
-            y: Math.random() * 1080,
-            radius: Math.random() * 2.5 + 0.8,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: (Math.random() - 0.5) * 0.3 + 0.2, // 살짝 위에서 아래로 떨어지는 느낌
-            alpha: Math.random() * 0.4 + 0.1
+
+        // 세로형 캔버스용 파티클 (눈/먼지 효과)
+        const particles = Array.from({length: 60}, () => ({
+            x: Math.random() * 1080,
+            y: Math.random() * 1920,
+            radius: Math.random() * 3 + 1,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: Math.random() * 0.5 + 0.2, // 세로로 떨어지는 느낌 강화
+            alpha: Math.random() * 0.5 + 0.1
         }));
 
-        // 보안 문제(Tainted Canvas) 방지를 위해 워터마크 이미지의 크로스도메인 속성 추가
+        // 워터마크
         const watermarkLogo = new Image();
         watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
+        // 통합 상태(State) 관리 (인트로, 아웃트로 포함)
         const state = {
-            images: [],
-            durationPerSlide: 4,
-            introDuration: 3, // 시네마틱 인트로 3초
-            outroDuration: 3, // 시네마틱 아웃로 3초
-            isPlaying: false,
-            isRecording: false,
-            currentTime: 0,
-            totalDuration: 0,
-            animationFrameId: null,
-            lastTimestamp: 0,
-            title: "우리가 머문 찬란했던 계절",
-            dateStr: "",
-            infoStr: "숲체원 힐링캠프"
+            intro: { title: "기억 보관소", subtitle: "장성숲체원에 오신 것을 환영합니다", duration: 3 },
+            images: [], // { id, imgElement, src, effect, phrase, duration }
+            outro: { title: "숲에서 얻은 맑은 숨결로 일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
+            
+            isPlaying: false, isRecording: false,
+            currentTime: 0, totalDuration: 0,
+            animationFrameId: null, lastTimestamp: 0,
+            draggedItemIndex: null
         };
 
         const elements = {
             imageUpload: document.getElementById('image-upload'),
-            timelineContainer: document.getElementById('timeline-container'),
+            storyboardContainer: document.getElementById('storyboard-container'),
             canvas: document.getElementById('preview-canvas'),
             ctx: document.getElementById('preview-canvas').getContext('2d'),
             emptyState: document.getElementById('empty-state'),
@@ -358,108 +224,40 @@
             currentTimeDisplay: document.getElementById('current-time-display'),
             totalTimeDisplay: document.getElementById('total-time-display'),
             estimatedTimeDisplay: document.getElementById('estimated-time'),
-            slideDurationInput: document.getElementById('slide-duration'),
-            videoTitleInput: document.getElementById('video-title'),
-            visitDateInput: document.getElementById('visit-date'),
-            visitInfoInput: document.getElementById('visit-info'),
-            phrasesInput: document.getElementById('phrases-input'),
             loadingOverlay: document.getElementById('loading-overlay'),
             renderProgress: document.getElementById('render-progress'),
             renderTimeText: document.getElementById('render-time-text'),
-            
             bgmSelect: document.getElementById('bgm-select'),
             customBgmInput: document.getElementById('custom-bgm-input'),
-            customBgmInfo: document.getElementById('custom-bgm-info'),
-            customBgmName: document.getElementById('custom-bgm-name'),
-            customBgmRemove: document.getElementById('custom-bgm-remove'),
-            bgmAudio: document.getElementById('bgm-audio'),
-
-            photoListContainer: document.getElementById('photo-list-container'),
-            photoList: document.getElementById('photo-list'),
-            photoCountText: document.getElementById('photo-count-text')
+            bgmAudio: document.getElementById('bgm-audio')
         };
 
-        // 초기 날짜 세팅 (오늘)
-        const today = new Date();
-        elements.visitDateInput.value = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
-        state.dateStr = elements.visitDateInput.value;
-
-        let audioCtx = null;
-        let audioDest = null;
-        let audioSource = null;
-
-        function setupAudioRouting() {
-            if (!audioCtx) {
-                try {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    audioDest = audioCtx.createMediaStreamDestination();
-                    audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
-                    audioSource.connect(audioDest);
-                    audioSource.connect(audioCtx.destination); 
-                } catch(e) {
-                    console.error("Audio routing error:", e);
-                }
-            }
-        }
+        let audioCtx, audioDest, audioSource;
 
         function init() {
-            elements.phrasesInput.value = healingPhrases.join('\n');
-            elements.phrasesInput.addEventListener('input', (e) => {
-                const lines = e.target.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                healingPhrases = lines.length > 0 ? lines : [""];
-                if (!state.isPlaying) drawFrame(state.currentTime);
-            });
-
             elements.imageUpload.addEventListener('change', handleImageUpload);
-            elements.slideDurationInput.addEventListener('change', (e) => {
-                state.durationPerSlide = parseInt(e.target.value) || 4;
-                updateDurations();
+            elements.bgmSelect.addEventListener('change', (e) => {
+                if(e.target.value === 'custom') elements.customBgmInput.click();
+                else elements.bgmAudio.src = e.target.value;
             });
-            elements.videoTitleInput.addEventListener('input', (e) => { state.title = e.target.value; if(!state.isPlaying) drawFrame(state.currentTime); });
-            elements.visitDateInput.addEventListener('input', (e) => { state.dateStr = e.target.value; if(!state.isPlaying) drawFrame(state.currentTime); });
-            elements.visitInfoInput.addEventListener('input', (e) => { state.infoStr = e.target.value; if(!state.isPlaying) drawFrame(state.currentTime); });
-            
-            elements.bgmSelect.addEventListener('change', handleBgmChange);
-            elements.customBgmInput.addEventListener('change', handleCustomBgmUpload);
-            elements.customBgmRemove.addEventListener('click', removeCustomBgm);
+            elements.customBgmInput.addEventListener('change', (e) => {
+                if(e.target.files[0]) {
+                    elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]);
+                } else elements.bgmSelect.value = '';
+            });
 
             elements.playBtn.addEventListener('click', togglePlay);
             elements.stopBtn.addEventListener('click', stopPlayback);
             elements.exportBtn.addEventListener('click', exportVideo);
             elements.progressContainer.addEventListener('click', seekTime);
 
-            updateUI();
+            renderStoryboard();
+            updateDurations();
         }
 
-        // BGM 핸들링
-        function handleBgmChange(e) {
-            const val = e.target.value;
-            if (val === 'custom') elements.customBgmInput.click();
-            else if (val === '') { elements.bgmAudio.src = ''; elements.bgmAudio.pause(); elements.customBgmInfo.classList.add('hidden'); }
-            else { elements.bgmAudio.src = val; elements.customBgmInfo.classList.add('hidden'); }
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function handleCustomBgmUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                elements.bgmAudio.src = url;
-                elements.customBgmName.textContent = file.name;
-                elements.customBgmInfo.classList.remove('hidden');
-                elements.bgmSelect.value = 'custom';
-            } else { removeCustomBgm(); }
-        }
-
-        function removeCustomBgm() {
-            elements.bgmSelect.value = ''; elements.bgmAudio.src = '';
-            elements.customBgmInput.value = ''; elements.customBgmInfo.classList.add('hidden');
-        }
-
-        // 이미지 처리
         async function handleImageUpload(e) {
             const files = Array.from(e.target.files);
-            if (files.length === 0) return;
+            if (!files.length) return;
 
             const loadPromises = files.map(file => new Promise((resolve) => {
                 const reader = new FileReader();
@@ -470,7 +268,8 @@
                         imgElement: img,
                         src: event.target.result,
                         effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
-                        fileName: file.name
+                        phrase: getRandomPhrase(),
+                        duration: 4 // 기본 4초
                     });
                     img.src = event.target.result;
                 };
@@ -481,357 +280,304 @@
             state.images = [...state.images, ...loadedImages];
             
             updateDurations();
-            renderTimeline();
-            renderPhotoList(); 
+            renderStoryboard();
             updateUI();
-            
-            if (state.images.length > 0 && !state.isPlaying) drawFrame(0); // 처음으로 리셋
+            if(!state.isPlaying) drawFrame(state.currentTime);
             e.target.value = '';
         }
 
-        function updateDurations() {
-            if (state.images.length > 0) {
-                // 인트로 3초 + 각 슬라이드 + 아웃로 3초
-                state.totalDuration = state.introDuration + (state.images.length * state.durationPerSlide) + state.outroDuration;
+        // ==========================================
+        // 스토리보드 (드래그앤드롭 & 문구 통합 UI)
+        // ==========================================
+        function renderStoryboard() {
+            elements.storyboardContainer.innerHTML = '';
+
+            // 1. 인트로 카드
+            elements.storyboardContainer.appendChild(createSegmentCard('intro', null, state.intro));
+
+            // 2. 사진 리스트 (Draggable)
+            state.images.forEach((imgObj, idx) => {
+                elements.storyboardContainer.appendChild(createSegmentCard('slide', idx, imgObj));
+            });
+
+            // 3. 아웃트로 카드
+            elements.storyboardContainer.appendChild(createSegmentCard('outro', null, state.outro));
+            lucide.createIcons();
+        }
+
+        function createSegmentCard(type, index, data) {
+            const div = document.createElement('div');
+            div.className = 'bg-stone-50 border border-stone-200 rounded-xl p-3 flex gap-3 storyboard-item items-start';
+            
+            let label = '', icon = '';
+            if(type === 'intro') { label = '인트로'; icon = 'play-square'; }
+            if(type === 'outro') { label = '아웃트로'; icon = 'film'; }
+
+            let thumbHTML = '';
+            if (type === 'slide') {
+                div.draggable = true;
+                div.addEventListener('dragstart', (e) => { state.draggedItemIndex = index; div.classList.add('dragging'); });
+                div.addEventListener('dragend', () => { div.classList.remove('dragging'); state.draggedItemIndex = null; });
+                div.addEventListener('dragover', (e) => e.preventDefault());
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if(state.draggedItemIndex === null || state.draggedItemIndex === index) return;
+                    const item = state.images.splice(state.draggedItemIndex, 1)[0];
+                    state.images.splice(index, 0, item);
+                    updateDurations(); renderStoryboard();
+                    if(!state.isPlaying) drawFrame(0);
+                });
+
+                thumbHTML = `
+                    <div class="w-16 h-24 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab">
+                        <img src="${data.src}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <i data-lucide="grip-vertical" class="text-white w-5 h-5"></i>
+                        </div>
+                    </div>`;
             } else {
-                state.totalDuration = 0;
+                thumbHTML = `
+                    <div class="w-16 h-24 shrink-0 rounded-lg bg-stone-800 text-stone-300 flex flex-col items-center justify-center gap-1">
+                        <i data-lucide="${icon}" class="w-5 h-5"></i>
+                        <span class="text-[10px]">${label}</span>
+                    </div>`;
             }
+
+            // 입력 폼 (문구 1, 문구 2/랜덤버튼, 시간)
+            let inputsHTML = '';
+            if (type === 'intro' || type === 'outro') {
+                inputsHTML = `
+                    <input type="text" class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-xs font-serif-kr text-stone-800" value="${data.title}" onchange="updateState('${type}', ${index}, 'title', this.value)" placeholder="메인 문구">
+                    <input type="text" class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-[11px] font-gowun text-stone-500 mt-1" value="${data.subtitle}" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="서브 문구">
+                `;
+            } else {
+                inputsHTML = `
+                    <div class="flex gap-1 w-full relative">
+                        <textarea class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-xs font-gowun text-stone-700 resize-none h-[56px]" onchange="updateState('slide', ${index}, 'phrase', this.value)" placeholder="감성 문구">${data.phrase}</textarea>
+                        <button onclick="applyRandomPhrase(${index})" class="absolute bottom-1.5 right-1.5 bg-stone-100 p-1 rounded text-stone-500 hover:bg-stone-200" title="랜덤 추천">
+                            <i data-lucide="sparkles" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                `;
+            }
+
+            // 공통 시간 입력 및 (슬라이드 한정) 삭제 버튼
+            const controlsHTML = `
+                <div class="flex justify-between items-center mt-2">
+                    <div class="flex items-center gap-1 text-[11px] text-stone-500">
+                        <i data-lucide="clock" class="w-3 h-3"></i>
+                        <input type="number" min="1" max="10" class="w-10 bg-transparent border-b border-stone-300 text-center focus:outline-none" value="${data.duration}" onchange="updateState('${type}', ${index}, 'duration', parseInt(this.value)||3)"> 초
+                    </div>
+                    ${type === 'slide' ? `<button onclick="removeImage(${index})" class="text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                </div>
+            `;
+
+            div.innerHTML = `
+                ${thumbHTML}
+                <div class="flex-1 flex flex-col justify-between h-full">
+                    ${inputsHTML}
+                    ${controlsHTML}
+                </div>
+            `;
+            return div;
+        }
+
+        window.updateState = (type, index, key, value) => {
+            if(type === 'intro') state.intro[key] = value;
+            else if(type === 'outro') state.outro[key] = value;
+            else if(type === 'slide') state.images[index][key] = value;
+            updateDurations();
+            if(!state.isPlaying) drawFrame(state.currentTime);
+        };
+
+        window.applyRandomPhrase = (index) => {
+            state.images[index].phrase = getRandomPhrase();
+            renderStoryboard();
+            if(!state.isPlaying) drawFrame(state.currentTime);
+        };
+
+        window.removeImage = (index) => {
+            state.images.splice(index, 1);
+            updateDurations(); renderStoryboard(); updateUI();
+            if(!state.isPlaying) drawFrame(0);
+        };
+
+        function updateDurations() {
+            let total = state.intro.duration + state.outro.duration;
+            state.images.forEach(img => total += img.duration);
+            state.totalDuration = total;
             elements.totalTimeDisplay.textContent = formatTime(state.totalDuration);
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
         }
 
-        function renderPhotoList() {
-            if (state.images.length === 0) {
-                elements.photoListContainer.classList.add('hidden');
-                elements.photoListContainer.classList.remove('flex');
-            } else {
-                elements.photoListContainer.classList.remove('hidden');
-                elements.photoListContainer.classList.add('flex');
-                elements.photoCountText.textContent = state.images.length;
-                elements.photoList.innerHTML = '';
-                
-                state.images.forEach((imgObj, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-white border border-stone-100 rounded px-2 py-1.5 shadow-sm';
-                    li.innerHTML = `
-                        <span class="truncate pr-2 text-stone-600 flex-1">${index + 1}. ${imgObj.fileName}</span>
-                        <button onclick="removeImage(${index})" class="text-stone-300 hover:text-red-500 transition-colors shrink-0 p-1" title="삭제">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                    `;
-                    elements.photoList.appendChild(li);
-                });
-            }
-        }
-
-        function renderTimeline() {
-            elements.timelineContainer.innerHTML = '';
-            state.images.forEach((imgObj, index) => {
-                const div = document.createElement('div');
-                div.className = 'timeline-item';
-                div.onclick = () => {
-                    // 타임라인 클릭 시 해당 슬라이드 시작점(인트로 시간 이후)으로 이동
-                    state.currentTime = state.introDuration + (index * state.durationPerSlide);
-                    if(!state.isPlaying) drawFrame(state.currentTime);
-                    highlightTimelineItem(index);
-                    if (elements.bgmAudio.src) elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-                };
-
-                const img = document.createElement('img');
-                img.src = imgObj.src;
-                
-                const delBtn = document.createElement('div');
-                delBtn.className = 'delete-btn';
-                delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-                delBtn.onclick = (e) => { e.stopPropagation(); removeImage(index); };
-
-                div.appendChild(img); div.appendChild(delBtn);
-                elements.timelineContainer.appendChild(div);
-            });
-        }
-
-        function highlightTimelineItem(index) {
-            document.querySelectorAll('.timeline-item').forEach((el, i) => {
-                if (i === index) el.classList.add('active'); else el.classList.remove('active');
-            });
-            const activeEl = document.querySelectorAll('.timeline-item')[index];
-            if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
-
-        function removeImage(index) {
-            state.images.splice(index, 1);
-            updateDurations();
-            renderTimeline();
-            renderPhotoList(); 
-            updateUI();
+        // ==========================================
+        // 렌더링 엔진 (9:16 인스타 릴스 해상도 1080x1920)
+        // ==========================================
+        function getSceneContext(time) {
+            if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
             
-            if (state.currentTime >= state.totalDuration) state.currentTime = Math.max(0, state.totalDuration - 0.1);
-            if (state.images.length > 0) drawFrame(state.currentTime);
-            else {
-                elements.ctx.clearRect(0,0, elements.canvas.width, elements.canvas.height);
-                elements.ctx.fillStyle = '#1c1917';
-                elements.ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
-            }
-        }
-
-        function updateUI() {
-            const hasImages = state.images.length > 0;
-            elements.emptyState.style.display = hasImages ? 'none' : 'flex';
-            elements.playBtn.disabled = !hasImages;
-            elements.stopBtn.disabled = !hasImages;
-            elements.exportBtn.disabled = !hasImages;
-            
-            elements.playBtn.innerHTML = state.isPlaying 
-                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' 
-                : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        }
-
-        // 재생 컨트롤
-        function togglePlay() {
-            if (state.images.length === 0) return;
-            setupAudioRouting();
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            
-            if (state.isPlaying) {
-                state.isPlaying = false;
-                cancelAnimationFrame(state.animationFrameId);
-                elements.bgmAudio.pause();
-            } else {
-                state.isPlaying = true;
-                state.lastTimestamp = performance.now();
-                if (state.currentTime >= state.totalDuration) state.currentTime = 0;
-                
-                if(elements.bgmAudio.src) {
-                    elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-                    elements.bgmAudio.play().catch(e => console.log("Audio play prevented:", e));
+            let acc = state.intro.duration;
+            for (let i = 0; i < state.images.length; i++) {
+                if (time < acc + state.images[i].duration) {
+                    return { type: 'slide', index: i, elapsed: time - acc, duration: state.images[i].duration, globalAcc: acc };
                 }
-                animationLoop(performance.now());
+                acc += state.images[i].duration;
             }
-            updateUI();
+            return { type: 'outro', elapsed: time - acc, duration: state.outro.duration };
         }
 
-        function stopPlayback() {
-            state.isPlaying = false;
-            cancelAnimationFrame(state.animationFrameId);
-            state.currentTime = 0;
-            elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0;
-            drawFrame(0); updateUI();
-        }
-
-        function seekTime(e) {
-            if (state.images.length === 0) return;
-            setupAudioRouting();
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-
-            const rect = elements.progressContainer.getBoundingClientRect();
-            const percentage = (e.clientX - rect.left) / rect.width;
-            state.currentTime = Math.max(0, Math.min(percentage * state.totalDuration, state.totalDuration));
-            
-            if (elements.bgmAudio.src) elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-            drawFrame(state.currentTime);
-        }
-
-        function animationLoop(timestamp) {
-            if (!state.isPlaying) return;
-            const deltaTime = (timestamp - state.lastTimestamp) / 1000;
-            state.lastTimestamp = timestamp;
-            state.currentTime += deltaTime;
-
-            if (state.currentTime >= state.totalDuration) {
-                state.currentTime = state.totalDuration;
-                drawFrame(state.currentTime);
-                stopPlayback();
-                return;
-            }
-            drawFrame(state.currentTime);
-            state.animationFrameId = requestAnimationFrame(animationLoop);
-        }
-
-        // ==========================================
-        // 렌더링 엔진 (Intro/Outro, 정보판, 파티클)
-        // ==========================================
-
-        function renderScene(ctx, imgObj, cw, ch, elapsed, alpha) {
+        function renderSlideImage(ctx, imgObj, cw, ch, elapsed, alpha) {
             ctx.globalAlpha = alpha;
-            ctx.filter = 'blur(50px) brightness(0.35) sepia(0.15)';
+            // 배경 풀-블러 (9:16 최적화)
+            ctx.filter = 'blur(60px) brightness(0.25) sepia(0.2)';
             drawCoverImage(ctx, imgObj.imgElement, cw, ch);
             ctx.filter = 'none';
             
-            const p = elapsed / (state.durationPerSlide + 1.5); 
+            const p = elapsed / (imgObj.duration + 1.5); 
             let scale = 1.0, transX = 0, transY = 0;
-            const drift = 50; 
-            switch(imgObj.effect || 'zoom-in') {
-                case 'zoom-in':   scale = 1.0 + (p * 0.05); break;
-                case 'zoom-out':  scale = 1.05 - (p * 0.05); break;
-                case 'pan-left':  scale = 1.03; transX = (drift / 2) - (p * drift); break;
-                case 'pan-right': scale = 1.03; transX = -(drift / 2) + (p * drift); break;
-                case 'pan-up':    scale = 1.03; transY = (drift / 2) - (p * drift); break;
-                case 'pan-down':  scale = 1.03; transY = -(drift / 2) + (p * drift); break;
+            const drift = 40; 
+            switch(imgObj.effect) {
+                case 'zoom-in':   scale = 1.0 + (p * 0.08); break;
+                case 'zoom-out':  scale = 1.08 - (p * 0.08); break;
+                case 'pan-left':  scale = 1.05; transX = (drift/2) - (p*drift); break;
+                case 'pan-right': scale = 1.05; transX = -(drift/2) + (p*drift); break;
+                case 'pan-up':    scale = 1.05; transY = (drift/2) - (p*drift); break;
+                case 'pan-down':  scale = 1.05; transY = -(drift/2) + (p*drift); break;
             }
             
             ctx.save();
             ctx.translate(cw/2 + transX, ch/2 + transY);
             ctx.scale(scale, scale);
             ctx.translate(-cw/2, -ch/2);
-            ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 25;
-            drawFineArtFrame(ctx, imgObj.imgElement, cw, ch);
+            
+            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 80; ctx.shadowOffsetY = 30;
+            drawVerticalFineArtFrame(ctx, imgObj.imgElement, cw, ch);
             ctx.restore();
+        }
+
+        function drawVerticalFineArtFrame(ctx, img, cw, ch) {
+            // 세로 화면에 맞는 액자 비율
+            const paddingX = 120, paddingTop = 300, paddingBottom = 450;
+            const availW = cw - (paddingX * 2);
+            const availH = ch - paddingTop - paddingBottom;
+            
+            const imgRatio = img.width / img.height, availRatio = availW / availH;
+            let drawW = availW, drawH = availH;
+            
+            if (imgRatio > availRatio) drawH = availW / imgRatio; else drawW = availH * imgRatio;
+            
+            const offsetX = (cw - drawW) / 2, offsetY = paddingTop + (availH - drawH) / 2;
+
+            ctx.fillStyle = '#fefefe'; const borderSize = 20;
+            ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize*2), drawH + (borderSize*2));
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2;
+            ctx.strokeRect(offsetX, offsetY, drawW, drawH);
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
         function drawFrame(timeInSeconds) {
             const ctx = elements.ctx;
-            const width = elements.canvas.width;
-            const height = elements.canvas.height;
+            const width = elements.canvas.width;  // 1080
+            const height = elements.canvas.height; // 1920
             
-            // 베이스 배경
             ctx.fillStyle = '#111827';
             ctx.fillRect(0, 0, width, height);
 
-            if (state.images.length === 0) return;
+            const scene = getSceneContext(timeInSeconds);
 
-            // 1. 인트로 (Intro) 씬
-            if (timeInSeconds < state.introDuration) {
-                let alpha = Math.min(timeInSeconds / 1.5, 1);
-                if (state.introDuration - timeInSeconds < 1) alpha = state.introDuration - timeInSeconds;
-                
+            if (scene.type === 'intro') {
+                let alpha = Math.min(scene.elapsed / 1.5, 1);
+                if (scene.duration - scene.elapsed < 1) alpha = scene.duration - scene.elapsed;
                 ctx.globalAlpha = alpha;
-                ctx.fillStyle = '#f5f5f4';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
-                ctx.font = '300 32px "Pretendard"';
-                ctx.fillText("기억 보관소", width/2, height/2 - 50);
+                ctx.fillStyle = '#a8a29e'; ctx.font = '300 48px "Pretendard"';
+                ctx.fillText(state.intro.subtitle, width/2, height/2 - 80);
                 
-                ctx.font = '400 64px "Noto Serif KR"';
-                ctx.fillText("장성숲체원에 오신 것을 환영합니다", width/2, height/2 + 20);
-                
-                ctx.globalAlpha = 1.0;
-                updateProgressUI(timeInSeconds, 0);
-                return; // 인트로 중에는 뒤의 사진을 그리지 않음
-            }
-
-            // 2. 아웃로 (Outro) 씬
-            const slidesEndTime = state.introDuration + (state.images.length * state.durationPerSlide);
-            if (timeInSeconds >= slidesEndTime) {
-                let outroTime = timeInSeconds - slidesEndTime;
-                let alpha = Math.min(outroTime / 1.5, 1);
-                
+                ctx.fillStyle = '#f5f5f4'; ctx.font = '400 80px "Noto Serif KR"';
+                ctx.fillText(state.intro.title, width/2, height/2 + 30);
+            } 
+            else if (scene.type === 'outro') {
+                let alpha = Math.min(scene.elapsed / 1.5, 1);
                 ctx.globalAlpha = alpha;
-                ctx.fillStyle = '#f5f5f4';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
-                ctx.font = '300 48px "Noto Serif KR"';
-                ctx.fillText("숲에서 얻은 맑은 숨결로 일상을 다시 시작해 보세요.", width/2, height/2 - 30);
+                ctx.fillStyle = '#f5f5f4'; ctx.font = '300 56px "Noto Serif KR"';
+                // 문구가 길 수 있으므로 줄바꿈 처리 (간단히)
+                ctx.fillText(state.outro.title, width/2, height/2 - 50);
                 
-                ctx.font = '300 32px "Pretendard"';
-                ctx.fillStyle = '#a8a29e';
-                ctx.fillText("- 국립장성숲체원 -", width/2, height/2 + 50);
+                ctx.fillStyle = '#a8a29e'; ctx.font = '300 40px "Pretendard"';
+                ctx.fillText(state.outro.subtitle, width/2, height/2 + 60);
+            } 
+            else if (scene.type === 'slide') {
+                const imgObj = state.images[scene.index];
+                const fadeDuration = 1.0; 
+                let isFading = (scene.elapsed < fadeDuration && scene.index > 0);
                 
-                ctx.globalAlpha = 1.0;
-                updateProgressUI(timeInSeconds, state.images.length - 1);
-                return; // 아웃로 중에는 뒤의 사진을 그리지 않음
-            }
-
-            // 3. 본편 사진 슬라이드 렌더링
-            const slideTime = timeInSeconds - state.introDuration;
-            let currentIndex = Math.floor(slideTime / state.durationPerSlide);
-            if (currentIndex >= state.images.length) currentIndex = state.images.length - 1;
-            
-            const timeInCurrentSlide = slideTime % state.durationPerSlide;
-            const fadeDuration = 1.2; 
-            let isFading = (timeInCurrentSlide < fadeDuration && currentIndex > 0);
-            
-            if (isFading) {
-                const prevIndex = currentIndex - 1;
-                const progress = timeInCurrentSlide / fadeDuration; 
-                renderScene(ctx, state.images[prevIndex], width, height, state.durationPerSlide + timeInCurrentSlide, 1 - progress);
-                renderScene(ctx, state.images[currentIndex], width, height, timeInCurrentSlide, progress);
-            } else {
-                renderScene(ctx, state.images[currentIndex], width, height, timeInCurrentSlide, 1.0);
-            }
-
-            // 비네팅 효과
-            ctx.globalAlpha = 1.0;
-            const vignette = ctx.createRadialGradient(width/2, height/2, height/2.5, width/2, height/2, width/1.2);
-            vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.8)');
-            ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
-
-            // 파티클 (먼지/햇살) 애니메이션
-            ctx.globalAlpha = 1.0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            particles.forEach(p => {
-                if(state.isPlaying || state.isRecording) {
-                    p.x += p.vx; p.y += p.vy;
-                    if(p.x < 0) p.x = width; if(p.x > width) p.x = 0;
-                    if(p.y < 0) p.y = height; if(p.y > height) p.y = 0;
+                if (isFading) {
+                    const prevObj = state.images[scene.index - 1];
+                    const progress = scene.elapsed / fadeDuration; 
+                    renderSlideImage(ctx, prevObj, width, height, prevObj.duration + scene.elapsed, 1 - progress);
+                    renderSlideImage(ctx, imgObj, width, height, scene.elapsed, progress);
+                } else {
+                    renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
-            });
 
-            // 방문 정보판 (Digital Info Board) - 좌측 상단 반투명 박스
-            if (state.dateStr || state.infoStr) {
-                ctx.globalAlpha = 0.8;
-                ctx.fillStyle = 'rgba(28, 25, 23, 0.6)';
-                safeRoundRect(ctx, 40, 40, 360, 110, 16); // 안전한 라운드 박스 함수 사용
-                
+                // 세로형 비네팅
                 ctx.globalAlpha = 1.0;
-                ctx.fillStyle = '#d6d3d1';
-                ctx.font = '22px "Pretendard"';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillText(`방문일 :  ${state.dateStr}`, 70, 80);
-                ctx.fillStyle = '#fafaf9';
-                ctx.font = 'bold 26px "Pretendard"';
-                ctx.fillText(`${state.infoStr}`, 70, 120);
-            }
+                const vignette = ctx.createRadialGradient(width/2, height/2, width/2, width/2, height/2, width*1.2);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
+                ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
-            // 하단 텍스트 그라데이션
-            const gradient = ctx.createLinearGradient(0, height - 350, 0, height);
-            gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
-            gradient.addColorStop(0.6, 'rgba(15, 15, 15, 0.8)');
-            gradient.addColorStop(1, 'rgba(15, 15, 15, 0.95)');
-            ctx.fillStyle = gradient; ctx.fillRect(0, height - 350, width, 350);
+                // 파티클 세로 최적화
+                ctx.globalAlpha = 1.0; ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                particles.forEach(p => {
+                    if(state.isPlaying || state.isRecording) {
+                        p.x += p.vx; p.y += p.vy;
+                        if(p.x < 0) p.x = width; if(p.x > width) p.x = 0;
+                        if(p.y < 0) p.y = height; if(p.y > height) p.y = 0;
+                    }
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+                });
 
-            // 앨범 제목 및 감성 문구
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            if (state.title.trim() !== '') {
-                ctx.fillStyle = '#f5f5f4'; ctx.font = '300 42px "Noto Serif KR", serif';
+                // 하단 텍스트 영역 (높게)
+                const gradient = ctx.createLinearGradient(0, height - 600, 0, height);
+                gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
+                gradient.addColorStop(0.7, 'rgba(15, 15, 15, 0.9)');
+                gradient.addColorStop(1, 'rgba(15, 15, 15, 1)');
+                ctx.fillStyle = gradient; ctx.fillRect(0, height - 600, width, 600);
+
+                // 감성 문구 렌더링
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                const currentPhrase = imgObj.phrase || "";
+                const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
+
+                ctx.fillStyle = '#e7e5e4'; ctx.font = '400 56px "Gowun Dodum"';
                 ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
-                ctx.fillText(state.title, width / 2, height - 190);
-                ctx.beginPath(); ctx.moveTo(width / 2 - 40, height - 140); ctx.lineTo(width / 2 + 40, height - 140);
-                ctx.strokeStyle = '#a8a29e'; ctx.lineWidth = 1.5; ctx.stroke();
-            }
 
-            const currentPhrase = healingPhrases[currentIndex % healingPhrases.length] || "";
-            const prevPhrase = currentIndex > 0 ? (healingPhrases[(currentIndex - 1) % healingPhrases.length] || "") : "";
-
-            ctx.fillStyle = '#e7e5e4'; ctx.font = '400 52px "Gowun Dodum", sans-serif';
-            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
-
-            if (isFading && prevPhrase !== currentPhrase) {
-                ctx.globalAlpha = 1 - (timeInCurrentSlide / fadeDuration);
-                ctx.fillText(prevPhrase, width / 2, height - 80);
-                ctx.globalAlpha = timeInCurrentSlide / fadeDuration;
-                ctx.fillText(currentPhrase, width / 2, height - 80);
-            } else {
-                ctx.globalAlpha = 1.0; ctx.fillText(currentPhrase, width / 2, height - 80);
+                if (isFading && prevPhrase !== currentPhrase) {
+                    ctx.globalAlpha = 1 - (scene.elapsed / fadeDuration);
+                    ctx.fillText(prevPhrase, width / 2, height - 200);
+                    ctx.globalAlpha = scene.elapsed / fadeDuration;
+                    ctx.fillText(currentPhrase, width / 2, height - 200);
+                } else {
+                    ctx.globalAlpha = 1.0; ctx.fillText(currentPhrase, width / 2, height - 200);
+                }
             }
             
-            // 로고 워터마크 (선명한 백색 글로우 처리 유지)
+            // 로고 워터마크 (우측 상단 릴스 UI 피해서 약간 아래로)
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = 300;
+                const logoW = 350;
                 const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'; ctx.shadowBlur = 20;
-                ctx.drawImage(watermarkLogo, width - logoW - 60, 40, logoW, logoH);
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'; ctx.shadowBlur = 25;
+                ctx.drawImage(watermarkLogo, width - logoW - 80, 100, logoW, logoH);
             }
 
             ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
-            updateProgressUI(timeInSeconds, currentIndex);
+            updateProgressUI(timeInSeconds);
         }
 
-        // 유틸: 꽉 차는 이미지
         function drawCoverImage(ctx, img, cw, ch) {
             const imgRatio = img.width / img.height, canvasRatio = cw / ch;
             let drawW = cw, drawH = ch, offsetX = 0, offsetY = 0;
@@ -840,117 +586,123 @@
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
-        // 유틸: 파인아트 프레임 처리
-        function drawFineArtFrame(ctx, img, cw, ch) {
-            const paddingX = 220, paddingY = 160;
-            const availW = cw - (paddingX * 2), availH = ch - (paddingY * 2) - 100;
-            const imgRatio = img.width / img.height, availRatio = availW / availH;
-            let drawW = availW, drawH = availH;
-            
-            if (imgRatio > availRatio) drawH = availW / imgRatio; else drawW = availH * imgRatio;
-            
-            const offsetX = (cw - drawW) / 2, offsetY = (ch - drawH) / 2 - 40;
-
-            ctx.fillStyle = '#fefefe'; const borderSize = 16;
-            ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize*2), drawH + (borderSize*2));
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
-            ctx.strokeRect(offsetX, offsetY, drawW, drawH);
-            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+        // ==========================================
+        // 컨트롤 및 내보내기 (Export)
+        // ==========================================
+        function updateUI() {
+            const hasImages = state.images.length > 0;
+            elements.emptyState.style.display = hasImages ? 'none' : 'flex';
+            elements.playBtn.disabled = !hasImages; elements.stopBtn.disabled = !hasImages; elements.exportBtn.disabled = !hasImages;
+            elements.playBtn.innerHTML = state.isPlaying 
+                ? '<i data-lucide="pause" class="w-4 h-4"></i>' : '<i data-lucide="play" class="w-4 h-4 ml-1"></i>';
+            lucide.createIcons();
         }
 
-        function updateProgressUI(time, currentIndex) {
+        function togglePlay() {
+            if (state.images.length === 0) return;
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioDest = audioCtx.createMediaStreamDestination();
+                audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
+                audioSource.connect(audioDest); audioSource.connect(audioCtx.destination); 
+            }
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            if (state.isPlaying) {
+                state.isPlaying = false; cancelAnimationFrame(state.animationFrameId); elements.bgmAudio.pause();
+            } else {
+                state.isPlaying = true; state.lastTimestamp = performance.now();
+                if (state.currentTime >= state.totalDuration) state.currentTime = 0;
+                if(elements.bgmAudio.src) {
+                    elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+                    elements.bgmAudio.play().catch(e => console.log("Audio prevent:", e));
+                }
+                animationLoop(performance.now());
+            }
+            updateUI();
+        }
+
+        function stopPlayback() {
+            state.isPlaying = false; cancelAnimationFrame(state.animationFrameId);
+            state.currentTime = 0; elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0;
+            drawFrame(0); updateUI();
+        }
+
+        function seekTime(e) {
+            if (state.images.length === 0) return;
+            const rect = elements.progressContainer.getBoundingClientRect();
+            state.currentTime = Math.max(0, Math.min(((e.clientX - rect.left) / rect.width) * state.totalDuration, state.totalDuration));
+            if (elements.bgmAudio.src) elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+            drawFrame(state.currentTime);
+        }
+
+        function animationLoop(timestamp) {
+            if (!state.isPlaying) return;
+            state.currentTime += (timestamp - state.lastTimestamp) / 1000;
+            state.lastTimestamp = timestamp;
+            if (state.currentTime >= state.totalDuration) { state.currentTime = state.totalDuration; drawFrame(state.currentTime); stopPlayback(); return; }
+            drawFrame(state.currentTime);
+            state.animationFrameId = requestAnimationFrame(animationLoop);
+        }
+
+        function updateProgressUI(time) {
             if (state.totalDuration > 0) {
                 elements.progressBar.style.width = `${(time / state.totalDuration) * 100}%`;
                 elements.currentTimeDisplay.textContent = formatTime(time);
             }
-            // 타임라인 하이라이트 동기화 (인트로/아웃로 씬이 아닐때만)
-            if (time >= state.introDuration && time < (state.totalDuration - state.outroDuration)) {
-                if(Math.floor(time) % state.durationPerSlide === 0 || time === state.introDuration) {
-                    highlightTimelineItem(currentIndex);
-                }
-            } else {
-                // 인트로, 아웃로일땐 모든 하이라이트 해제
-                document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
-            }
         }
 
-        // 보안 문제 완벽 대비 영상 추출
         async function exportVideo() {
             if (state.images.length === 0 || state.isRecording) return;
-            
             if(state.isPlaying) stopPlayback();
             
-            state.isRecording = true;
-            elements.loadingOverlay.style.display = 'flex';
-            elements.exportBtn.disabled = true;
-            
-            setupAudioRouting();
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            state.isRecording = true; elements.loadingOverlay.style.display = 'flex'; elements.exportBtn.disabled = true;
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioDest = audioCtx.createMediaStreamDestination();
+                audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
+                audioSource.connect(audioDest); audioSource.connect(audioCtx.destination); 
+            }
+            if(audioCtx.state === 'suspended') audioCtx.resume();
 
-            const canvas = elements.canvas;
             const fps = 30;
-            
             let canvasStream;
-            try {
-                canvasStream = canvas.captureStream(fps);
-            } catch (err) {
-                // 핵심 에러 처리: 로컬 이미지로 인한 Tainted Canvas 발생 시 안내
-                alert("브라우저 보안 정책(CORS)으로 인해 영상 추출이 차단되었습니다.\n동일한 폴더에 있는 이미지를 웹 서버(Live Server 등)를 통해 실행해주시거나 보안 예외 설정을 확인해주세요.");
-                elements.loadingOverlay.style.display = 'none';
-                state.isRecording = false; elements.exportBtn.disabled = false;
-                return;
+            try { canvasStream = elements.canvas.captureStream(fps); } 
+            catch (err) {
+                alert("보안 정책(CORS)으로 추출이 차단되었습니다. 웹 서버 환경에서 실행해주세요.");
+                elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return;
             }
             
             let tracks = [...canvasStream.getVideoTracks()];
-            
-            if (audioDest && elements.bgmAudio.src) {
-                const audioTracks = audioDest.stream.getAudioTracks();
-                if (audioTracks.length > 0) tracks = [...tracks, ...audioTracks];
-            }
+            if (audioDest && elements.bgmAudio.src) tracks = [...tracks, ...audioDest.stream.getAudioTracks()];
 
-            const combinedStream = new MediaStream(tracks);
-
-            let options = { mimeType: 'video/mp4' };
-            let fileExtension = 'mp4';
+            let options = { mimeType: 'video/mp4' }, ext = 'mp4';
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                 options = { mimeType: 'video/webm; codecs=h264' }; 
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options = { mimeType: 'video/webm; codecs=vp9' }; fileExtension = 'webm'; 
-                    if (!MediaRecorder.isTypeSupported(options.mimeType)) options = { mimeType: 'video/webm; codecs=vp8' };
-                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm; codecs=vp9' }; ext = 'webm'; }
             }
             
-            const recorder = new MediaRecorder(combinedStream, options);
+            const recorder = new MediaRecorder(new MediaStream(tracks), options);
             const chunks = [];
-            
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-            
             recorder.onstop = () => {
                 if(elements.bgmAudio.src) { elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0; }
-                const blob = new Blob(chunks, { type: options.mimeType });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.style.display = 'none'; a.href = url;
-                a.download = `숲체원_${state.title || '기억보관소'}.${fileExtension}`;
-                document.body.appendChild(a); a.click();
-                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-                
-                state.isRecording = false; elements.loadingOverlay.style.display = 'none';
-                elements.exportBtn.disabled = false; drawFrame(0);
+                const a = document.createElement('a'); a.style.display = 'none';
+                a.href = URL.createObjectURL(new Blob(chunks, { type: options.mimeType }));
+                a.download = `숲체원_릴스_${Date.now()}.${ext}`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                state.isRecording = false; elements.loadingOverlay.style.display = 'none'; elements.exportBtn.disabled = false; drawFrame(0);
             };
             
-            if(elements.bgmAudio.src) {
-                elements.bgmAudio.currentTime = 0;
-                elements.bgmAudio.play().catch(e => console.error("Export audio error:", e));
-            }
-            
+            if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = 0; elements.bgmAudio.play().catch(e=>console.log(e)); }
             recorder.start();
-            let renderTime = 0; const timeStep = 1 / fps; const total = state.totalDuration;
             
+            let renderTime = 0; const timeStep = 1 / fps;
             function renderNextFrame() {
-                if (renderTime > total) { recorder.stop(); return; }
+                if (renderTime > state.totalDuration) { recorder.stop(); return; }
                 drawFrame(renderTime);
-                elements.renderProgress.style.width = `${(renderTime / total) * 100}%`;
-                elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(total)}`;
+                elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`;
+                elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
                 renderTime += timeStep;
                 setTimeout(renderNextFrame, 1000 / fps);
             }
