@@ -62,7 +62,7 @@
         }
         
         .timeline-item.active {
-            border-color: #57534e; /* stone-600 */
+            border-color: #57534e;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             transform: translateY(-2px);
         }
@@ -77,7 +77,7 @@
             position: absolute;
             top: 4px;
             right: 4px;
-            background: rgba(28, 25, 23, 0.7); /* stone-900 */
+            background: rgba(28, 25, 23, 0.7);
             color: white;
             border-radius: 50%;
             width: 20px;
@@ -91,22 +91,18 @@
         }
         
         .timeline-item:hover .delete-btn { opacity: 1; }
-
-        /* 비디오 영역 섀도우 */
-        .video-container {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
+        .video-container { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-0 sm:p-4 md:p-8 relative">
 
-    <!-- 메인 컨테이너 -->
     <div class="w-full max-w-[1400px] bg-white sm:rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col min-h-screen sm:min-h-[85vh] border-0 sm:border border-stone-200 relative animate-fade-up">
         
         <!-- 상단 헤더 -->
         <div class="px-5 sm:px-10 py-4 flex justify-between items-center border-b border-stone-100 bg-white/90 backdrop-blur-md z-20">
             <div class="flex items-center gap-2 text-stone-800 font-serif-kr text-xl font-bold">
-                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 sm:h-10 object-contain">
+                <!-- 로고 이미지 에러 처리 추가 -->
+                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 sm:h-10 object-contain" onerror="this.style.display='none'">
                 <span class="hidden sm:inline border-l border-stone-300 pl-2 ml-1 text-lg">영상 제작소</span>
             </div>
             <div class="text-xs sm:text-sm font-gowun text-stone-400 flex items-center gap-2">
@@ -114,18 +110,24 @@
             </div>
         </div>
 
-        <!-- 콘텐츠 영역 (좌우 분할) -->
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
             
             <!-- 왼쪽: 설정 패널 -->
             <aside class="w-full lg:w-[380px] bg-white border-r border-stone-100 p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
                 
-                <!-- 1. 텍스트 설정 -->
+                <!-- 1. 텍스트 & 방문 정보 설정 -->
                 <section>
                     <h2 class="text-lg font-serif-kr mb-4 text-stone-800 flex items-center gap-2 font-bold">
-                        <i data-lucide="pen-line" class="w-4 h-4 text-stone-400"></i> 앨범 제목
+                        <i data-lucide="pen-line" class="w-4 h-4 text-stone-400"></i> 기본 정보 (오버레이)
                     </h2>
-                    <input type="text" id="video-title" value="우리가 머문 찬란했던 계절" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base" placeholder="영상 하단에 표시될 제목">
+                    <div class="space-y-3">
+                        <input type="text" id="video-title" value="우리가 머문 찬란했던 계절" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base" placeholder="영상 메인 제목">
+                        
+                        <div class="flex gap-2">
+                            <input type="text" id="visit-date" value="" class="w-1/2 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm" placeholder="날짜 (예: 2026.07.02)">
+                            <input type="text" id="visit-info" value="숲체원 힐링캠프" class="w-1/2 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm" placeholder="단체명/기록">
+                        </div>
+                    </div>
                     
                     <div class="mt-4 flex items-center justify-between">
                         <label class="text-sm text-stone-500 font-gowun">사진 전환 속도</label>
@@ -153,10 +155,8 @@
                             <option value="custom">🎧 내 음원 파일 업로드...</option>
                         </select>
                         
-                        <!-- 커스텀 오디오 업로드용 (숨김) -->
                         <input type="file" id="custom-bgm-input" accept="audio/*, .mp3, .wav, .m4a, .ogg, .flac" class="hidden">
                         
-                        <!-- 업로드된 음원 정보 표시 영역 -->
                         <div id="custom-bgm-info" class="hidden flex items-center justify-between bg-stone-100 rounded-xl px-4 py-3 border border-stone-200">
                             <div class="flex items-center gap-2 overflow-hidden">
                                 <i data-lucide="file-audio" class="w-4 h-4 text-stone-500 shrink-0"></i>
@@ -168,9 +168,6 @@
                         </div>
                         
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
-                        <p class="text-[11px] text-stone-400 font-gowun keep-all leading-tight">
-                            * 기본 제공 음원이나 직접 보유하신 오디오 파일을 영상과 함께 합성할 수 있습니다.
-                        </p>
                     </div>
                 </section>
 
@@ -182,7 +179,7 @@
                         <i data-lucide="quote" class="w-4 h-4 text-stone-400"></i> 감성 문구 관리
                     </h2>
                     <div class="space-y-2">
-                        <p class="text-[11px] text-stone-500 font-gowun keep-all">사진 순서대로 아래 문구가 교차하며 표시됩니다. 원하시는 문구로 자유롭게 추가/수정해 보세요.</p>
+                        <p class="text-[11px] text-stone-500 font-gowun keep-all">각 사진마다 아래 문구들이 번갈아가며 표시됩니다.</p>
                         <textarea id="phrases-input" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all text-sm sm:text-base resize-y leading-relaxed whitespace-pre-wrap" rows="4"></textarea>
                     </div>
                 </section>
@@ -195,78 +192,67 @@
                         <i data-lucide="images" class="w-4 h-4 text-stone-400"></i> 사진 담기
                     </h2>
                     
-                    <!-- 업로드 영역 -->
                     <div class="w-full aspect-[4/3] rounded-2xl border-[1.5px] border-dashed border-stone-300 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-stone-400 hover:bg-stone-50 group bg-white mx-auto shadow-sm">
                         <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-500 group-hover:scale-105 pointer-events-none">
                             <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-sm bg-stone-100 group-hover:bg-white transition-colors">
                                 <i data-lucide="image-plus" class="w-6 h-6 text-stone-500"></i>
                             </div>
                             <div class="text-stone-700 font-serif-kr text-lg">터치하여 사진 선택</div>
-                            <div class="text-stone-400 font-gowun text-xs tracking-wide bg-stone-100/80 px-3 py-1 rounded-full">최대 5분 분량까지 추가 가능</div>
+                            <div class="text-stone-400 font-gowun text-xs tracking-wide bg-stone-100/80 px-3 py-1 rounded-full">여러 장 선택 가능</div>
                         </div>
                         <input id="image-upload" type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
                     </div>
 
-                    <!-- 선택된 사진 목록 UI -->
                     <div id="photo-list-container" class="mt-4 hidden flex-col">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-sm font-serif-kr text-stone-700 font-bold">선택된 사진 (<span id="photo-count-text">0</span>)</span>
                         </div>
-                        <ul id="photo-list" class="bg-stone-50 border border-stone-200 rounded-lg p-2 max-h-36 overflow-y-auto text-[12px] text-stone-600 font-gowun space-y-1">
-                            <!-- JS를 통해 동적 생성됨 -->
-                        </ul>
+                        <ul id="photo-list" class="bg-stone-50 border border-stone-200 rounded-lg p-2 max-h-36 overflow-y-auto text-[12px] text-stone-600 font-gowun space-y-1"></ul>
                     </div>
                 </section>
                 
                 <!-- 5. 추출 버튼 -->
                 <section class="mt-auto pt-4 border-t border-stone-100">
                     <div class="flex justify-between text-sm mb-3 font-gowun">
-                        <span class="text-stone-500">예상 영상 길이</span>
+                        <span class="text-stone-500">시네마틱 영상 길이</span>
                         <span id="estimated-time" class="font-bold text-stone-800">00:00</span>
                     </div>
                     <button id="export-btn" class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-serif-kr text-lg text-white bg-stone-800 hover:bg-stone-900 transition-all duration-300 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i data-lucide="download" class="w-5 h-5"></i> 프리미엄 영상 추출
+                        <i data-lucide="download" class="w-5 h-5"></i> 고화질 영상 추출
                     </button>
-                    <p class="text-[11px] text-stone-400 mt-2 text-center font-gowun keep-all">추출이 완료될 때까지 브라우저 창을 유지해 주세요.</p>
                 </section>
             </aside>
 
-            <!-- 오른쪽: 캔버스 및 플레이어 영역 -->
+            <!-- 오른쪽: 캔버스 및 플레이어 -->
             <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden">
                 
-                <!-- 렌더링 상태 오버레이 -->
                 <div id="loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center">
                     <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
                     <h3 class="text-2xl font-bold mb-3 text-stone-800 font-serif-kr">프리미엄 렌더링 진행 중...</h3>
-                    <p class="text-stone-500 font-gowun mb-8">고화질 비디오와 오디오를 병합 중입니다. 잠시만 기다려주세요.</p>
-                    
+                    <p class="text-stone-500 font-gowun mb-8 text-center px-4">
+                        인트로, 파티클 효과, 오디오를 병합하고 있습니다.<br/>오류 방지를 위해 브라우저 창을 닫거나 최소화하지 마세요.
+                    </p>
                     <div class="w-80 bg-stone-200 rounded-full h-2 mb-2 overflow-hidden">
                       <div id="render-progress" class="bg-stone-800 h-full rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
                     </div>
                     <p id="render-time-text" class="text-sm font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <!-- 플레이어 캔버스 영역 -->
                 <div class="flex-1 flex items-center justify-center p-4 sm:p-8">
                     <div class="relative w-full max-w-4xl aspect-video bg-stone-900 rounded-2xl sm:rounded-[2rem] overflow-hidden video-container">
                         <canvas id="preview-canvas" width="1920" height="1080" class="w-full h-full object-contain"></canvas>
                         
-                        <!-- 사진 없을 때 빈 상태 -->
                         <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800">
                             <i data-lucide="clapperboard" class="w-16 h-16 mb-4 opacity-50 stroke-[1]"></i>
-                            <p class="text-lg font-serif-kr text-stone-300">왼쪽에서 사진을 추가하여 영상을 미리보세요</p>
+                            <p class="text-lg font-serif-kr text-stone-300">왼쪽에서 사진을 추가하여 시네마틱 영상을 감상하세요</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- 플레이어 컨트롤 -->
                 <div class="px-6 pb-6 pt-2 flex flex-col gap-4 max-w-4xl w-full mx-auto">
-                    <!-- 타임라인 썸네일 -->
-                    <div id="timeline-container" class="w-full pb-2 no-scrollbar">
-                        <!-- 동적 생성 -->
-                    </div>
+                    <div id="timeline-container" class="w-full pb-2 no-scrollbar"></div>
 
-                    <!-- 컨트롤 바 -->
                     <div class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-stone-200 flex items-center gap-4">
                         <button id="play-btn" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
                             <i data-lucide="play" class="w-5 h-5 ml-1"></i>
@@ -289,59 +275,73 @@
         </div>
     </div>
 
-    <!-- JavaScript 로직 -->
     <script>
-        // Lucide 아이콘 초기화
         lucide.createIcons();
 
-        // 시간 포맷 유틸리티 함수
+        // 1. 유틸리티 함수 (안정성 확보)
         function formatTime(seconds) {
+            if (isNaN(seconds) || seconds < 0) seconds = 0;
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = Math.floor(seconds % 60).toString().padStart(2, '0');
             return `${m}:${s}`;
         }
 
-        // 초기 감성 문구 (상태 변수로 분리하여 수정 가능하도록)
+        // 안전한 모서리 둥근 사각형 그리기 함수 (구형 브라우저 roundRect 오류 방지)
+        function safeRoundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 2. 상태 및 데이터 초기화
         let healingPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
             "바람이 들려주는 고요하고 다정한 이야기",
             "한 걸음 느리게, 찬란했던 계절과 동화되는 순간",
-            "나무 사이로 스며든 눈부신 숲의 활기",
-            "햇살이 머무는 곳, 자연이 내어준 포근한 휴식",
-            "마음의 무거운 짐을 잠시 내려놓습니다",
-            "우리 함께 걸었던 깊고 따뜻한 정취",
-            "나뭇잎 사이로 부서지는 맑은 에너지",
-            "고요한 숲의 정적 속에서 되찾는 마음의 평화"
+            "나무 사이로 스며든 눈부신 숲의 활기"
         ];
 
-        // 영상 연출 효과 배열 (다양한 카메라 무빙)
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
-
-        // 빛 파티클 (생동감을 위한 오버레이) 초기화
-        const particles = Array.from({length: 40}, () => ({
+        
+        // 자연스러운 숲속 먼지 파티클 생성
+        const particles = Array.from({length: 45}, () => ({
             x: Math.random() * 1920,
             y: Math.random() * 1080,
-            radius: Math.random() * 2.5 + 0.5,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: (Math.random() - 0.5) * 0.4,
+            radius: Math.random() * 2.5 + 0.8,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3 + 0.2, // 살짝 위에서 아래로 떨어지는 느낌
             alpha: Math.random() * 0.4 + 0.1
         }));
 
-        // 로고 이미지 로드 (워터마크용)
+        // 보안 문제(Tainted Canvas) 방지를 위해 워터마크 이미지의 크로스도메인 속성 추가
         const watermarkLogo = new Image();
+        watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
         const state = {
             images: [],
             durationPerSlide: 4,
+            introDuration: 3, // 시네마틱 인트로 3초
+            outroDuration: 3, // 시네마틱 아웃로 3초
             isPlaying: false,
             isRecording: false,
             currentTime: 0,
             totalDuration: 0,
             animationFrameId: null,
             lastTimestamp: 0,
-            title: "우리가 머문 찬란했던 계절"
+            title: "우리가 머문 찬란했던 계절",
+            dateStr: "",
+            infoStr: "숲체원 힐링캠프"
         };
 
         const elements = {
@@ -360,7 +360,9 @@
             estimatedTimeDisplay: document.getElementById('estimated-time'),
             slideDurationInput: document.getElementById('slide-duration'),
             videoTitleInput: document.getElementById('video-title'),
-            phrasesInput: document.getElementById('phrases-input'), // 문구 입력창
+            visitDateInput: document.getElementById('visit-date'),
+            visitInfoInput: document.getElementById('visit-info'),
+            phrasesInput: document.getElementById('phrases-input'),
             loadingOverlay: document.getElementById('loading-overlay'),
             renderProgress: document.getElementById('render-progress'),
             renderTimeText: document.getElementById('render-time-text'),
@@ -376,6 +378,11 @@
             photoList: document.getElementById('photo-list'),
             photoCountText: document.getElementById('photo-count-text')
         };
+
+        // 초기 날짜 세팅 (오늘)
+        const today = new Date();
+        elements.visitDateInput.value = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+        state.dateStr = elements.visitDateInput.value;
 
         let audioCtx = null;
         let audioDest = null;
@@ -396,16 +403,10 @@
         }
 
         function init() {
-            // 문구 입력창 초기화 및 이벤트 연결
             elements.phrasesInput.value = healingPhrases.join('\n');
             elements.phrasesInput.addEventListener('input', (e) => {
                 const lines = e.target.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                if (lines.length > 0) {
-                    healingPhrases = lines;
-                } else {
-                    healingPhrases = [""]; // 문구가 전부 지워졌을 때 대비
-                }
-                // 미리보기 즉시 갱신
+                healingPhrases = lines.length > 0 ? lines : [""];
                 if (!state.isPlaying) drawFrame(state.currentTime);
             });
 
@@ -414,10 +415,9 @@
                 state.durationPerSlide = parseInt(e.target.value) || 4;
                 updateDurations();
             });
-            elements.videoTitleInput.addEventListener('input', (e) => {
-                state.title = e.target.value;
-                if(!state.isPlaying) drawFrame(state.currentTime);
-            });
+            elements.videoTitleInput.addEventListener('input', (e) => { state.title = e.target.value; if(!state.isPlaying) drawFrame(state.currentTime); });
+            elements.visitDateInput.addEventListener('input', (e) => { state.dateStr = e.target.value; if(!state.isPlaying) drawFrame(state.currentTime); });
+            elements.visitInfoInput.addEventListener('input', (e) => { state.infoStr = e.target.value; if(!state.isPlaying) drawFrame(state.currentTime); });
             
             elements.bgmSelect.addEventListener('change', handleBgmChange);
             elements.customBgmInput.addEventListener('change', handleCustomBgmUpload);
@@ -429,27 +429,14 @@
             elements.progressContainer.addEventListener('click', seekTime);
 
             updateUI();
-            
-            document.fonts.ready.then(() => {
-                elements.ctx.font = '10px "Noto Serif KR"';
-                elements.ctx.fillText('.', 0, 0);
-                elements.ctx.font = '10px "Gowun Dodum"';
-                elements.ctx.fillText('.', 0, 0);
-            });
         }
 
+        // BGM 핸들링
         function handleBgmChange(e) {
             const val = e.target.value;
-            if (val === 'custom') {
-                elements.customBgmInput.click();
-            } else if (val === '') {
-                elements.bgmAudio.src = '';
-                elements.bgmAudio.pause();
-                elements.customBgmInfo.classList.add('hidden');
-            } else {
-                elements.bgmAudio.src = val;
-                elements.customBgmInfo.classList.add('hidden');
-            }
+            if (val === 'custom') elements.customBgmInput.click();
+            else if (val === '') { elements.bgmAudio.src = ''; elements.bgmAudio.pause(); elements.customBgmInfo.classList.add('hidden'); }
+            else { elements.bgmAudio.src = val; elements.customBgmInfo.classList.add('hidden'); }
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
@@ -461,72 +448,54 @@
                 elements.customBgmName.textContent = file.name;
                 elements.customBgmInfo.classList.remove('hidden');
                 elements.bgmSelect.value = 'custom';
-            } else {
-                elements.bgmSelect.value = '';
-                elements.customBgmInfo.classList.add('hidden');
-            }
+            } else { removeCustomBgm(); }
         }
 
         function removeCustomBgm() {
-            elements.bgmSelect.value = '';
-            elements.bgmAudio.src = '';
-            elements.customBgmInput.value = '';
-            elements.customBgmInfo.classList.add('hidden');
+            elements.bgmSelect.value = ''; elements.bgmAudio.src = '';
+            elements.customBgmInput.value = ''; elements.customBgmInfo.classList.add('hidden');
         }
 
+        // 이미지 처리
         async function handleImageUpload(e) {
             const files = Array.from(e.target.files);
             if (files.length === 0) return;
 
-            let addedCount = 0;
-            const maxDuration = 300; 
-            const loadPromises = [];
+            const loadPromises = files.map(file => new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => resolve({
+                        id: Date.now() + Math.random(),
+                        imgElement: img,
+                        src: event.target.result,
+                        effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
+                        fileName: file.name
+                    });
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }));
 
-            for (const file of files) {
-                if ((state.images.length + addedCount + 1) * state.durationPerSlide > maxDuration) {
-                    if (addedCount === 0) alert(`최대 5분(${maxDuration}초) 분량까지만 제작할 수 있습니다. 일부 사진은 제외되었습니다.`);
-                    break;
-                }
-                addedCount++;
-
-                const promise = new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            resolve({
-                                id: Date.now() + Math.random(),
-                                imgElement: img,
-                                src: event.target.result,
-                                effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
-                                fileName: file.name
-                            });
-                        };
-                        img.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                loadPromises.push(promise);
-            }
-
-            if (loadPromises.length > 0) {
-                const loadedImages = await Promise.all(loadPromises);
-                state.images = [...state.images, ...loadedImages];
-                
-                updateDurations();
-                renderTimeline();
-                renderPhotoList(); 
-                updateUI();
-                
-                if (state.images.length > 0 && !state.isPlaying) {
-                    drawFrame(state.currentTime);
-                }
-            }
+            const loadedImages = await Promise.all(loadPromises);
+            state.images = [...state.images, ...loadedImages];
+            
+            updateDurations();
+            renderTimeline();
+            renderPhotoList(); 
+            updateUI();
+            
+            if (state.images.length > 0 && !state.isPlaying) drawFrame(0); // 처음으로 리셋
             e.target.value = '';
         }
 
         function updateDurations() {
-            state.totalDuration = state.images.length * state.durationPerSlide;
+            if (state.images.length > 0) {
+                // 인트로 3초 + 각 슬라이드 + 아웃로 3초
+                state.totalDuration = state.introDuration + (state.images.length * state.durationPerSlide) + state.outroDuration;
+            } else {
+                state.totalDuration = 0;
+            }
             elements.totalTimeDisplay.textContent = formatTime(state.totalDuration);
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
         }
@@ -539,15 +508,13 @@
                 elements.photoListContainer.classList.remove('hidden');
                 elements.photoListContainer.classList.add('flex');
                 elements.photoCountText.textContent = state.images.length;
-                
                 elements.photoList.innerHTML = '';
                 
                 state.images.forEach((imgObj, index) => {
                     const li = document.createElement('li');
                     li.className = 'flex justify-between items-center bg-white border border-stone-100 rounded px-2 py-1.5 shadow-sm';
-                    
                     li.innerHTML = `
-                        <span class="truncate pr-2 text-stone-600 flex-1">${index + 1}. ${imgObj.fileName || '사진.jpg'}</span>
+                        <span class="truncate pr-2 text-stone-600 flex-1">${index + 1}. ${imgObj.fileName}</span>
                         <button onclick="removeImage(${index})" class="text-stone-300 hover:text-red-500 transition-colors shrink-0 p-1" title="삭제">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
@@ -559,18 +526,15 @@
 
         function renderTimeline() {
             elements.timelineContainer.innerHTML = '';
-            
             state.images.forEach((imgObj, index) => {
                 const div = document.createElement('div');
                 div.className = 'timeline-item';
                 div.onclick = () => {
-                    state.currentTime = index * state.durationPerSlide;
+                    // 타임라인 클릭 시 해당 슬라이드 시작점(인트로 시간 이후)으로 이동
+                    state.currentTime = state.introDuration + (index * state.durationPerSlide);
                     if(!state.isPlaying) drawFrame(state.currentTime);
                     highlightTimelineItem(index);
-                    
-                    if (elements.bgmAudio.src) {
-                        elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-                    }
+                    if (elements.bgmAudio.src) elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
                 };
 
                 const img = document.createElement('img');
@@ -578,27 +542,20 @@
                 
                 const delBtn = document.createElement('div');
                 delBtn.className = 'delete-btn';
-                delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    removeImage(index);
-                };
+                delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                delBtn.onclick = (e) => { e.stopPropagation(); removeImage(index); };
 
-                div.appendChild(img);
-                div.appendChild(delBtn);
+                div.appendChild(img); div.appendChild(delBtn);
                 elements.timelineContainer.appendChild(div);
             });
         }
 
         function highlightTimelineItem(index) {
             document.querySelectorAll('.timeline-item').forEach((el, i) => {
-                if (i === index) el.classList.add('active');
-                else el.classList.remove('active');
+                if (i === index) el.classList.add('active'); else el.classList.remove('active');
             });
             const activeEl = document.querySelectorAll('.timeline-item')[index];
-            if(activeEl) {
-                activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
+            if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
         function removeImage(index) {
@@ -608,12 +565,9 @@
             renderPhotoList(); 
             updateUI();
             
-            if (state.currentTime >= state.totalDuration) {
-                state.currentTime = Math.max(0, state.totalDuration - 0.1);
-            }
-            if(state.images.length > 0) {
-                drawFrame(state.currentTime);
-            } else {
+            if (state.currentTime >= state.totalDuration) state.currentTime = Math.max(0, state.totalDuration - 0.1);
+            if (state.images.length > 0) drawFrame(state.currentTime);
+            else {
                 elements.ctx.clearRect(0,0, elements.canvas.width, elements.canvas.height);
                 elements.ctx.fillStyle = '#1c1917';
                 elements.ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
@@ -628,13 +582,13 @@
             elements.exportBtn.disabled = !hasImages;
             
             elements.playBtn.innerHTML = state.isPlaying 
-                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' 
-                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>' 
+                : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
         }
 
+        // 재생 컨트롤
         function togglePlay() {
             if (state.images.length === 0) return;
-            
             setupAudioRouting();
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
@@ -649,9 +603,8 @@
                 
                 if(elements.bgmAudio.src) {
                     elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-                    elements.bgmAudio.play().catch(e => console.log("오디오 재생 정책에 의해 막힘:", e));
+                    elements.bgmAudio.play().catch(e => console.log("Audio play prevented:", e));
                 }
-
                 animationLoop(performance.now());
             }
             updateUI();
@@ -661,12 +614,8 @@
             state.isPlaying = false;
             cancelAnimationFrame(state.animationFrameId);
             state.currentTime = 0;
-            
-            elements.bgmAudio.pause();
-            elements.bgmAudio.currentTime = 0;
-            
-            drawFrame(0);
-            updateUI();
+            elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0;
+            drawFrame(0); updateUI();
         }
 
         function seekTime(e) {
@@ -678,19 +627,14 @@
             const percentage = (e.clientX - rect.left) / rect.width;
             state.currentTime = Math.max(0, Math.min(percentage * state.totalDuration, state.totalDuration));
             
-            if (elements.bgmAudio.src) {
-                 elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-            }
-            
+            if (elements.bgmAudio.src) elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
             drawFrame(state.currentTime);
         }
 
         function animationLoop(timestamp) {
             if (!state.isPlaying) return;
-            
             const deltaTime = (timestamp - state.lastTimestamp) / 1000;
             state.lastTimestamp = timestamp;
-            
             state.currentTime += deltaTime;
 
             if (state.currentTime >= state.totalDuration) {
@@ -699,30 +643,24 @@
                 stopPlayback();
                 return;
             }
-
             drawFrame(state.currentTime);
             state.animationFrameId = requestAnimationFrame(animationLoop);
         }
 
         // ==========================================
-        // 핵심: 렌더링 엔진 (시네마틱)
+        // 렌더링 엔진 (Intro/Outro, 정보판, 파티클)
         // ==========================================
 
         function renderScene(ctx, imgObj, cw, ch, elapsed, alpha) {
             ctx.globalAlpha = alpha;
-
-            ctx.filter = 'blur(50px) brightness(0.3) sepia(0.2)';
+            ctx.filter = 'blur(50px) brightness(0.35) sepia(0.15)';
             drawCoverImage(ctx, imgObj.imgElement, cw, ch);
             ctx.filter = 'none';
             
             const p = elapsed / (state.durationPerSlide + 1.5); 
-            let scale = 1.0;
-            let transX = 0;
-            let transY = 0;
-            const effect = imgObj.effect || 'zoom-in';
+            let scale = 1.0, transX = 0, transY = 0;
             const drift = 50; 
-
-            switch(effect) {
+            switch(imgObj.effect || 'zoom-in') {
                 case 'zoom-in':   scale = 1.0 + (p * 0.05); break;
                 case 'zoom-out':  scale = 1.05 - (p * 0.05); break;
                 case 'pan-left':  scale = 1.03; transX = (drift / 2) - (p * drift); break;
@@ -735,11 +673,7 @@
             ctx.translate(cw/2 + transX, ch/2 + transY);
             ctx.scale(scale, scale);
             ctx.translate(-cw/2, -ch/2);
-            
-            ctx.shadowColor = 'rgba(0,0,0,0.6)';
-            ctx.shadowBlur = 60;
-            ctx.shadowOffsetY = 25;
-            
+            ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 25;
             drawFineArtFrame(ctx, imgObj.imgElement, cw, ch);
             ctx.restore();
         }
@@ -749,178 +683,198 @@
             const width = elements.canvas.width;
             const height = elements.canvas.height;
             
-            ctx.fillStyle = '#1c1917';
+            // 베이스 배경
+            ctx.fillStyle = '#111827';
             ctx.fillRect(0, 0, width, height);
 
             if (state.images.length === 0) return;
 
-            let currentIndex = Math.floor(timeInSeconds / state.durationPerSlide);
+            // 1. 인트로 (Intro) 씬
+            if (timeInSeconds < state.introDuration) {
+                let alpha = Math.min(timeInSeconds / 1.5, 1);
+                if (state.introDuration - timeInSeconds < 1) alpha = state.introDuration - timeInSeconds;
+                
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#f5f5f4';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.font = '300 32px "Pretendard"';
+                ctx.fillText("기억 보관소", width/2, height/2 - 50);
+                
+                ctx.font = '400 64px "Noto Serif KR"';
+                ctx.fillText("장성숲체원에 오신 것을 환영합니다", width/2, height/2 + 20);
+                
+                ctx.globalAlpha = 1.0;
+                updateProgressUI(timeInSeconds, 0);
+                return; // 인트로 중에는 뒤의 사진을 그리지 않음
+            }
+
+            // 2. 아웃로 (Outro) 씬
+            const slidesEndTime = state.introDuration + (state.images.length * state.durationPerSlide);
+            if (timeInSeconds >= slidesEndTime) {
+                let outroTime = timeInSeconds - slidesEndTime;
+                let alpha = Math.min(outroTime / 1.5, 1);
+                
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#f5f5f4';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.font = '300 48px "Noto Serif KR"';
+                ctx.fillText("숲에서 얻은 맑은 숨결로 일상을 다시 시작해 보세요.", width/2, height/2 - 30);
+                
+                ctx.font = '300 32px "Pretendard"';
+                ctx.fillStyle = '#a8a29e';
+                ctx.fillText("- 국립장성숲체원 -", width/2, height/2 + 50);
+                
+                ctx.globalAlpha = 1.0;
+                updateProgressUI(timeInSeconds, state.images.length - 1);
+                return; // 아웃로 중에는 뒤의 사진을 그리지 않음
+            }
+
+            // 3. 본편 사진 슬라이드 렌더링
+            const slideTime = timeInSeconds - state.introDuration;
+            let currentIndex = Math.floor(slideTime / state.durationPerSlide);
             if (currentIndex >= state.images.length) currentIndex = state.images.length - 1;
             
-            const timeInCurrentSlide = timeInSeconds % state.durationPerSlide;
-            
-            // 1. 크로스페이드(Crossfade) 트랜지션
+            const timeInCurrentSlide = slideTime % state.durationPerSlide;
             const fadeDuration = 1.2; 
             let isFading = (timeInCurrentSlide < fadeDuration && currentIndex > 0);
             
             if (isFading) {
                 const prevIndex = currentIndex - 1;
                 const progress = timeInCurrentSlide / fadeDuration; 
-                
-                const prevElapsed = state.durationPerSlide + timeInCurrentSlide;
-                renderScene(ctx, state.images[prevIndex], width, height, prevElapsed, 1 - progress);
+                renderScene(ctx, state.images[prevIndex], width, height, state.durationPerSlide + timeInCurrentSlide, 1 - progress);
                 renderScene(ctx, state.images[currentIndex], width, height, timeInCurrentSlide, progress);
             } else {
                 renderScene(ctx, state.images[currentIndex], width, height, timeInCurrentSlide, 1.0);
             }
 
-            // 2. 비네팅 효과
+            // 비네팅 효과
             ctx.globalAlpha = 1.0;
             const vignette = ctx.createRadialGradient(width/2, height/2, height/2.5, width/2, height/2, width/1.2);
-            vignette.addColorStop(0, 'rgba(0,0,0,0)');
-            vignette.addColorStop(1, 'rgba(0,0,0,0.7)');
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0, 0, width, height);
+            vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.8)');
+            ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
-            // 3. 파티클 애니메이션
+            // 파티클 (먼지/햇살) 애니메이션
             ctx.globalAlpha = 1.0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             particles.forEach(p => {
                 if(state.isPlaying || state.isRecording) {
                     p.x += p.vx; p.y += p.vy;
                     if(p.x < 0) p.x = width; if(p.x > width) p.x = 0;
                     if(p.y < 0) p.y = height; if(p.y > height) p.y = 0;
                 }
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
             });
 
-            // 4. 하단 텍스트 영역
+            // 방문 정보판 (Digital Info Board) - 좌측 상단 반투명 박스
+            if (state.dateStr || state.infoStr) {
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = 'rgba(28, 25, 23, 0.6)';
+                safeRoundRect(ctx, 40, 40, 360, 110, 16); // 안전한 라운드 박스 함수 사용
+                
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = '#d6d3d1';
+                ctx.font = '22px "Pretendard"';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillText(`방문일 :  ${state.dateStr}`, 70, 80);
+                ctx.fillStyle = '#fafaf9';
+                ctx.font = 'bold 26px "Pretendard"';
+                ctx.fillText(`${state.infoStr}`, 70, 120);
+            }
+
+            // 하단 텍스트 그라데이션
             const gradient = ctx.createLinearGradient(0, height - 350, 0, height);
             gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
             gradient.addColorStop(0.6, 'rgba(15, 15, 15, 0.8)');
             gradient.addColorStop(1, 'rgba(15, 15, 15, 0.95)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, height - 350, width, 350);
+            ctx.fillStyle = gradient; ctx.fillRect(0, height - 350, width, 350);
 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // 메인 앨범 제목
+            // 앨범 제목 및 감성 문구
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             if (state.title.trim() !== '') {
-                ctx.fillStyle = '#f5f5f4';
-                ctx.font = '300 42px "Noto Serif KR", serif';
-                ctx.letterSpacing = '3px';
-                ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                ctx.shadowBlur = 15;
+                ctx.fillStyle = '#f5f5f4'; ctx.font = '300 42px "Noto Serif KR", serif';
+                ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
                 ctx.fillText(state.title, width / 2, height - 190);
-                
-                ctx.beginPath();
-                ctx.moveTo(width / 2 - 40, height - 140);
-                ctx.lineTo(width / 2 + 40, height - 140);
-                ctx.strokeStyle = '#a8a29e';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(width / 2 - 40, height - 140); ctx.lineTo(width / 2 + 40, height - 140);
+                ctx.strokeStyle = '#a8a29e'; ctx.lineWidth = 1.5; ctx.stroke();
             }
 
-            // 동적 문구 매칭 및 페이드 크로스오버 처리
             const currentPhrase = healingPhrases[currentIndex % healingPhrases.length] || "";
             const prevPhrase = currentIndex > 0 ? (healingPhrases[(currentIndex - 1) % healingPhrases.length] || "") : "";
 
-            ctx.fillStyle = '#e7e5e4';
-            ctx.font = '400 52px "Gowun Dodum", sans-serif';
-            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#e7e5e4'; ctx.font = '400 52px "Gowun Dodum", sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
 
             if (isFading && prevPhrase !== currentPhrase) {
-                // 이전 문구 (사라짐)
                 ctx.globalAlpha = 1 - (timeInCurrentSlide / fadeDuration);
                 ctx.fillText(prevPhrase, width / 2, height - 80);
-                // 현재 문구 (나타남)
                 ctx.globalAlpha = timeInCurrentSlide / fadeDuration;
                 ctx.fillText(currentPhrase, width / 2, height - 80);
             } else {
-                // 일반 노출
-                ctx.globalAlpha = 1.0;
-                ctx.fillText(currentPhrase, width / 2, height - 80);
+                ctx.globalAlpha = 1.0; ctx.fillText(currentPhrase, width / 2, height - 80);
             }
             
-            // 5. 로고 워터마크 (선명도 및 가독성 대폭 향상)
-            ctx.globalAlpha = 1.0; // 투명도 100%로 설정
+            // 로고 워터마크 (선명한 백색 글로우 처리 유지)
+            ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = 320;
+                const logoW = 300;
                 const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
-                
-                // 로고 주변에 뚜렷한 흰색 글로우(Glow) 효과를 주어 배경색상에 구애받지 않고 잘 보이도록 함
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.7)'; 
-                ctx.shadowBlur = 15;
-                
-                ctx.drawImage(watermarkLogo, width - logoW - 60, 50, logoW, logoH);
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.8)'; ctx.shadowBlur = 20;
+                ctx.drawImage(watermarkLogo, width - logoW - 60, 40, logoW, logoH);
             }
 
-            ctx.globalAlpha = 1.0;
-            ctx.shadowBlur = 0;
-
+            ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
             updateProgressUI(timeInSeconds, currentIndex);
         }
 
+        // 유틸: 꽉 차는 이미지
         function drawCoverImage(ctx, img, cw, ch) {
-            const imgRatio = img.width / img.height;
-            const canvasRatio = cw / ch;
+            const imgRatio = img.width / img.height, canvasRatio = cw / ch;
             let drawW = cw, drawH = ch, offsetX = 0, offsetY = 0;
-            if (imgRatio > canvasRatio) {
-                drawW = ch * imgRatio;
-                offsetX = (cw - drawW) / 2;
-            } else {
-                drawH = cw / imgRatio;
-                offsetY = (ch - drawH) / 2;
-            }
+            if (imgRatio > canvasRatio) { drawW = ch * imgRatio; offsetX = (cw - drawW) / 2; } 
+            else { drawH = cw / imgRatio; offsetY = (ch - drawH) / 2; }
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
+        // 유틸: 파인아트 프레임 처리
         function drawFineArtFrame(ctx, img, cw, ch) {
-            const paddingX = 220;
-            const paddingY = 160;
-            const availW = cw - (paddingX * 2);
-            const availH = ch - (paddingY * 2) - 100;
-            
-            const imgRatio = img.width / img.height;
-            const availRatio = availW / availH;
-            
+            const paddingX = 220, paddingY = 160;
+            const availW = cw - (paddingX * 2), availH = ch - (paddingY * 2) - 100;
+            const imgRatio = img.width / img.height, availRatio = availW / availH;
             let drawW = availW, drawH = availH;
             
-            if (imgRatio > availRatio) {
-                drawH = availW / imgRatio;
-            } else {
-                drawW = availH * imgRatio;
-            }
+            if (imgRatio > availRatio) drawH = availW / imgRatio; else drawW = availH * imgRatio;
             
-            const offsetX = (cw - drawW) / 2;
-            const offsetY = (ch - drawH) / 2 - 40;
+            const offsetX = (cw - drawW) / 2, offsetY = (ch - drawH) / 2 - 40;
 
-            ctx.fillStyle = '#fefefe';
-            const borderSize = 16;
+            ctx.fillStyle = '#fefefe'; const borderSize = 16;
             ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize*2), drawH + (borderSize*2));
-            
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
             ctx.strokeRect(offsetX, offsetY, drawW, drawH);
-            
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
         function updateProgressUI(time, currentIndex) {
             if (state.totalDuration > 0) {
-                const percent = (time / state.totalDuration) * 100;
-                elements.progressBar.style.width = `${percent}%`;
+                elements.progressBar.style.width = `${(time / state.totalDuration) * 100}%`;
                 elements.currentTimeDisplay.textContent = formatTime(time);
             }
-            if(Math.floor(time) % state.durationPerSlide === 0 || time === 0) {
-                highlightTimelineItem(currentIndex);
+            // 타임라인 하이라이트 동기화 (인트로/아웃로 씬이 아닐때만)
+            if (time >= state.introDuration && time < (state.totalDuration - state.outroDuration)) {
+                if(Math.floor(time) % state.durationPerSlide === 0 || time === state.introDuration) {
+                    highlightTimelineItem(currentIndex);
+                }
+            } else {
+                // 인트로, 아웃로일땐 모든 하이라이트 해제
+                document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
             }
         }
 
+        // 보안 문제 완벽 대비 영상 추출
         async function exportVideo() {
             if (state.images.length === 0 || state.isRecording) return;
             
@@ -936,70 +890,52 @@
             const canvas = elements.canvas;
             const fps = 30;
             
-            if (!canvas.captureStream) {
-                alert("현재 브라우저에서는 영상 추출을 지원하지 않습니다. 크롬(Chrome) 브라우저를 이용해주세요.");
+            let canvasStream;
+            try {
+                canvasStream = canvas.captureStream(fps);
+            } catch (err) {
+                // 핵심 에러 처리: 로컬 이미지로 인한 Tainted Canvas 발생 시 안내
+                alert("브라우저 보안 정책(CORS)으로 인해 영상 추출이 차단되었습니다.\n동일한 폴더에 있는 이미지를 웹 서버(Live Server 등)를 통해 실행해주시거나 보안 예외 설정을 확인해주세요.");
                 elements.loadingOverlay.style.display = 'none';
-                state.isRecording = false;
-                elements.exportBtn.disabled = false;
+                state.isRecording = false; elements.exportBtn.disabled = false;
                 return;
             }
-
-            const canvasStream = canvas.captureStream(fps);
+            
             let tracks = [...canvasStream.getVideoTracks()];
             
             if (audioDest && elements.bgmAudio.src) {
                 const audioTracks = audioDest.stream.getAudioTracks();
-                if (audioTracks.length > 0) {
-                    tracks = [...tracks, ...audioTracks];
-                }
+                if (audioTracks.length > 0) tracks = [...tracks, ...audioTracks];
             }
 
             const combinedStream = new MediaStream(tracks);
 
             let options = { mimeType: 'video/mp4' };
             let fileExtension = 'mp4';
-
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                 options = { mimeType: 'video/webm; codecs=h264' }; 
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options = { mimeType: 'video/webm; codecs=vp9' };
-                    fileExtension = 'webm'; 
-                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                        options = { mimeType: 'video/webm; codecs=vp8' };
-                    }
+                    options = { mimeType: 'video/webm; codecs=vp9' }; fileExtension = 'webm'; 
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) options = { mimeType: 'video/webm; codecs=vp8' };
                 }
             }
             
             const recorder = new MediaRecorder(combinedStream, options);
             const chunks = [];
             
-            recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunks.push(e.data);
-            };
+            recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             
             recorder.onstop = () => {
-                if(elements.bgmAudio.src) {
-                    elements.bgmAudio.pause();
-                    elements.bgmAudio.currentTime = 0;
-                }
-
+                if(elements.bgmAudio.src) { elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0; }
                 const blob = new Blob(chunks, { type: options.mimeType });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
+                const a = document.createElement('a'); a.style.display = 'none'; a.href = url;
                 a.download = `숲체원_${state.title || '기억보관소'}.${fileExtension}`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+                document.body.appendChild(a); a.click();
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
                 
-                state.isRecording = false;
-                elements.loadingOverlay.style.display = 'none';
-                elements.exportBtn.disabled = false;
-                drawFrame(0);
+                state.isRecording = false; elements.loadingOverlay.style.display = 'none';
+                elements.exportBtn.disabled = false; drawFrame(0);
             };
             
             if(elements.bgmAudio.src) {
@@ -1008,27 +944,16 @@
             }
             
             recorder.start();
-            
-            let renderTime = 0;
-            const timeStep = 1 / fps;
-            const total = state.totalDuration;
+            let renderTime = 0; const timeStep = 1 / fps; const total = state.totalDuration;
             
             function renderNextFrame() {
-                if (renderTime > total) {
-                    recorder.stop();
-                    return;
-                }
-                
+                if (renderTime > total) { recorder.stop(); return; }
                 drawFrame(renderTime);
-                
-                const percent = (renderTime / total) * 100;
-                elements.renderProgress.style.width = `${percent}%`;
+                elements.renderProgress.style.width = `${(renderTime / total) * 100}%`;
                 elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(total)}`;
-                
                 renderTime += timeStep;
                 setTimeout(renderNextFrame, 1000 / fps);
             }
-            
             renderNextFrame();
         }
 
