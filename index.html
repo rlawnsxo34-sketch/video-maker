@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- 구글 폰트 추가 (고운바탕 추가) -->
+    <!-- 구글 폰트 추가 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
@@ -67,7 +67,7 @@
                         </div>
                     </section>
 
-                    <!-- 2. 글씨체 선택 (새 기능) -->
+                    <!-- 2. 글씨체 선택 -->
                     <section class="flex flex-col gap-2">
                         <h2 class="text-base font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
                             <i data-lucide="type" class="w-4 h-4 text-stone-400"></i> 글씨체 선택
@@ -200,7 +200,7 @@
             return `${m}:${s}`;
         }
 
-        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (이전 감성 섀도우 버전으로 복구)
+        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (감성 섀도우)
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -230,7 +230,7 @@
             }
         }
 
-        // 프리미엄 감성 문구 풀 (랜덤 추천용)
+        // 프리미엄 감성 문구 풀
         const premiumPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
@@ -265,8 +265,7 @@
         // 상태(State) 관리
         const state = {
             aspectRatio: 'vertical', 
-            fontFamily: 'Gowun Dodum', // 글씨체 상태 추가
-            // 수정: 인트로 UI 상단(title)과 하단(subtitle) 일치
+            fontFamily: 'Gowun Dodum',
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
@@ -348,10 +347,8 @@
             renderStoryboard();
             updateDurations();
             
-            // 기본 BGM 초기 설정
             elements.bgmAudio.src = elements.bgmSelect.value;
             
-            // 폰트 로드 완료 시 초기 화면 렌더링
             document.fonts.ready.then(() => {
                 elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0);
                 elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0);
@@ -629,14 +626,15 @@
                 ctx.globalAlpha = alpha;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
+                // 텍스트 감성 그림자 복구
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
                 ctx.fillStyle = '#f5f5f4'; 
-                ctx.font = `400 ${isVertical ? '80px' : '64px'} "${state.fontFamily}"`;
+                ctx.font = `400 ${isVertical ? '80px' : '64px'} "${state.fontFamily}", sans-serif`;
                 drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 100 : 80);
 
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = '#a8a29e'; 
-                ctx.font = `300 ${isVertical ? '48px' : '40px'} "Pretendard"`;
+                ctx.font = `300 ${isVertical ? '48px' : '40px'} "Pretendard", sans-serif`;
                 drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 64 : 54);
             } 
             // -- 2. 아웃트로 렌더링 --
@@ -647,12 +645,12 @@
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
                 ctx.fillStyle = '#f5f5f4'; 
-                ctx.font = `300 ${isVertical ? '56px' : '52px'} "${state.fontFamily}"`;
+                ctx.font = `300 ${isVertical ? '56px' : '52px'} "${state.fontFamily}", sans-serif`;
                 drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 72 : 68);
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = '#a8a29e'; 
-                ctx.font = `300 ${isVertical ? '40px' : '32px'} "Pretendard"`;
+                ctx.font = `300 ${isVertical ? '40px' : '32px'} "Pretendard", sans-serif`;
                 drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 50 : 40);
             } 
             // -- 3. 슬라이드 본편 렌더링 --
@@ -670,13 +668,11 @@
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
 
-                // 비네팅
                 ctx.globalAlpha = 1.0;
                 const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
                 ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
-                // 파티클
                 ctx.globalAlpha = 1.0; ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 particles.forEach(p => {
                     if(state.isPlaying || state.isRecording) {
@@ -687,7 +683,6 @@
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
                 });
 
-                // 하단 텍스트 그라데이션
                 const gradHeight = isVertical ? 600 : 400; 
                 const gradient = ctx.createLinearGradient(0, height - gradHeight, 0, height);
                 gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
@@ -695,14 +690,17 @@
                 gradient.addColorStop(1, 'rgba(15, 15, 15, 1)');
                 ctx.fillStyle = gradient; ctx.fillRect(0, height - gradHeight, width, gradHeight);
 
-                // 감성 문구
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const currentPhrase = imgObj.phrase || "";
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
-                const textY = height - (isVertical ? 220 : 140);
+                
+                // 가로형/세로형 잘림 방지를 위해 텍스트 Y 좌표를 안전하게 올림
+                const textY = height - (isVertical ? 220 : 160);
 
-                // 적용된 글씨체 반영
-                ctx.font = `400 ${isVertical ? '56px' : '48px'} "${state.fontFamily}"`;
+                ctx.fillStyle = '#e7e5e4'; 
+                ctx.font = `400 ${isVertical ? '56px' : '52px'} "${state.fontFamily}", sans-serif`;
+                ctx.shadowColor = 'rgba(0,0,0,0.9)'; 
+                ctx.shadowBlur = 15;
 
                 const maxWidth = width * 0.85; 
                 const lineHeight = isVertical ? 72 : 64;
@@ -718,7 +716,7 @@
                 }
             }
             
-            // -- 4. 워터마크 로고 (솔리드 흰색 테두리 적용으로 내부 텍스트 시인성 확보) --
+            // -- 4. 🌟 로고 시인성 극대화 (솔리드 흰색 테두리 효과) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
@@ -726,14 +724,16 @@
                 const logoX = width - logoW - (isVertical ? 60 : 50);
                 const logoY = isVertical ? 100 : 40;
 
-                // 8방향 오프셋 그리기 (투명 PNG 기반 흰색 테두리 형성)
+                // 16방향의 촘촘한 오프셋 렌더링으로 부드럽고 강력한 흰색 테두리를 구현
                 ctx.shadowColor = 'white';
-                ctx.shadowBlur = 2; // 선명한 테두리를 위해 블러를 낮춤
+                ctx.shadowBlur = 2; // 선명한 테두리를 보조하는 최소한의 블러
                 
-                const outline = 3; // 테두리 두께
+                const outline = 4; // 테두리 두께 조절
                 const offsets = [
                     [-outline, 0], [outline, 0], [0, -outline], [0, outline],
-                    [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline]
+                    [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline],
+                    [-outline/2, -outline], [outline/2, -outline], [-outline/2, outline], [outline/2, outline],
+                    [-outline, -outline/2], [outline, -outline/2], [-outline, outline/2], [outline, outline/2]
                 ];
                 
                 offsets.forEach(off => {
@@ -742,9 +742,9 @@
                     ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
                 });
 
-                // 테두리 위에 원본을 그대로 얹어 마무리
+                // 테두리 위에 원본을 투명한 상태로 깔끔하게 얹기
                 ctx.shadowColor = 'transparent';
-                ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+                ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
 
