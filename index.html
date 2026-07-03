@@ -8,9 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- 구글 폰트 추가 (고운바탕 추가) -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
 
         body { font-family: 'Pretendard', sans-serif; background-color: #e7e5e4; margin: 0; padding: 0; }
         .font-serif-kr { font-family: 'Noto Serif KR', serif; }
@@ -66,24 +67,46 @@
                         </div>
                     </section>
 
-                    <!-- 2. 프리미엄 BGM 업로드 -->
+                    <!-- 2. 글씨체 선택 (새 기능) -->
+                    <section class="flex flex-col gap-2">
+                        <h2 class="text-base font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
+                            <i data-lucide="type" class="w-4 h-4 text-stone-400"></i> 글씨체 선택
+                        </h2>
+                        <div class="grid grid-cols-2 gap-2" id="font-selector">
+                            <button data-font="Gowun Dodum" class="font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm" style="font-family: 'Gowun Dodum';">고운 돋움</button>
+                            <button data-font="Noto Serif KR" class="font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm" style="font-family: 'Noto Serif KR'; font-weight: 600;">클래식 명조</button>
+                            <button data-font="Gowun Batang" class="font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm" style="font-family: 'Gowun Batang';">고운 바탕</button>
+                            <button data-font="Pretendard" class="font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm" style="font-family: 'Pretendard'; font-weight: 500;">프리텐다드</button>
+                        </div>
+                    </section>
+
+                    <!-- 3. 프리미엄 BGM 업로드 -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <h2 class="text-base font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
-                            <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 프리미엄 배경음악
+                            <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
                         </h2>
                         <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm">
-                            <option value="https://cdn.pixabay.com/download/audio/2022/10/25/audio_2eb1b002c9.mp3?filename=healing-forest-123476.mp3" selected>🌿 힐링 포레스트 (차분한 아침)</option>
-                            <option value="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=ambient-piano-amp-strings-126233.mp3">🎹 서정적인 숲 (피아노와 현악기)</option>
-                            <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=cinematic-documentary-115669.mp3">🎬 시네마틱 감동 (깊은 울림)</option>
-                            <option value="https://cdn.pixabay.com/download/audio/2022/02/07/audio_1079abcfbe.mp3?filename=soft-piano-100735.mp3">☕ 따뜻한 위로 (소프트 피아노)</option>
+                            <option value="https://cdn.pixabay.com/audio/2022/10/25/audio_2eb1b002c9.mp3" selected>🌿 힐링 포레스트 (차분한 아침)</option>
+                            <option value="https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3">🎹 서정적인 숲 (피아노와 현악기)</option>
+                            <option value="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3">🎬 시네마틱 감동 (깊은 울림)</option>
+                            <option value="https://cdn.pixabay.com/audio/2022/02/07/audio_1079abcfbe.mp3">☕ 따뜻한 위로 (소프트 피아노)</option>
                             <option value="custom">🎧 내 음원 직접 업로드...</option>
                             <option value="">소리 없음</option>
                         </select>
                         <input type="file" id="custom-bgm-input" accept="audio/*" class="hidden">
+                        <div id="custom-bgm-info" class="hidden flex items-center justify-between bg-stone-100 rounded-xl px-4 py-3 border border-stone-200 mt-2">
+                            <div class="flex items-center gap-2 overflow-hidden">
+                                <i data-lucide="file-audio" class="w-4 h-4 text-stone-500 shrink-0"></i>
+                                <span id="custom-bgm-name" class="text-sm text-stone-600 font-gowun truncate">음원.mp3</span>
+                            </div>
+                            <button id="custom-bgm-remove" class="text-stone-400 hover:text-stone-600 shrink-0 transition-colors" title="음원 삭제">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
                     </section>
 
-                    <!-- 3. 사진 업로드 버튼 -->
+                    <!-- 4. 사진 업로드 버튼 -->
                     <section>
                         <label class="cursor-pointer w-full py-6 rounded-2xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center transition-all hover:bg-stone-50 group bg-white shadow-sm">
                             <div class="w-12 h-12 rounded-full bg-stone-100 group-hover:bg-white flex items-center justify-center mb-2 transition-colors">
@@ -95,7 +118,7 @@
                         </label>
                     </section>
 
-                    <!-- 4. 통합 스토리보드 에디터 -->
+                    <!-- 5. 통합 스토리보드 에디터 -->
                     <section>
                         <div class="flex justify-between items-end mb-3">
                             <h2 class="text-base font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
@@ -134,7 +157,7 @@
                     <p id="render-time-text" class="text-xs mt-2 font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <!-- 캔버스 컨테이너 (비율 동적 변경됨) -->
+                <!-- 캔버스 컨테이너 -->
                 <div id="preview-wrapper" class="relative h-[70vh] sm:h-[80vh] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
@@ -177,7 +200,7 @@
             return `${m}:${s}`;
         }
 
-        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘
+        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (이전 감성 섀도우 버전으로 복구)
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -242,7 +265,9 @@
         // 상태(State) 관리
         const state = {
             aspectRatio: 'vertical', 
-            intro: { title: "기억 보관소", subtitle: "장성숲체원에 오신 것을 환영합니다", duration: 3 },
+            fontFamily: 'Gowun Dodum', // 글씨체 상태 추가
+            // 수정: 인트로 UI 상단(title)과 하단(subtitle) 일치
+            intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
             
@@ -274,6 +299,9 @@
             renderTimeText: document.getElementById('render-time-text'),
             bgmSelect: document.getElementById('bgm-select'),
             customBgmInput: document.getElementById('custom-bgm-input'),
+            customBgmInfo: document.getElementById('custom-bgm-info'),
+            customBgmName: document.getElementById('custom-bgm-name'),
+            customBgmRemove: document.getElementById('custom-bgm-remove'),
             bgmAudio: document.getElementById('bgm-audio')
         };
 
@@ -284,14 +312,32 @@
             elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
             elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
 
+            // 글씨체 버튼 이벤트 연결
+            document.querySelectorAll('.font-btn').forEach(btn => {
+                btn.addEventListener('click', () => setFont(btn.dataset.font));
+            });
+
             elements.imageUpload.addEventListener('change', handleImageUpload);
             elements.bgmSelect.addEventListener('change', (e) => {
                 if(e.target.value === 'custom') elements.customBgmInput.click();
-                else elements.bgmAudio.src = e.target.value;
+                else {
+                    elements.bgmAudio.src = e.target.value;
+                    elements.customBgmInfo.classList.add('hidden');
+                }
             });
             elements.customBgmInput.addEventListener('change', (e) => {
-                if(e.target.files[0]) elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]);
-                else elements.bgmSelect.value = '';
+                if(e.target.files[0]) {
+                    elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]);
+                    elements.customBgmName.textContent = e.target.files[0].name;
+                    elements.customBgmInfo.classList.remove('hidden');
+                    elements.bgmSelect.value = 'custom';
+                } else elements.bgmSelect.value = '';
+            });
+            elements.customBgmRemove.addEventListener('click', () => {
+                elements.bgmSelect.value = '';
+                elements.bgmAudio.src = '';
+                elements.customBgmInput.value = '';
+                elements.customBgmInfo.classList.add('hidden');
             });
 
             elements.playBtn.addEventListener('click', togglePlay);
@@ -301,6 +347,30 @@
 
             renderStoryboard();
             updateDurations();
+            
+            // 기본 BGM 초기 설정
+            elements.bgmAudio.src = elements.bgmSelect.value;
+            
+            // 폰트 로드 완료 시 초기 화면 렌더링
+            document.fonts.ready.then(() => {
+                elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0);
+                elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0);
+                elements.ctx.font = '10px "Gowun Batang"'; elements.ctx.fillText('.', 0, 0);
+                elements.ctx.font = '10px "Pretendard"'; elements.ctx.fillText('.', 0, 0);
+                if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            });
+        }
+
+        function setFont(fontName) {
+            state.fontFamily = fontName;
+            document.querySelectorAll('.font-btn').forEach(btn => {
+                if (btn.dataset.font === fontName) {
+                    btn.className = "font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm";
+                } else {
+                    btn.className = "font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm";
+                }
+            });
+            if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
         function setAspectRatio(ratio) {
@@ -358,7 +428,7 @@
         }
 
         // ==========================================
-        // 스토리보드 
+        // 스토리보드 UI
         // ==========================================
         function renderStoryboard() {
             elements.storyboardContainer.innerHTML = '';
@@ -411,8 +481,8 @@
             let inputsHTML = '';
             if (type === 'intro' || type === 'outro') {
                 inputsHTML = `
-                    <input type="text" class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-xs font-serif-kr text-stone-800" value="${data.title.replace(/\n/g, ' ')}" onchange="updateState('${type}', ${index}, 'title', this.value)" placeholder="메인 문구">
-                    <textarea class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-[11px] font-gowun text-stone-500 mt-1 resize-none h-[42px]" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="서브 문구 (여러 줄 가능)">${data.subtitle}</textarea>
+                    <textarea class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-xs font-serif-kr text-stone-800 resize-none h-[42px] mb-1" onchange="updateState('${type}', ${index}, 'title', this.value)" placeholder="위쪽 메인 문구">${data.title}</textarea>
+                    <input type="text" class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-[11px] font-gowun text-stone-500" value="${data.subtitle}" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="아래쪽 서브 문구">
                 `;
             } else {
                 inputsHTML = `
@@ -559,11 +629,15 @@
                 ctx.globalAlpha = alpha;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
-                ctx.fillStyle = '#a8a29e'; ctx.font = `300 ${isVertical ? '48px' : '40px'} "Pretendard"`;
-                drawWrapText(ctx, state.intro.subtitle, width/2, height/2 - (isVertical?80:60), width * 0.8, isVertical ? 64 : 54);
-                
-                ctx.fillStyle = '#f5f5f4'; ctx.font = `400 ${isVertical ? '80px' : '64px'} "Noto Serif KR"`;
-                drawWrapText(ctx, state.intro.title, width/2, height/2 + (isVertical?50:40), width * 0.8, isVertical ? 100 : 80);
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
+                ctx.fillStyle = '#f5f5f4'; 
+                ctx.font = `400 ${isVertical ? '80px' : '64px'} "${state.fontFamily}"`;
+                drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 100 : 80);
+
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#a8a29e'; 
+                ctx.font = `300 ${isVertical ? '48px' : '40px'} "Pretendard"`;
+                drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 64 : 54);
             } 
             // -- 2. 아웃트로 렌더링 --
             else if (scene.type === 'outro') {
@@ -571,10 +645,14 @@
                 ctx.globalAlpha = alpha;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
-                ctx.fillStyle = '#f5f5f4'; ctx.font = `300 ${isVertical ? '56px' : '52px'} "Noto Serif KR"`;
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
+                ctx.fillStyle = '#f5f5f4'; 
+                ctx.font = `300 ${isVertical ? '56px' : '52px'} "${state.fontFamily}"`;
                 drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 72 : 68);
                 
-                ctx.fillStyle = '#a8a29e'; ctx.font = `300 ${isVertical ? '40px' : '32px'} "Pretendard"`;
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#a8a29e'; 
+                ctx.font = `300 ${isVertical ? '40px' : '32px'} "Pretendard"`;
                 drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 50 : 40);
             } 
             // -- 3. 슬라이드 본편 렌더링 --
@@ -592,7 +670,7 @@
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
 
-                // 비네팅 효과
+                // 비네팅
                 ctx.globalAlpha = 1.0;
                 const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
@@ -623,8 +701,8 @@
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
                 const textY = height - (isVertical ? 220 : 140);
 
-                ctx.fillStyle = '#e7e5e4'; ctx.font = `400 ${isVertical ? '56px' : '48px'} "Gowun Dodum"`;
-                ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
+                // 적용된 글씨체 반영
+                ctx.font = `400 ${isVertical ? '56px' : '48px'} "${state.fontFamily}"`;
 
                 const maxWidth = width * 0.85; 
                 const lineHeight = isVertical ? 72 : 64;
@@ -640,34 +718,33 @@
                 }
             }
             
-            // -- 4. 🌟 강화된 워터마크 로고 렌더링 🌟 --
+            // -- 4. 워터마크 로고 (솔리드 흰색 테두리 적용으로 내부 텍스트 시인성 확보) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                // 상단 어두운 그라데이션 (로고를 돋보이게 함)
-                const topGradHeight = isVertical ? 300 : 200;
-                const topGradient = ctx.createLinearGradient(0, 0, 0, topGradHeight);
-                topGradient.addColorStop(0, 'rgba(15, 15, 15, 0.6)');
-                topGradient.addColorStop(1, 'rgba(15, 15, 15, 0)');
-                ctx.fillStyle = topGradient; 
-                ctx.fillRect(0, 0, width, topGradHeight);
-
-                // 로고 크기 및 위치 (가로/세로 동적 계산)
                 const logoW = isVertical ? 350 : 280;
                 const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
                 const logoX = width - logoW - (isVertical ? 60 : 50);
                 const logoY = isVertical ? 100 : 40;
 
-                // 시인성 강화를 위한 2중 글로우(Glow) 효과
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'; 
-                ctx.shadowBlur = 20; // 1차 넓은 발광
-                ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
+                // 8방향 오프셋 그리기 (투명 PNG 기반 흰색 테두리 형성)
+                ctx.shadowColor = 'white';
+                ctx.shadowBlur = 2; // 선명한 테두리를 위해 블러를 낮춤
                 
-                ctx.shadowBlur = 8;  // 2차 좁고 강한 발광 (테두리 효과)
-                ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
+                const outline = 3; // 테두리 두께
+                const offsets = [
+                    [-outline, 0], [outline, 0], [0, -outline], [0, outline],
+                    [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline]
+                ];
                 
-                // 그림자 해제 후 원본 선명하게 덮기
+                offsets.forEach(off => {
+                    ctx.shadowOffsetX = off[0];
+                    ctx.shadowOffsetY = off[1];
+                    ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
+                });
+
+                // 테두리 위에 원본을 그대로 얹어 마무리
                 ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
 
