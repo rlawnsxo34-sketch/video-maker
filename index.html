@@ -66,14 +66,16 @@
                         </div>
                     </section>
 
-                    <!-- 2. BGM 업로드 -->
+                    <!-- 2. 프리미엄 BGM 업로드 -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <h2 class="text-base font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
-                            <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
+                            <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 프리미엄 배경음악
                         </h2>
                         <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm">
-                            <option value="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=nature-calls-114569.mp3" selected>숲의 속삭임 (기본)</option>
-                            <option value="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2db17dc312.mp3?filename=acoustic-guitars-ambient-113069.mp3">따스한 햇살 (어쿠스틱)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/10/25/audio_2eb1b002c9.mp3?filename=healing-forest-123476.mp3" selected>🌿 힐링 포레스트 (차분한 아침)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=ambient-piano-amp-strings-126233.mp3">🎹 서정적인 숲 (피아노와 현악기)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=cinematic-documentary-115669.mp3">🎬 시네마틱 감동 (깊은 울림)</option>
+                            <option value="https://cdn.pixabay.com/download/audio/2022/02/07/audio_1079abcfbe.mp3?filename=soft-piano-100735.mp3">☕ 따뜻한 위로 (소프트 피아노)</option>
                             <option value="custom">🎧 내 음원 직접 업로드...</option>
                             <option value="">소리 없음</option>
                         </select>
@@ -133,9 +135,7 @@
                 </div>
 
                 <!-- 캔버스 컨테이너 (비율 동적 변경됨) -->
-                <!-- 가로/세로 변경 시 짤리지 않도록 object-contain 적용 -->
                 <div id="preview-wrapper" class="relative h-[70vh] sm:h-[80vh] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
-                    <!-- 기본값 1080x1920 -->
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
                     <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800">
@@ -207,7 +207,7 @@
             }
         }
 
-        // 프리미엄 감성 문구 풀
+        // 프리미엄 감성 문구 풀 (랜덤 추천용)
         const premiumPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
@@ -303,7 +303,6 @@
             updateDurations();
         }
 
-        // 🌟 수정됨: 비율 설정 변경 함수 (가로모드에서 짤림 방지)
         function setAspectRatio(ratio) {
             state.aspectRatio = ratio;
             
@@ -311,7 +310,6 @@
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all";
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50";
                 
-                // 세로형 컨테이너 클래스 재정의 (충돌 방지)
                 elements.previewWrapper.className = "relative h-[70vh] sm:h-[80vh] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1080;
@@ -320,7 +318,6 @@
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all";
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50";
                 
-                // 가로형 컨테이너 클래스 재정의 (높이 고정 해제, 넓이 100% 사용)
                 elements.previewWrapper.className = "relative w-full aspect-video bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1920;
@@ -415,7 +412,7 @@
             if (type === 'intro' || type === 'outro') {
                 inputsHTML = `
                     <input type="text" class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-xs font-serif-kr text-stone-800" value="${data.title.replace(/\n/g, ' ')}" onchange="updateState('${type}', ${index}, 'title', this.value)" placeholder="메인 문구">
-                    <input type="text" class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-[11px] font-gowun text-stone-500 mt-1" value="${data.subtitle}" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="서브 문구">
+                    <textarea class="w-full bg-white border border-stone-200 rounded px-2 py-1.5 text-[11px] font-gowun text-stone-500 mt-1 resize-none h-[42px]" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="서브 문구 (여러 줄 가능)">${data.subtitle}</textarea>
                 `;
             } else {
                 inputsHTML = `
@@ -477,7 +474,7 @@
         }
 
         // ==========================================
-        // 렌더링 엔진 
+        // 렌더링 엔진 (가로/세로 동적 레이아웃 지원)
         // ==========================================
         function getSceneContext(time) {
             if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
@@ -578,7 +575,7 @@
                 drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 72 : 68);
                 
                 ctx.fillStyle = '#a8a29e'; ctx.font = `300 ${isVertical ? '40px' : '32px'} "Pretendard"`;
-                ctx.fillText(state.outro.subtitle, width/2, height/2 + (isVertical?80:60));
+                drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 50 : 40);
             } 
             // -- 3. 슬라이드 본편 렌더링 --
             else if (scene.type === 'slide') {
@@ -595,11 +592,13 @@
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
 
+                // 비네팅 효과
                 ctx.globalAlpha = 1.0;
                 const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
                 ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
+                // 파티클
                 ctx.globalAlpha = 1.0; ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 particles.forEach(p => {
                     if(state.isPlaying || state.isRecording) {
@@ -610,13 +609,15 @@
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
                 });
 
-                const gradHeight = isVertical ? 600 : 400; // 가로 모드일 때 그라데이션을 조금 더 올려 텍스트 가독성 확보
+                // 하단 텍스트 그라데이션
+                const gradHeight = isVertical ? 600 : 400; 
                 const gradient = ctx.createLinearGradient(0, height - gradHeight, 0, height);
                 gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
                 gradient.addColorStop(0.7, 'rgba(15, 15, 15, 0.9)');
                 gradient.addColorStop(1, 'rgba(15, 15, 15, 1)');
                 ctx.fillStyle = gradient; ctx.fillRect(0, height - gradHeight, width, gradHeight);
 
+                // 감성 문구
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const currentPhrase = imgObj.phrase || "";
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
@@ -639,32 +640,32 @@
                 }
             }
             
-            // 🌟 수정됨: 워터마크 로고 (흰색 테두리 적용 및 시인성 극대화)
+            // -- 4. 🌟 강화된 워터마크 로고 렌더링 🌟 --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = isVertical ? 350 : 350;
-                const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
-                
-                const logoX = width - logoW - (isVertical ? 60 : 70);
-                const logoY = isVertical ? 100 : 60;
+                // 상단 어두운 그라데이션 (로고를 돋보이게 함)
+                const topGradHeight = isVertical ? 300 : 200;
+                const topGradient = ctx.createLinearGradient(0, 0, 0, topGradHeight);
+                topGradient.addColorStop(0, 'rgba(15, 15, 15, 0.6)');
+                topGradient.addColorStop(1, 'rgba(15, 15, 15, 0)');
+                ctx.fillStyle = topGradient; 
+                ctx.fillRect(0, 0, width, topGradHeight);
 
-                // 1. 강하고 얇은 그림자를 4방향으로 주어 흰색 테두리(Stroke)처럼 연출
-                ctx.shadowColor = '#ffffff'; 
-                ctx.shadowBlur = 4;
-                const offsets = [[-2,-2], [2,-2], [-2,2], [2,2]];
-                offsets.forEach(off => {
-                    ctx.shadowOffsetX = off[0];
-                    ctx.shadowOffsetY = off[1];
-                    ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
-                });
-                
-                // 2. 넓게 퍼지는 백색 글로우 한 번 더 적용하여 뚜렷하게 부각
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
-                ctx.shadowBlur = 15;
+                // 로고 크기 및 위치 (가로/세로 동적 계산)
+                const logoW = isVertical ? 350 : 280;
+                const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
+                const logoX = width - logoW - (isVertical ? 60 : 50);
+                const logoY = isVertical ? 100 : 40;
+
+                // 시인성 강화를 위한 2중 글로우(Glow) 효과
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)'; 
+                ctx.shadowBlur = 20; // 1차 넓은 발광
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
                 
-                // 3. 그림자 속성을 지우고 원본 이미지를 덮어 가장 선명한 상태를 만듦
+                ctx.shadowBlur = 8;  // 2차 좁고 강한 발광 (테두리 효과)
+                ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
+                
+                // 그림자 해제 후 원본 선명하게 덮기
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
@@ -765,7 +766,7 @@
             let canvasStream;
             try { canvasStream = elements.canvas.captureStream(fps); } 
             catch (err) {
-                alert("보안 정책(CORS)으로 추출이 차단되었습니다. 로컬 서버 환경에서 실행해주세요.");
+                alert("보안 정책(CORS)으로 추출이 차단되었습니다. 웹 서버 환경에서 실행해주세요.");
                 elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return;
             }
             
