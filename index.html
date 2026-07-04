@@ -11,7 +11,7 @@
     <!-- 구글 폰트 추가 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
 
         body { font-family: 'Pretendard', sans-serif; background-color: #e7e5e4; margin: 0; padding: 0; }
         .font-serif-kr { font-family: 'Noto Serif KR', serif; }
@@ -80,16 +80,16 @@
                         </div>
                     </section>
 
-                    <!-- 3. 프리미엄 BGM 업로드 -->
+                    <!-- 3. 프리미엄 BGM 설정 (네트워크 에러 대응 완료) -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <h2 class="text-base font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
                             <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
                         </h2>
-                        <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm">
-                            <option value="https://cdn.pixabay.com/audio/2022/10/25/audio_2eb1b002c9.mp3" selected>🌿 힐링 포레스트 (차분한 아침)</option>
-                            <option value="https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3">🎹 서정적인 숲 (피아노와 현악기)</option>
-                            <option value="https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3">🎬 시네마틱 감동 (깊은 울림)</option>
-                            <option value="https://cdn.pixabay.com/audio/2022/02/07/audio_1079abcfbe.mp3">☕ 따뜻한 위로 (소프트 피아노)</option>
+                        <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm cursor-pointer">
+                            <option value="procedural" selected>🌿 실시간 힐링 사운드 (자연 합성음 - 100% 재생 보장)</option>
+                            <option value="https://ia802508.us.archive.org/5/items/relaxing-piano-music-royalty-free/Relaxing%20Piano%20Music.mp3">🎹 평온한 편백숲 (피아노 앰비언트)</option>
+                            <option value="https://ia802506.us.archive.org/16/items/nature-sounds-birds-singing-relaxing/nature-sounds-birds-singing.mp3">🐤 아침 숲의 소리 (실제 새 지저귐)</option>
+                            <option value="https://ia801402.us.archive.org/20/items/free_music_archive_instrumental/FMA_Instrumental_Selection_-_01_-_Gillicuddy_-_Springish.mp3">🎸 숲속의 봄날 (감성 어쿠스틱 기타)</option>
                             <option value="custom">🎧 내 음원 직접 업로드...</option>
                             <option value="">소리 없음</option>
                         </select>
@@ -200,7 +200,7 @@
             return `${m}:${s}`;
         }
 
-        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (감성 섀도우)
+        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (이전 감성 명조/돋움 그림자 오버레이 탑재)
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -230,7 +230,7 @@
             }
         }
 
-        // 프리미엄 감성 문구 풀
+        // 프리미엄 감성 문구 풀 (랜덤 추천용)
         const premiumPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
@@ -304,7 +304,9 @@
             bgmAudio: document.getElementById('bgm-audio')
         };
 
+        // 실시간 오디오 합성을 위한 컨텍스트 변수들
         let audioCtx, audioDest, audioSource;
+        let windNode, windGain, chimeInterval;
 
         function init() {
             // 비율 토글 이벤트
@@ -318,13 +320,18 @@
 
             elements.imageUpload.addEventListener('change', handleImageUpload);
             elements.bgmSelect.addEventListener('change', (e) => {
+                stopProceduralAmbient();
                 if(e.target.value === 'custom') elements.customBgmInput.click();
-                else {
+                else if (e.target.value === 'procedural') {
+                    elements.bgmAudio.src = '';
+                    elements.customBgmInfo.classList.add('hidden');
+                } else {
                     elements.bgmAudio.src = e.target.value;
                     elements.customBgmInfo.classList.add('hidden');
                 }
             });
             elements.customBgmInput.addEventListener('change', (e) => {
+                stopProceduralAmbient();
                 if(e.target.files[0]) {
                     elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]);
                     elements.customBgmName.textContent = e.target.files[0].name;
@@ -333,7 +340,8 @@
                 } else elements.bgmSelect.value = '';
             });
             elements.customBgmRemove.addEventListener('click', () => {
-                elements.bgmSelect.value = '';
+                stopProceduralAmbient();
+                elements.bgmSelect.value = 'procedural';
                 elements.bgmAudio.src = '';
                 elements.customBgmInput.value = '';
                 elements.customBgmInfo.classList.add('hidden');
@@ -347,8 +355,6 @@
             renderStoryboard();
             updateDurations();
             
-            elements.bgmAudio.src = elements.bgmSelect.value;
-            
             document.fonts.ready.then(() => {
                 elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0);
                 elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0);
@@ -356,6 +362,100 @@
                 elements.ctx.font = '10px "Pretendard"'; elements.ctx.fillText('.', 0, 0);
                 if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
+        }
+
+        // 🌟 실시간 BGM 숲체원 힐링 합성 엔진 (네트워크가 아예 없어도 동작하는 합성음)
+        function startProceduralAmbient() {
+            stopProceduralAmbient();
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+            // 1. 바람 소리 노이즈 버퍼 생성
+            const bufferSize = 2 * audioCtx.sampleRate;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                output[i] *= 0.05; // 부드럽고 잔잔하게 소리 조절
+                b6 = white * 0.115926;
+            }
+
+            const noiseNode = audioCtx.createBufferSource();
+            noiseNode.buffer = noiseBuffer;
+            noiseNode.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(250, audioCtx.currentTime);
+            filter.Q.setValueAtTime(3, audioCtx.currentTime);
+
+            windGain = audioCtx.createGain();
+            windGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+            noiseNode.connect(filter);
+            filter.connect(windGain);
+            windGain.connect(audioDest);
+            noiseNode.start();
+            windNode = noiseNode;
+
+            // 바람 소리 주기적 필터 움직임 생성
+            let step = 0;
+            function modulateWind() {
+                if (!state.isPlaying && !state.isRecording) return;
+                step += 0.03;
+                const targetFreq = 220 + Math.sin(step) * 100;
+                filter.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+                setTimeout(modulateWind, 60);
+            }
+            modulateWind();
+
+            // 2. 맑은 계곡의 종소리 및 힐링 차임 합성음 재생 루프
+            const chimeChords = [329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; // C 메이저 펜타토닉 스케일
+            chimeInterval = setInterval(() => {
+                if (!state.isPlaying && !state.isRecording) return;
+                if (Math.random() > 0.45) { // 55% 확률로 차임벨 랜덤 재생
+                    const pitch = chimeChords[Math.floor(Math.random() * chimeChords.length)];
+                    playBell(pitch);
+                }
+            }, 1400);
+        }
+
+        function playBell(pitch) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5); // 잔향이 3.5초간 서서히 퍼짐
+
+            osc.connect(gain);
+            gain.connect(audioDest);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 3.6);
+        }
+
+        function stopProceduralAmbient() {
+            if (windNode) {
+                try { windNode.stop(); } catch(e){}
+                windNode = null;
+            }
+            if (chimeInterval) {
+                clearInterval(chimeInterval);
+                chimeInterval = null;
+            }
         }
 
         function setFont(fontName) {
@@ -693,12 +793,10 @@
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const currentPhrase = imgObj.phrase || "";
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
-                
-                // 가로형/세로형 잘림 방지를 위해 텍스트 Y 좌표를 안전하게 올림
                 const textY = height - (isVertical ? 220 : 160);
 
                 ctx.fillStyle = '#e7e5e4'; 
-                ctx.font = `400 ${isVertical ? '56px' : '52px'} "${state.fontFamily}", sans-serif`;
+                ctx.font = `400 ${isVertical ? '56px' : '48px'} "${state.fontFamily}", sans-serif`;
                 ctx.shadowColor = 'rgba(0,0,0,0.9)'; 
                 ctx.shadowBlur = 15;
 
@@ -716,7 +814,7 @@
                 }
             }
             
-            // -- 4. 🌟 로고 시인성 극대화 (솔리드 흰색 테두리 효과) --
+            // -- 4. 워터마크 로고 (고선명 솔리드 스티커 흰색 테두리 적용) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
@@ -724,11 +822,10 @@
                 const logoX = width - logoW - (isVertical ? 60 : 50);
                 const logoY = isVertical ? 100 : 40;
 
-                // 16방향의 촘촘한 오프셋 렌더링으로 부드럽고 강력한 흰색 테두리를 구현
                 ctx.shadowColor = 'white';
-                ctx.shadowBlur = 2; // 선명한 테두리를 보조하는 최소한의 블러
+                ctx.shadowBlur = 1;
                 
-                const outline = 4; // 테두리 두께 조절
+                const outline = 5; // 두껍고 강렬한 흰색 테두리로 글자 선명도 극대화
                 const offsets = [
                     [-outline, 0], [outline, 0], [0, -outline], [0, outline],
                     [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline],
@@ -742,9 +839,9 @@
                     ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
                 });
 
-                // 테두리 위에 원본을 투명한 상태로 깔끔하게 얹기
+                // 테두리 위에 원본을 그대로 얹기
                 ctx.shadowColor = 'transparent';
-                ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
 
@@ -772,22 +869,40 @@
             lucide.createIcons();
         }
 
+        function setupAudioRouting() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioDest = audioCtx.createMediaStreamDestination();
+                    audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
+                    audioSource.connect(audioDest); 
+                    audioSource.connect(audioCtx.destination); 
+                } catch(e) {
+                    console.error("Audio routing error:", e);
+                }
+            }
+        }
+
         function togglePlay() {
             if (state.images.length === 0) return;
-            if(!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioDest = audioCtx.createMediaStreamDestination();
-                audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
-                audioSource.connect(audioDest); audioSource.connect(audioCtx.destination); 
-            }
-            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
             if (state.isPlaying) {
-                state.isPlaying = false; cancelAnimationFrame(state.animationFrameId); elements.bgmAudio.pause();
+                state.isPlaying = false; 
+                cancelAnimationFrame(state.animationFrameId); 
+                elements.bgmAudio.pause();
+                stopProceduralAmbient();
             } else {
-                state.isPlaying = true; state.lastTimestamp = performance.now();
+                state.isPlaying = true; 
+                state.lastTimestamp = performance.now();
                 if (state.currentTime >= state.totalDuration) state.currentTime = 0;
-                if(elements.bgmAudio.src) {
+                
+                // BGM 재생 분기 처리
+                if (elements.bgmSelect.value === 'procedural') {
+                    startProceduralAmbient();
+                } else if(elements.bgmAudio.src) {
                     elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
                     elements.bgmAudio.play().catch(e => console.log("Audio prevent:", e));
                 }
@@ -797,16 +912,23 @@
         }
 
         function stopPlayback() {
-            state.isPlaying = false; cancelAnimationFrame(state.animationFrameId);
-            state.currentTime = 0; elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0;
-            drawFrame(0); updateUI();
+            state.isPlaying = false; 
+            cancelAnimationFrame(state.animationFrameId);
+            state.currentTime = 0; 
+            elements.bgmAudio.pause(); 
+            elements.bgmAudio.currentTime = 0;
+            stopProceduralAmbient();
+            drawFrame(0); 
+            updateUI();
         }
 
         function seekTime(e) {
             if (state.images.length === 0) return;
             const rect = elements.progressContainer.getBoundingClientRect();
             state.currentTime = Math.max(0, Math.min(((e.clientX - rect.left) / rect.width) * state.totalDuration, state.totalDuration));
-            if (elements.bgmAudio.src) elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+            if (elements.bgmAudio.src && elements.bgmSelect.value !== 'procedural') {
+                elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+            }
             drawFrame(state.currentTime);
         }
 
@@ -831,13 +953,8 @@
             if(state.isPlaying) stopPlayback();
             
             state.isRecording = true; elements.loadingOverlay.style.display = 'flex'; elements.exportBtn.disabled = true;
-            if(!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioDest = audioCtx.createMediaStreamDestination();
-                audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
-                audioSource.connect(audioDest); audioSource.connect(audioCtx.destination); 
-            }
-            if(audioCtx.state === 'suspended') audioCtx.resume();
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
             const fps = 30;
             let canvasStream;
@@ -848,7 +965,14 @@
             }
             
             let tracks = [...canvasStream.getVideoTracks()];
-            if (audioDest && elements.bgmAudio.src) tracks = [...tracks, ...audioDest.stream.getAudioTracks()];
+            
+            // 녹화용 오디오 트랙 추가
+            if (audioDest) {
+                const audioTracks = audioDest.stream.getAudioTracks();
+                if (audioTracks.length > 0) tracks = [...tracks, ...audioTracks];
+            }
+
+            const combinedStream = new MediaStream(tracks);
 
             let options = { mimeType: 'video/mp4' }, ext = 'mp4';
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
@@ -856,11 +980,12 @@
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm; codecs=vp9' }; ext = 'webm'; }
             }
             
-            const recorder = new MediaRecorder(new MediaStream(tracks), options);
+            const recorder = new MediaRecorder(combinedStream, options);
             const chunks = [];
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 if(elements.bgmAudio.src) { elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0; }
+                stopProceduralAmbient();
                 const a = document.createElement('a'); a.style.display = 'none';
                 a.href = URL.createObjectURL(new Blob(chunks, { type: options.mimeType }));
                 a.download = `숲체원_영상_${Date.now()}.${ext}`;
@@ -868,7 +993,14 @@
                 state.isRecording = false; elements.loadingOverlay.style.display = 'none'; elements.exportBtn.disabled = false; drawFrame(0);
             };
             
-            if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = 0; elements.bgmAudio.play().catch(e=>console.log(e)); }
+            // 녹화 시작 시 BGM 구동
+            if (elements.bgmSelect.value === 'procedural') {
+                startProceduralAmbient();
+            } else if(elements.bgmAudio.src) { 
+                elements.bgmAudio.currentTime = 0; 
+                elements.bgmAudio.play().catch(e=>console.log(e)); 
+            }
+            
             recorder.start();
             
             let renderTime = 0; const timeStep = 1 / fps;
