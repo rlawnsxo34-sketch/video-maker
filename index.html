@@ -80,7 +80,7 @@
                         </div>
                     </section>
 
-                    <!-- 3. 프리미엄 BGM 설정 (네트워크 에러 대응 완료) -->
+                    <!-- 3. 프리미엄 BGM 설정 -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <h2 class="text-base font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
                             <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
@@ -157,8 +157,8 @@
                     <p id="render-time-text" class="text-xs mt-2 font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <!-- 캔버스 컨테이너 (비비드 16:9 & 9:16 반응형 패킹 처리) -->
-                <div id="preview-wrapper" class="relative w-full max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
+                <!-- 캔버스 컨테이너 (디바이스/해상도 반응형 클래스 전면 설계) -->
+                <div id="preview-wrapper" class="relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
                     <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800">
@@ -468,7 +468,7 @@
             if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
-        // 반응형 해상도 조정 (모바일 및 PC 디바이스 레이아웃 충돌 제어)
+        // 반응형 해상도 래퍼 클래스 최적화
         function setAspectRatio(ratio) {
             state.aspectRatio = ratio;
             
@@ -476,8 +476,8 @@
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all";
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50";
                 
-                // 모바일 해상도 너비 한계 및 비율 고정 처리
-                elements.previewWrapper.className = "relative w-full max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
+                // 모바일 최적화 세로 비율
+                elements.previewWrapper.className = "relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1080;
                 elements.canvas.height = 1920;
@@ -485,7 +485,7 @@
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all";
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50";
                 
-                // PC 가로 해상도 한계 및 반응형 100% 처리
+                // PC 최적화 가로 비율
                 elements.previewWrapper.className = "relative w-full max-w-[800px] aspect-video bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1920;
@@ -718,40 +718,44 @@
             if(state.images.length === 0) return;
             const scene = getSceneContext(timeInSeconds);
 
-            // -- 1. 인트로 렌더링 --
+            // -- 1. 인트로 렌더링 (비율별 가변 글자 크기 보완) --
             if (scene.type === 'intro') {
                 let alpha = Math.min(scene.elapsed / 1.5, 1);
                 if (scene.duration - scene.elapsed < 1) alpha = scene.duration - scene.elapsed;
                 ctx.globalAlpha = alpha;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
+                // 위쪽 메인 문구
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
                 ctx.fillStyle = '#f5f5f4'; 
-                ctx.font = `400 ${isVertical ? '80px' : '64px'} "${state.fontFamily}", sans-serif`;
-                drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 100 : 80);
+                ctx.font = `400 ${isVertical ? '80px' : '110px'} "${state.fontFamily}", sans-serif`;
+                drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?80:70), width * 0.85, isVertical ? 100 : 130);
 
+                // 아래쪽 서브 문구
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = '#a8a29e'; 
-                ctx.font = `300 ${isVertical ? '48px' : '40px'} "Pretendard", sans-serif`;
-                drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 64 : 54);
+                ctx.font = `300 ${isVertical ? '48px' : '64px'} "Pretendard", sans-serif`;
+                drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:90), width * 0.85, isVertical ? 64 : 80);
             } 
-            // -- 2. 아웃트로 렌더링 --
+            // -- 2. 아웃트로 렌더링 (비율별 가변 글자 크기 보완) --
             else if (scene.type === 'outro') {
                 let alpha = Math.min(scene.elapsed / 1.5, 1);
                 ctx.globalAlpha = alpha;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 
+                // 위쪽 메인 문구
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
                 ctx.fillStyle = '#f5f5f4'; 
-                ctx.font = `300 ${isVertical ? '56px' : '52px'} "${state.fontFamily}", sans-serif`;
-                drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:40), width * 0.8, isVertical ? 72 : 68);
+                ctx.font = `300 ${isVertical ? '56px' : '76px'} "${state.fontFamily}", sans-serif`;
+                drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:50), width * 0.85, isVertical ? 72 : 96);
                 
+                // 아래쪽 서브 문구
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = '#a8a29e'; 
-                ctx.font = `300 ${isVertical ? '40px' : '32px'} "Pretendard", sans-serif`;
-                drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:60), width * 0.8, isVertical ? 50 : 40);
+                ctx.font = `300 ${isVertical ? '40px' : '54px'} "Pretendard", sans-serif`;
+                drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:80), width * 0.85, isVertical ? 50 : 68);
             } 
-            // -- 3. 슬라이드 본편 렌더링 --
+            // -- 3. 슬라이드 본편 렌더링 (비율별 가변 글자 크기 보완) --
             else if (scene.type === 'slide') {
                 const imgObj = state.images[scene.index];
                 const fadeDuration = 1.0; 
@@ -766,11 +770,13 @@
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
 
+                // 비네팅
                 ctx.globalAlpha = 1.0;
                 const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
                 ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
+                // 파티클
                 ctx.globalAlpha = 1.0; ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 particles.forEach(p => {
                     if(state.isPlaying || state.isRecording) {
@@ -791,15 +797,16 @@
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const currentPhrase = imgObj.phrase || "";
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
+                
+                // 가로형/세로형 가독성을 고려한 안전 텍스트 위치 및 가변 폰트 세팅
                 const textY = height - (isVertical ? 220 : 160);
-
                 ctx.fillStyle = '#e7e5e4'; 
-                ctx.font = `400 ${isVertical ? '56px' : '48px'} "${state.fontFamily}", sans-serif`;
+                ctx.font = `400 ${isVertical ? '56px' : '72px'} "${state.fontFamily}", sans-serif`;
                 ctx.shadowColor = 'rgba(0,0,0,0.9)'; 
                 ctx.shadowBlur = 15;
 
                 const maxWidth = width * 0.85; 
-                const lineHeight = isVertical ? 72 : 64;
+                const lineHeight = isVertical ? 72 : 96;
 
                 if (isFading && prevPhrase !== currentPhrase) {
                     ctx.globalAlpha = 1 - (scene.elapsed / fadeDuration);
@@ -812,7 +819,7 @@
                 }
             }
             
-            // -- 4. 🌟 로고 시인성 조절 (이전 버전 정도로 테두리 축소) 🌟 --
+            // -- 4. 워터마크 로고 (시인성 적정 보정 3px 오프셋 8방향) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
@@ -821,9 +828,8 @@
                 const logoY = isVertical ? 100 : 40;
 
                 ctx.shadowColor = 'white';
-                ctx.shadowBlur = 2; // 선명하지만 뭉개지지 않도록 블러값 세팅
+                ctx.shadowBlur = 2; 
                 
-                // 테두리 두께를 3px(이전 버전 수준)로 적절히 낮추어 자잘한 국문 텍스트 뭉개짐 해소
                 const outline = 3; 
                 const offsets = [
                     [-outline, 0], [outline, 0], [0, -outline], [0, outline],
@@ -836,7 +842,6 @@
                     ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
                 });
 
-                // 테두리 위에 원본 텍스트를 깔끔하게 투영
                 ctx.shadowColor = 'transparent';
                 ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
@@ -956,7 +961,7 @@
             let canvasStream;
             try { canvasStream = elements.canvas.captureStream(fps); } 
             catch (err) {
-                alert("보안 정책(CORS)으로 추출이 차단되었습니다. 로컬 웹 서버 환경에서 실행해주세요.");
+                alert("보안 정책(CORS)으로 추출이 차단되었습니다. 웹 서버 환경에서 실행해주세요.");
                 elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return;
             }
             
