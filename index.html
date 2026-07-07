@@ -113,7 +113,7 @@
 
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
             
-            <!-- 왼쪽: 설정 패널 (PC화면 스케일업 반영) -->
+            <!-- 왼쪽: 설정 패널 -->
             <aside class="w-full lg:w-[520px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
                 <div class="flex-1 overflow-y-auto p-6 space-y-6">
                     
@@ -189,7 +189,8 @@
                                 <i data-lucide="x-circle" class="w-5 h-5"></i>
                             </button>
                         </div>
-                        <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
+                        <!-- crossorigin 속성을 제거하여 로컬 파일 연동 문제를 해결 -->
+                        <audio id="bgm-audio" loop></audio>
                     </section>
 
                     <!-- 4. 사진 업로드 버튼 -->
@@ -286,7 +287,7 @@
             return `${m}:${s}`;
         }
 
-        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (그림자 감성)
+        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -316,7 +317,6 @@
             }
         }
 
-        // 프리미엄 감성 문구 풀 (랜덤 추천용)
         const premiumPhrases = [
             "따스한 햇살 아래, 오롯이 나를 만나는 시간",
             "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
@@ -333,7 +333,6 @@
 
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
 
-        // 파티클
         const particles = Array.from({length: 60}, () => ({
             x: Math.random() * 1920,
             y: Math.random() * 1920,
@@ -343,12 +342,10 @@
             alpha: Math.random() * 0.5 + 0.1
         }));
 
-        // 워터마크 로고
         const watermarkLogo = new Image();
         watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
-        // 상태(State) 관리
         const state = {
             aspectRatio: 'vertical', 
             fontFamily: 'Gowun Dodum',
@@ -389,7 +386,6 @@
             customBgmRemove: document.getElementById('custom-bgm-remove'),
             bgmAudio: document.getElementById('bgm-audio'),
 
-            // 신규 오퍼레이션 요소 바인딩
             canvasFontSize: document.getElementById('canvas-font-size'),
             fontSizeVal: document.getElementById('font-size-val'),
             logoOutlineThickness: document.getElementById('logo-outline-thickness'),
@@ -400,16 +396,13 @@
         let windNode, windGain, chimeInterval;
 
         function init() {
-            // 비율 토글 이벤트
             elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
             elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
 
-            // 글씨체 버튼 이벤트 연결
             document.querySelectorAll('.font-btn').forEach(btn => {
                 btn.addEventListener('click', () => setFont(btn.dataset.font));
             });
 
-            // 🌟 내부 조작계 동적 리스너 연결
             elements.canvasFontSize.addEventListener('input', (e) => {
                 const val = parseInt(e.target.value);
                 elements.fontSizeVal.textContent = val === 0 ? "자동 맞춤" : `${val} px`;
@@ -421,31 +414,47 @@
                 if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
 
-            // 파일 처리 및 플레이어 연동
             elements.imageUpload.addEventListener('change', handleImageUpload);
+            
+            // BGM 다이내믹 CORS 라우팅 처리
             elements.bgmSelect.addEventListener('change', (e) => {
                 stopProceduralAmbient();
-                if(e.target.value === 'custom') elements.customBgmInput.click();
-                else if (e.target.value === 'procedural') {
+                if(e.target.value === 'custom') {
+                    elements.customBgmInput.click();
+                } else if (e.target.value === 'procedural') {
+                    elements.bgmAudio.removeAttribute('crossorigin');
                     elements.bgmAudio.src = '';
                     elements.customBgmInfo.classList.add('hidden');
-                } else {
+                } else if (e.target.value !== '') {
+                    elements.bgmAudio.setAttribute('crossorigin', 'anonymous');
                     elements.bgmAudio.src = e.target.value;
+                    elements.customBgmInfo.classList.add('hidden');
+                } else {
+                    elements.bgmAudio.removeAttribute('crossorigin');
+                    elements.bgmAudio.src = '';
                     elements.customBgmInfo.classList.add('hidden');
                 }
             });
+
+            // 내 음원 직접 업로드 시 Blob 처리
             elements.customBgmInput.addEventListener('change', (e) => {
                 stopProceduralAmbient();
                 if(e.target.files[0]) {
+                    // Blob URL 생성 시 CORS 정책 해제 (Web Audio API 차단 해결)
+                    elements.bgmAudio.removeAttribute('crossorigin'); 
                     elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]);
                     elements.customBgmName.textContent = e.target.files[0].name;
                     elements.customBgmInfo.classList.remove('hidden');
                     elements.bgmSelect.value = 'custom';
-                } else elements.bgmSelect.value = '';
+                } else {
+                    elements.bgmSelect.value = '';
+                }
             });
+
             elements.customBgmRemove.addEventListener('click', () => {
                 stopProceduralAmbient();
                 elements.bgmSelect.value = 'procedural';
+                elements.bgmAudio.removeAttribute('crossorigin');
                 elements.bgmAudio.src = '';
                 elements.customBgmInput.value = '';
                 elements.customBgmInfo.classList.add('hidden');
@@ -459,9 +468,12 @@
             renderStoryboard();
             updateDurations();
             
-            elements.bgmAudio.src = elements.bgmSelect.value;
+            // 기본 BGM 초기 세팅 로직
+            if (elements.bgmSelect.value !== 'procedural' && elements.bgmSelect.value !== 'custom' && elements.bgmSelect.value !== '') {
+                elements.bgmAudio.setAttribute('crossorigin', 'anonymous');
+                elements.bgmAudio.src = elements.bgmSelect.value;
+            }
             
-            // 폰트 안전 적용 대기
             document.fonts.ready.then(() => {
                 elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0);
                 elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0);
@@ -574,7 +586,6 @@
             if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
-        // 반응형 해상도 조작 엔진
         function setAspectRatio(ratio) {
             state.aspectRatio = ratio;
             
@@ -582,7 +593,6 @@
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
                 
-                // 모바일 세로 뷰포트
                 elements.previewWrapper.className = "relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1080;
@@ -591,7 +601,6 @@
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
                 
-                // PC 가로 뷰포트
                 elements.previewWrapper.className = "relative w-full max-w-[800px] aspect-video bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1920;
@@ -631,7 +640,6 @@
             e.target.value = '';
         }
 
-        // 스토리보드 UI 빌더 (PC 대응 사이즈 업그레이드)
         function renderStoryboard() {
             elements.storyboardContainer.innerHTML = '';
             elements.storyboardContainer.appendChild(createSegmentCard('intro', null, state.intro));
@@ -745,9 +753,6 @@
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
         }
 
-        // ==========================================
-        // 렌더링 동적 구조
-        // ==========================================
         function getSceneContext(time) {
             if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
             
@@ -824,7 +829,6 @@
             if(state.images.length === 0) return;
             const scene = getSceneContext(timeInSeconds);
 
-            // 🌟 폰트 크기 커스텀 조작계 설정값 수용
             const userFontSize = parseInt(elements.canvasFontSize.value);
             let fontSizeIntroTitle = isVertical ? 80 : 110;
             let fontSizeIntroSubtitle = isVertical ? 48 : 64;
@@ -838,7 +842,6 @@
                 fontSizeIntroSubtitle = Math.round(userFontSize * 0.85);
             }
 
-            // -- 1. 인트로 렌더링 --
             if (scene.type === 'intro') {
                 let alpha = Math.min(scene.elapsed / 1.5, 1);
                 if (scene.duration - scene.elapsed < 1) alpha = scene.duration - scene.elapsed;
@@ -855,7 +858,6 @@
                 ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
                 drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:90), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
             } 
-            // -- 2. 아웃트로 렌더링 --
             else if (scene.type === 'outro') {
                 let alpha = Math.min(scene.elapsed / 1.5, 1);
                 ctx.globalAlpha = alpha;
@@ -871,7 +873,6 @@
                 ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
                 drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:80), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
             } 
-            // -- 3. 슬라이드 본편 렌더링 --
             else if (scene.type === 'slide') {
                 const imgObj = state.images[scene.index];
                 const fadeDuration = 1.0; 
@@ -931,7 +932,6 @@
                 }
             }
             
-            // -- 4. 워터마크 로고 (사용자 맞춤형 두께 8방향 오프셋 렌더링) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
@@ -974,9 +974,6 @@
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
-        // ==========================================
-        // 컨트롤 및 내보내기 
-        // ==========================================
         function updateUI() {
             const hasImages = state.images.length > 0;
             elements.emptyState.style.display = hasImages ? 'none' : 'flex';
@@ -1111,7 +1108,7 @@
                 startProceduralAmbient();
             } else if(elements.bgmAudio.src) { 
                 elements.bgmAudio.currentTime = 0; 
-                elements.bgmAudio.play().catch(e=>console.log(e)); 
+                try { await elements.bgmAudio.play(); } catch(e) { console.log(e); }
             }
             
             recorder.start();
