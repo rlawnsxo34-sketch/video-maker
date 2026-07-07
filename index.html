@@ -1,43 +1,110 @@
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>숲체원 프리미엄 영상 제작소</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- 고급 폰트 설정 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
 
-        body { font-family: 'Pretendard', sans-serif; background-color: #e7e5e4; margin: 0; padding: 0; }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #e7e5e4; 
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .font-serif-kr { font-family: 'Noto Serif KR', serif; }
         .font-gowun { font-family: 'Gowun Dodum', sans-serif; }
+        .keep-all { word-break: keep-all; overflow-wrap: break-word; }
 
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
         
+        /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
         
-        .video-container { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+        #timeline-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+        
+        .timeline-item {
+            flex: 0 0 auto;
+            width: 100px;
+            height: 70px;
+            margin-right: 12px;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f4;
+        }
+        
+        .timeline-item.active {
+            border-color: #57534e;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
 
+        .timeline-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(28, 25, 23, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(2px);
+        }
+        
+        .timeline-item:hover .delete-btn { opacity: 1; }
+        .video-container { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
         .storyboard-item.dragging { opacity: 0.5; border: 2px dashed #a8a29e; }
-        .storyboard-item { transition: transform 0.2s, box-shadow 0.2s; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-0 md:p-6 relative">
 
     <div class="w-full max-w-[1600px] bg-white md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-[90vh] md:max-h-[95vh] border border-stone-200 animate-fade-up">
         
+        <!-- 상단 헤더 -->
         <header class="px-6 py-4 flex justify-between items-center border-b border-stone-100 bg-white z-20">
             <div class="flex items-center gap-3 text-stone-800 font-serif-kr text-xl lg:text-2xl font-bold">
                 <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.style.display='none'">
-                <span class="border-l border-stone-300 pl-3 text-lg lg:text-xl">통합 영상 제작소</span>
+                <span class="hidden sm:inline border-l border-stone-300 pl-3 ml-1 text-lg lg:text-xl">통합 영상 제작소</span>
             </div>
             <div class="text-sm lg:text-base font-gowun text-stone-400 hidden sm:flex items-center gap-2">
                 <i data-lucide="monitor-play" class="w-4 h-4"></i> 맞춤형 프리미엄 비디오 에디터
@@ -46,27 +113,30 @@ html_content = """<!DOCTYPE html>
 
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
             
+            <!-- 왼쪽: 설정 패널 (PC화면 스케일업 반영) -->
             <aside class="w-full lg:w-[520px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
                 <div class="flex-1 overflow-y-auto p-6 space-y-6">
                     
+                    <!-- 1. 화면 비율 설정 -->
                     <section class="flex flex-col gap-2">
                         <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
-                            <i data-lucide="ratio" class="w-4 h-4 text-stone-400"></i> 화면 비율 선택
+                            <i data-lucide="ratio" class="w-5 h-5 text-stone-400"></i> 화면 비율 선택
                         </h2>
                         <div class="flex gap-2">
                             <button id="ratio-vertical" class="flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base">
-                                <i data-lucide="smartphone" class="w-4 h-4"></i> 세로형 (9:16)
+                                <i data-lucide="smartphone" class="w-4 h-4 lg:w-5 lg:h-5"></i> 세로형 (9:16)
                             </button>
                             <button id="ratio-horizontal" class="flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base">
-                                <i data-lucide="monitor" class="w-4 h-4"></i> 가로형 (16:9)
+                                <i data-lucide="monitor" class="w-4 h-4 lg:w-5 lg:h-5"></i> 가로형 (16:9)
                             </button>
                         </div>
                     </section>
 
-                    <section class="flex flex-col gap-4 p-4 bg-stone-50/60 rounded-2xl border border-stone-100">
+                    <!-- 2. 글씨체 및 조작계 설정 -->
+                    <section class="flex flex-col gap-4 p-4 lg:p-5 bg-stone-50 rounded-2xl border border-stone-100">
                         <div class="flex flex-col gap-2">
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
-                                <i data-lucide="type" class="w-4 h-4 text-stone-400"></i> 자막 글씨체 설정
+                                <i data-lucide="type" class="w-5 h-5 text-stone-400"></i> 글씨체 및 크기 설정
                             </h2>
                             <div class="grid grid-cols-2 gap-2" id="font-selector">
                                 <button data-font="Gowun Dodum" class="font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base" style="font-family: 'Gowun Dodum';">고운 돋움</button>
@@ -76,29 +146,32 @@ html_content = """<!DOCTYPE html>
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-1.5 pt-2 border-t border-stone-200/60">
+                        <!-- 영상 내부 자막 글씨 크기 조절기 -->
+                        <div class="flex flex-col gap-2 pt-3 border-t border-stone-200/80">
                             <div class="flex justify-between items-center text-sm lg:text-base text-stone-700 font-gowun">
-                                <span class="font-semibold">영상 내 글씨 크기 조절</span>
-                                <span id="font-size-val" class="text-stone-900 font-mono font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-xs lg:text-sm">선택 비율 맞춤</span>
+                                <span class="font-semibold">자막 글씨 크기</span>
+                                <span id="font-size-val" class="text-stone-900 font-mono font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-xs lg:text-sm shadow-sm">자동 맞춤</span>
                             </div>
-                            <input type="range" id="canvas-font-size" min="0" max="120" value="0" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-stone-800">
-                            <p class="text-[11px] lg:text-xs text-stone-400 keep-all">0px로 설정 시 가로/세로 화면 비율 환경에 맞추어 가장 우아한 프리미엄 크기로 자동 스케일링됩니다.</p>
+                            <input type="range" id="canvas-font-size" min="0" max="150" value="0" class="w-full h-2 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-stone-800">
+                            <p class="text-[11px] lg:text-xs text-stone-400 keep-all mt-1">슬라이더를 움직여 크기를 지정합니다. (0으로 설정 시 비율에 맞춰 자동 최적화됩니다)</p>
                         </div>
-
-                        <div class="flex flex-col gap-1.5 pt-2 border-t border-stone-200/60">
+                        
+                        <!-- 워터마크 로고 테두리 두께 조절기 -->
+                        <div class="flex flex-col gap-2 pt-3 border-t border-stone-200/80">
                             <div class="flex justify-between items-center text-sm lg:text-base text-stone-700 font-gowun">
-                                <span class="font-semibold">로고 테두리 두께 설정</span>
-                                <span id="logo-outline-val" class="text-stone-900 font-mono font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-xs lg:text-sm">3 px</span>
+                                <span class="font-semibold">로고 흰색 테두리 두께</span>
+                                <span id="logo-outline-val" class="text-stone-900 font-mono font-bold bg-white px-2 py-0.5 rounded border border-stone-200 text-xs lg:text-sm shadow-sm">3 px</span>
                             </div>
-                            <input type="range" id="logo-outline-thickness" min="0" max="10" value="3" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-stone-800">
+                            <input type="range" id="logo-outline-thickness" min="0" max="10" value="3" class="w-full h-2 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-stone-800">
                         </div>
                     </section>
 
+                    <!-- 3. 프리미엄 BGM 설정 -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <h2 class="text-base lg:text-xl font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
-                            <i data-lucide="music" class="w-4 h-4 text-stone-400"></i> 배경음악 (BGM)
+                            <i data-lucide="music" class="w-5 h-5 text-stone-400"></i> 배경음악 (BGM)
                         </h2>
-                        <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base cursor-pointer">
+                        <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base cursor-pointer">
                             <option value="procedural" selected>🌿 실시간 힐링 사운드 (자연 합성음 - 100% 재생 보장)</option>
                             <option value="https://ia802508.us.archive.org/5/items/relaxing-piano-music-royalty-free/Relaxing%20Piano%20Music.mp3">🎹 평온한 편백숲 (피아노 앰비언트)</option>
                             <option value="https://ia802506.us.archive.org/16/items/nature-sounds-birds-singing-relaxing/nature-sounds-birds-singing.mp3">🐤 아침 숲의 소리 (실제 새 지저귐)</option>
@@ -109,40 +182,44 @@ html_content = """<!DOCTYPE html>
                         <input type="file" id="custom-bgm-input" accept="audio/*" class="hidden">
                         <div id="custom-bgm-info" class="hidden flex items-center justify-between bg-stone-100 rounded-xl px-4 py-3 border border-stone-200 mt-2">
                             <div class="flex items-center gap-2 overflow-hidden">
-                                <i data-lucide="file-audio" class="w-4 h-4 text-stone-500 shrink-0"></i>
-                                <span id="custom-bgm-name" class="text-sm text-stone-600 font-gowun truncate">음원.mp3</span>
+                                <i data-lucide="file-audio" class="w-5 h-5 text-stone-500 shrink-0"></i>
+                                <span id="custom-bgm-name" class="text-sm lg:text-base text-stone-600 font-gowun truncate">음원.mp3</span>
                             </div>
                             <button id="custom-bgm-remove" class="text-stone-400 hover:text-red-500 shrink-0 transition-colors" title="음원 삭제">
-                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                <i data-lucide="x-circle" class="w-5 h-5"></i>
                             </button>
                         </div>
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
                     </section>
 
+                    <!-- 4. 사진 업로드 버튼 -->
                     <section>
-                        <label class="cursor-pointer w-full py-6 rounded-2xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center transition-all hover:bg-stone-50 group bg-white shadow-sm">
-                            <div class="w-12 h-12 rounded-full bg-stone-100 group-hover:bg-white flex items-center justify-center mb-2 transition-colors">
-                                <i data-lucide="image-plus" class="w-5 h-5 text-stone-600"></i>
+                        <label class="cursor-pointer w-full py-8 rounded-2xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center transition-all hover:bg-stone-50 group bg-white shadow-sm">
+                            <div class="w-14 h-14 rounded-full bg-stone-100 group-hover:bg-white flex items-center justify-center mb-2 transition-colors">
+                                <i data-lucide="image-plus" class="w-6 h-6 text-stone-600"></i>
                             </div>
                             <span class="text-stone-700 font-serif-kr text-base lg:text-lg font-bold">터치하여 숲체원 사진 추가</span>
-                            <span class="text-stone-400 font-gowun text-xs lg:text-sm mt-1">드래그 앤 드롭으로 순서 변경 가능</span>
+                            <span class="text-stone-400 font-gowun text-sm mt-1">드래그 앤 드롭으로 순서 변경 가능</span>
                             <input id="image-upload" type="file" multiple accept="image/*" class="hidden" />
                         </label>
                     </section>
 
+                    <!-- 5. 통합 스토리보드 에디터 -->
                     <section>
                         <div class="flex justify-between items-end mb-3">
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
-                                <i data-lucide="clapperboard" class="w-4 h-4 text-stone-400"></i> 스토리보드 편집
+                                <i data-lucide="clapperboard" class="w-5 h-5 text-stone-400"></i> 스토리보드 편집
                             </h2>
                         </div>
                         <div id="storyboard-container" class="space-y-4 pb-4">
-                            </div>
+                            <!-- JS 동적 렌더링 영역 -->
+                        </div>
                     </section>
 
                 </div>
 
-                <div class="p-6 border-t border-stone-100 bg-white">
+                <!-- 하단 추출 버튼 영역 -->
+                <div class="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
                     <div class="flex justify-between items-center mb-3">
                         <span class="text-sm lg:text-base font-gowun text-stone-500">총 재생 시간</span>
                         <span id="estimated-time" class="text-lg lg:text-xl font-bold text-stone-800 font-mono">00:00</span>
@@ -153,41 +230,44 @@ html_content = """<!DOCTYPE html>
                 </div>
             </aside>
 
+            <!-- 오른쪽: 플레이어 영역 -->
             <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden items-center justify-center p-4">
                 
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center w-full h-full">
                     <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
-                    <h3 class="text-xl font-bold mb-3 text-stone-800 font-serif-kr">고화질 영상 렌더링 중...</h3>
-                    <p class="text-stone-500 font-gowun mb-6 text-center text-sm">브라우저 창을 유지해 주세요.</p>
-                    <div class="w-64 bg-stone-200 rounded-full h-2 overflow-hidden">
+                    <h3 class="text-xl lg:text-2xl font-bold mb-3 text-stone-800 font-serif-kr">고화질 영상 렌더링 중...</h3>
+                    <p class="text-stone-500 font-gowun mb-6 text-center text-sm lg:text-base">브라우저 창을 유지해 주세요.</p>
+                    <div class="w-64 lg:w-80 bg-stone-200 rounded-full h-2 overflow-hidden">
                       <div id="render-progress" class="bg-stone-800 h-full transition-all duration-300" style="width: 0%"></div>
                     </div>
-                    <p id="render-time-text" class="text-xs mt-2 font-mono text-stone-500">00:00 / 00:00</p>
+                    <p id="render-time-text" class="text-xs lg:text-sm mt-2 font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
+                <!-- 캔버스 컨테이너 (비율 반응형) -->
                 <div id="preview-wrapper" class="relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
                     <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800 p-4 text-center">
                         <i data-lucide="clapperboard" class="w-12 h-12 mb-3 opacity-50 stroke-[1]"></i>
-                        <p class="text-sm font-serif-kr text-stone-300">왼쪽 스토리보드에서 사진을 추가하여 프리미엄 비디오를 완성하세요</p>
+                        <p class="text-sm font-serif-kr text-stone-300">왼쪽에서 사진을 추가하여 렌더링 미리보기를 활성화하세요</p>
                     </div>
                 </div>
 
-                <div class="mt-6 w-full max-w-sm bg-white rounded-2xl p-3 shadow-sm border border-stone-200 flex items-center gap-3">
-                    <button id="play-btn" class="w-10 h-10 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
-                        <i data-lucide="play" class="w-4 h-4 ml-1"></i>
+                <!-- 플레이어 컨트롤 -->
+                <div class="mt-6 w-full max-w-sm lg:max-w-md bg-white rounded-2xl p-3 lg:p-4 shadow-sm border border-stone-200 flex items-center gap-3">
+                    <button id="play-btn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
+                        <i data-lucide="play" class="w-4 h-4 lg:w-5 lg:h-5 ml-1"></i>
                     </button>
-                    <button id="stop-btn" class="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-500 transition active:scale-95 disabled:opacity-50">
-                        <i data-lucide="square" class="w-3 h-3"></i>
+                    <button id="stop-btn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-500 transition active:scale-95 disabled:opacity-50">
+                        <i data-lucide="square" class="w-3 h-3 lg:w-4 lg:h-4"></i>
                     </button>
                     
                     <div class="flex-1 flex items-center gap-3 px-1">
-                        <span id="current-time-display" class="text-[10px] font-mono text-stone-500">00:00</span>
-                        <div class="flex-1 h-1.5 bg-stone-100 rounded-full cursor-pointer relative overflow-hidden" id="progress-bar-container">
+                        <span id="current-time-display" class="text-[10px] lg:text-xs font-mono text-stone-500">00:00</span>
+                        <div class="flex-1 h-1.5 lg:h-2 bg-stone-100 rounded-full cursor-pointer relative overflow-hidden" id="progress-bar-container">
                             <div id="progress-bar" class="absolute top-0 left-0 h-full bg-stone-500 pointer-events-none transition-colors" style="width: 0%;"></div>
                         </div>
-                        <span id="total-time-display" class="text-[10px] font-mono text-stone-400">00:00</span>
+                        <span id="total-time-display" class="text-[10px] lg:text-xs font-mono text-stone-400">00:00</span>
                     </div>
                 </div>
 
@@ -206,7 +286,7 @@ html_content = """<!DOCTYPE html>
             return `${m}:${s}`;
         }
 
-        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (그림자 어버레이 감성 유지)
+        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘 (그림자 감성)
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -253,7 +333,7 @@ html_content = """<!DOCTYPE html>
 
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
 
-        // 파티클 초기화
+        // 파티클
         const particles = Array.from({length: 60}, () => ({
             x: Math.random() * 1920,
             y: Math.random() * 1920,
@@ -308,7 +388,7 @@ html_content = """<!DOCTYPE html>
             customBgmName: document.getElementById('custom-bgm-name'),
             customBgmRemove: document.getElementById('custom-bgm-remove'),
             bgmAudio: document.getElementById('bgm-audio'),
-            
+
             // 신규 오퍼레이션 요소 바인딩
             canvasFontSize: document.getElementById('canvas-font-size'),
             fontSizeVal: document.getElementById('font-size-val'),
@@ -320,17 +400,19 @@ html_content = """<!DOCTYPE html>
         let windNode, windGain, chimeInterval;
 
         function init() {
+            // 비율 토글 이벤트
             elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
             elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
 
+            // 글씨체 버튼 이벤트 연결
             document.querySelectorAll('.font-btn').forEach(btn => {
                 btn.addEventListener('click', () => setFont(btn.dataset.font));
             });
 
-            // 내부 조작계 동적 리스너
+            // 🌟 내부 조작계 동적 리스너 연결
             elements.canvasFontSize.addEventListener('input', (e) => {
                 const val = parseInt(e.target.value);
-                elements.fontSizeVal.textContent = val === 0 ? "선택 비율 맞춤" : `${val} px`;
+                elements.fontSizeVal.textContent = val === 0 ? "자동 맞춤" : `${val} px`;
                 if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
 
@@ -339,6 +421,7 @@ html_content = """<!DOCTYPE html>
                 if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
 
+            // 파일 처리 및 플레이어 연동
             elements.imageUpload.addEventListener('change', handleImageUpload);
             elements.bgmSelect.addEventListener('change', (e) => {
                 stopProceduralAmbient();
@@ -378,6 +461,7 @@ html_content = """<!DOCTYPE html>
             
             elements.bgmAudio.src = elements.bgmSelect.value;
             
+            // 폰트 안전 적용 대기
             document.fonts.ready.then(() => {
                 elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0);
                 elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0);
@@ -498,6 +582,7 @@ html_content = """<!DOCTYPE html>
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
                 
+                // 모바일 세로 뷰포트
                 elements.previewWrapper.className = "relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1080;
@@ -506,6 +591,7 @@ html_content = """<!DOCTYPE html>
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
                 
+                // PC 가로 뷰포트
                 elements.previewWrapper.className = "relative w-full max-w-[800px] aspect-video bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
                 
                 elements.canvas.width = 1920;
@@ -545,7 +631,7 @@ html_content = """<!DOCTYPE html>
             e.target.value = '';
         }
 
-        // 스토리보드 렌더링 (PC 전용 가독성을 보장하기 위해 가변 마크업 구성)
+        // 스토리보드 UI 빌더 (PC 대응 사이즈 업그레이드)
         function renderStoryboard() {
             elements.storyboardContainer.innerHTML = '';
             elements.storyboardContainer.appendChild(createSegmentCard('intro', null, state.intro));
@@ -558,7 +644,6 @@ html_content = """<!DOCTYPE html>
 
         function createSegmentCard(type, index, data) {
             const div = document.createElement('div');
-            // PC 대화면에서도 보기 편하게 패딩과 레이아웃 배치 최적화
             div.className = 'bg-stone-50 border border-stone-200 rounded-xl p-4 flex gap-4 storyboard-item items-start shadow-sm';
             
             let label = '', icon = '';
@@ -660,6 +745,9 @@ html_content = """<!DOCTYPE html>
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
         }
 
+        // ==========================================
+        // 렌더링 동적 구조
+        // ==========================================
         function getSceneContext(time) {
             if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
             
@@ -695,6 +783,7 @@ html_content = """<!DOCTYPE html>
             ctx.translate(cw/2 + transX, ch/2 + transY);
             ctx.scale(scale, scale);
             ctx.translate(-cw/2, -ch/2);
+            
             ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 80; ctx.shadowOffsetY = 30;
             drawDynamicFineArtFrame(ctx, imgObj.imgElement, cw, ch);
             ctx.restore();
@@ -723,7 +812,6 @@ html_content = """<!DOCTYPE html>
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
-        // 프레임 드로우 루프 (글씨 크기 사용자 직접 조절 조작계 알고리즘 이식 완료)
         function drawFrame(timeInSeconds) {
             const ctx = elements.ctx;
             const width = elements.canvas.width;  
@@ -736,16 +824,13 @@ html_content = """<!DOCTYPE html>
             if(state.images.length === 0) return;
             const scene = getSceneContext(timeInSeconds);
 
-            // 사용자가 선택한 내부 글자 크기 값 동적 획득
+            // 🌟 폰트 크기 커스텀 조작계 설정값 수용
             const userFontSize = parseInt(elements.canvasFontSize.value);
-
-            // 비율별 가변 디폴트 폰트 스케일링 정의
             let fontSizeIntroTitle = isVertical ? 80 : 110;
             let fontSizeIntroSubtitle = isVertical ? 48 : 64;
             let fontSizeSlide = isVertical ? 56 : 72;
             let lineHeightSlide = isVertical ? 72 : 96;
 
-            // 조작계 값이 활성화(>0)되어 있는 경우, 동적 가변식 마스터 비율 변환 적용
             if (userFontSize > 0) {
                 fontSizeSlide = userFontSize;
                 lineHeightSlide = Math.round(userFontSize * 1.3);
@@ -763,12 +848,12 @@ html_content = """<!DOCTYPE html>
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
                 ctx.fillStyle = '#f5f5f4'; 
                 ctx.font = `400 ${fontSizeIntroTitle}px "${state.fontFamily}", sans-serif`;
-                drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?60:40), width * 0.85, fontSizeIntroTitle * 1.25);
+                drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?60:40), width * 0.85, Math.round(fontSizeIntroTitle * 1.25));
 
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = '#a8a29e'; 
                 ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
-                drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:90), width * 0.85, fontSizeIntroSubtitle * 1.25);
+                drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:90), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
             } 
             // -- 2. 아웃트로 렌더링 --
             else if (scene.type === 'outro') {
@@ -778,13 +863,13 @@ html_content = """<!DOCTYPE html>
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
                 ctx.fillStyle = '#f5f5f4'; 
-                ctx.font = `300 ${isVertical ? fontSizeIntroTitle*0.7 : fontSizeIntroTitle*0.7}px "${state.fontFamily}", sans-serif`;
-                drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:50), width * 0.85, isVertical ? 72 : 96);
+                ctx.font = `300 ${Math.round(fontSizeIntroTitle * 0.7)}px "${state.fontFamily}", sans-serif`;
+                drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:50), width * 0.85, Math.round(fontSizeIntroTitle * 0.9));
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = '#a8a29e'; 
                 ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
-                drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:80), width * 0.85, isVertical ? 50 : 68);
+                drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:80), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
             } 
             // -- 3. 슬라이드 본편 렌더링 --
             else if (scene.type === 'slide') {
@@ -806,6 +891,7 @@ html_content = """<!DOCTYPE html>
                 vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
                 ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
+                ctx.globalAlpha = 1.0; ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 particles.forEach(p => {
                     if(state.isPlaying || state.isRecording) {
                         p.x += p.vx; p.y += p.vy;
@@ -827,8 +913,10 @@ html_content = """<!DOCTYPE html>
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
                 const textY = height - (isVertical ? 220 : 160);
 
+                ctx.fillStyle = '#e7e5e4'; 
                 ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`;
-                ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(0,0,0,0.9)'; 
+                ctx.shadowBlur = 15;
 
                 const maxWidth = width * 0.85; 
 
@@ -843,7 +931,7 @@ html_content = """<!DOCTYPE html>
                 }
             }
             
-            // -- 4. 워터마크 로고 (사용자 정의 두께 슬라이더 연동 완료) --
+            // -- 4. 워터마크 로고 (사용자 맞춤형 두께 8방향 오프셋 렌더링) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
@@ -851,9 +939,8 @@ html_content = """<!DOCTYPE html>
                 const logoX = width - logoW - (isVertical ? 60 : 50);
                 const logoY = isVertical ? 100 : 40;
 
-                // 조작계에서 읽어온 테두리 두께 변수 바인딩
                 const outline = parseInt(elements.logoOutlineThickness.value);
-
+                
                 if (outline > 0) {
                     ctx.shadowColor = 'white';
                     ctx.shadowBlur = 2; 
@@ -887,6 +974,9 @@ html_content = """<!DOCTYPE html>
             ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
         }
 
+        // ==========================================
+        // 컨트롤 및 내보내기 
+        // ==========================================
         function updateUI() {
             const hasImages = state.images.length > 0;
             elements.emptyState.style.display = hasImages ? 'none' : 'flex';
@@ -912,6 +1002,7 @@ html_content = """<!DOCTYPE html>
 
         function togglePlay() {
             if (state.images.length === 0) return;
+            
             setupAudioRouting();
             if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
@@ -1041,9 +1132,3 @@ html_content = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-with open("forest-video-maker-v2.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print("File 'forest-video-maker-v2.html' generated successfully.")
