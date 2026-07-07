@@ -392,10 +392,7 @@
                 btn.addEventListener('click', () => setFont(btn.dataset.font));
             });
 
-            elements.canvasFontSize.addEventListener('input', (e) => {
-                const val = parseInt(e.target.value);
-                elements.fontSizeVal.textContent = val === 0 ? "자동 맞춤" : `${val} px`;
-            // 🌟 내부 조작계 동적 리스너 연결
+            // 🌟 내부 조작계 동적 리스너 연결 (구문 오류 수정 완료)
             elements.canvasFontSize.addEventListener('input', (e) => {
                 const val = parseInt(e.target.value);
                 elements.fontSizeVal.textContent = val === 0 ? "자동 맞춤" : `${val} px`;
