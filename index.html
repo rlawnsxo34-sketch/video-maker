@@ -595,31 +595,16 @@
             if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
-        // AI API 재시도 유틸리티 (안정성 보강)
-        async function fetchWithRetry(url, options, retries = 5) {
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return await response.json();
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    await new Promise(res => setTimeout(res, delays[i]));
-                }
-            }
-        }
-
         async function handleImageUpload(e) {
             const files = Array.from(e.target.files);
             if (!files.length) return;
 
-            // 최대 재생 길이 체크
+            // 최대 재생 길이 체크 (5분 제한)
             let validFiles = [];
             let addedCount = 0;
             const maxDuration = 300; 
             for (const file of files) {
-                if ((state.images.length + addedCount + 1) * state.durationPerSlide > maxDuration) {
+                if ((state.images.length + addedCount + 1) * 4 > maxDuration) {
                     if (addedCount === 0) alert(`최대 5분(${maxDuration}초) 분량까지만 제작할 수 있습니다. 일부 사진은 제외되었습니다.`);
                     break;
                 }
@@ -632,50 +617,19 @@
                 return;
             }
 
-            // AI 분석 로딩 UI 표시
-            elements.loadingOverlay.style.display = 'flex';
-            elements.loadingOverlay.querySelector('h3').textContent = "AI 감성 문구 작성 중...";
-            elements.loadingOverlay.querySelector('p').textContent = "사진을 분석하여 어울리는 힐링 문구를 생성하고 있습니다.";
-            elements.renderProgress.style.width = "100%";
-            elements.renderProgress.classList.add('animate-pulse');
-            elements.renderTimeText.textContent = "AI 비전 분석 중...";
-
             const loadPromises = validFiles.map(file => new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const dataUrl = event.target.result;
-                    const base64Data = dataUrl.split(',')[1];
-                    const mimeType = file.type || "image/jpeg";
-                    
-                    const apiKey = ""; // Gemini API 키 자동 연동
-                    const prompt = "이 사진을 분석해서 숲체원(산림 휴양 시설) 방문객을 위한 힐링/자연/휴식 테마의 서정적인 감성 문구 1줄을 추천해줘. 사진의 색감이나 피사체를 반영하면 좋아. 최대 30자 이내, 특수문자나 쌍따옴표 없이 작성해.";
-                    
-                    let aiPhrase = "";
-                    try {
-                        const result = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mimeType, data: base64Data } }] }]
-                            })
-                        });
-                        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                        aiPhrase = text ? text.trim().replace(/^["']|["']$/g, '') : getRandomPhrase();
-                    } catch(err) {
-                        console.error("AI Analysis failed, using fallback:", err);
-                        aiPhrase = getRandomPhrase();
-                    }
-
+                reader.onload = (event) => {
                     const img = new Image();
                     img.onload = () => resolve({
                         id: Date.now() + Math.random(),
                         imgElement: img,
-                        src: dataUrl,
+                        src: event.target.result,
                         effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
-                        phrase: aiPhrase,
+                        phrase: getRandomPhrase(), // 로딩 지연 없이 즉시 기본 감성 문구 배정
                         duration: 4
                     });
-                    img.src = dataUrl;
+                    img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             }));
@@ -683,18 +637,13 @@
             const loadedImages = await Promise.all(loadPromises);
             state.images = [...state.images, ...loadedImages];
             
-            // 로딩 UI 원상 복구 및 숨김
-            elements.renderProgress.classList.remove('animate-pulse');
-            elements.loadingOverlay.style.display = 'none';
-            elements.loadingOverlay.querySelector('h3').textContent = "고화질 영상 렌더링 중...";
-            elements.loadingOverlay.querySelector('p').textContent = "브라우저 창을 유지해 주세요.";
-
             updateDurations();
             renderStoryboard();
             updateUI();
             if(!state.isPlaying) drawFrame(state.currentTime);
             e.target.value = '';
         }
+
 
         // 스토리보드 UI 빌더
         function renderStoryboard() {
