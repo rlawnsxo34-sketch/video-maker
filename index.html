@@ -5,102 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>숲체원 프리미엄 영상 제작소</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- 고급 폰트 설정 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Serif+KR:wght@300;400;600&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
 
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #e7e5e4; 
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        body { font-family: 'Pretendard', sans-serif; background-color: #e7e5e4; margin: 0; padding: 0; }
         .font-serif-kr { font-family: 'Noto Serif KR', serif; }
         .font-gowun { font-family: 'Gowun Dodum', sans-serif; }
-        .keep-all { word-break: keep-all; overflow-wrap: break-word; }
 
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-up {
-            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
         
-        #timeline-container {
-            display: flex;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-        }
-        
-        .timeline-item {
-            flex: 0 0 auto;
-            width: 100px;
-            height: 70px;
-            margin-right: 12px;
-            position: relative;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f5f5f4;
-        }
-        
-        .timeline-item.active {
-            border-color: #57534e;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
+        .video-container { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
 
-        .timeline-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(28, 25, 23, 0.7);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-            backdrop-filter: blur(2px);
-        }
-        
-        .timeline-item:hover .delete-btn { opacity: 1; }
-        .video-container { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
         .storyboard-item.dragging { opacity: 0.5; border: 2px dashed #a8a29e; }
+        .storyboard-item { transition: transform 0.2s, box-shadow 0.2s; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-0 md:p-6 relative">
 
     <div class="w-full max-w-[1600px] bg-white md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-[90vh] md:max-h-[95vh] border border-stone-200 animate-fade-up">
         
-        <!-- 상단 헤더 -->
+        <!-- 헤더 -->
         <header class="px-6 py-4 flex justify-between items-center border-b border-stone-100 bg-white z-20">
             <div class="flex items-center gap-3 text-stone-800 font-serif-kr text-xl lg:text-2xl font-bold">
                 <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.style.display='none'">
@@ -132,7 +67,7 @@
                         </div>
                     </section>
 
-                    <!-- 2. 글씨체 및 조작계 설정 -->
+                    <!-- 2. 글씨체 및 화면 전환 효과 설정 -->
                     <section class="flex flex-col gap-4 p-4 lg:p-5 bg-stone-50 rounded-2xl border border-stone-100">
                         <div class="flex flex-col gap-2">
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
@@ -154,6 +89,19 @@
                             </div>
                             <input type="range" id="canvas-font-size" min="0" max="150" value="0" class="w-full h-2 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-stone-800">
                             <p class="text-[11px] lg:text-xs text-stone-400 keep-all mt-1">슬라이더를 움직여 크기를 지정합니다. (0으로 설정 시 비율에 맞춰 자동 최적화됩니다)</p>
+                        </div>
+                        
+                        <!-- 🌟 화면 전환 테마 선택기 (새 기능) -->
+                        <div class="flex flex-col gap-2 pt-3 border-t border-stone-200/80">
+                            <div class="flex items-center text-sm lg:text-base text-stone-700 font-gowun mb-1">
+                                <i data-lucide="clapperboard" class="w-4 h-4 mr-2 text-stone-400"></i>
+                                <span class="font-semibold">화면 전환 효과 (트랜지션)</span>
+                            </div>
+                            <select id="transition-effect-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base cursor-pointer shadow-sm">
+                                <option value="crossfade" selected>🌬️ 시네마틱 페이드 (부드럽게 겹침 - 기본)</option>
+                                <option value="fadeblack">🎬 필름 블랙 아웃 (영화처럼 어두워짐)</option>
+                                <option value="slide">📸 포토 슬라이드 (옆으로 밀려남)</option>
+                            </select>
                         </div>
                     </section>
 
@@ -180,8 +128,7 @@
                                 <i data-lucide="x-circle" class="w-5 h-5"></i>
                             </button>
                         </div>
-                        <!-- crossorigin 속성을 제거하여 로컬 파일 연동 문제를 해결 -->
-                        <audio id="bgm-audio" loop></audio>
+                        <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
                     </section>
 
                     <!-- 4. 사진 업로드 버튼 -->
@@ -217,7 +164,7 @@
                         <span id="estimated-time" class="text-lg lg:text-xl font-bold text-stone-800 font-mono">00:00</span>
                     </div>
                     <button id="export-btn" class="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-serif-kr text-lg lg:text-xl text-white bg-stone-800 hover:bg-stone-900 transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i data-lucide="download" class="w-5 h-5"></i> 고화질 영상 추출
+                        <i data-lucide="download" class="w-5 h-5"></i> 고화질 영상 추출 (MP4)
                     </button>
                 </div>
             </aside>
@@ -270,7 +217,6 @@
     <script>
         lucide.createIcons();
 
-        // 유틸: 시간 포맷
         function formatTime(seconds) {
             if(isNaN(seconds) || seconds < 0) return "00:00";
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -278,7 +224,6 @@
             return `${m}:${s}`;
         }
 
-        // 유틸: 텍스트 자동 줄바꿈 렌더링 알고리즘
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -340,6 +285,7 @@
         const state = {
             aspectRatio: 'vertical', 
             fontFamily: 'Gowun Dodum',
+            transitionEffect: 'crossfade', // 신규: 트랜지션 테마
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
@@ -378,7 +324,8 @@
             bgmAudio: document.getElementById('bgm-audio'),
 
             canvasFontSize: document.getElementById('canvas-font-size'),
-            fontSizeVal: document.getElementById('font-size-val')
+            fontSizeVal: document.getElementById('font-size-val'),
+            transitionEffectSelect: document.getElementById('transition-effect-select')
         };
 
         let audioCtx, audioDest, audioSource;
@@ -392,17 +339,18 @@
                 btn.addEventListener('click', () => setFont(btn.dataset.font));
             });
 
-            // 🌟 내부 조작계 동적 리스너 연결 (구문 오류 수정 완료)
             elements.canvasFontSize.addEventListener('input', (e) => {
                 const val = parseInt(e.target.value);
                 elements.fontSizeVal.textContent = val === 0 ? "자동 맞춤" : `${val} px`;
                 if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
 
-            // 파일 처리 및 플레이어 연동
+            elements.transitionEffectSelect.addEventListener('change', (e) => {
+                state.transitionEffect = e.target.value;
+                if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            });
+
             elements.imageUpload.addEventListener('change', handleImageUpload);
-            
-            // BGM 다이내믹 CORS 라우팅 처리
             elements.bgmSelect.addEventListener('change', (e) => {
                 stopProceduralAmbient();
                 if(e.target.value === 'custom') {
@@ -422,11 +370,9 @@
                 }
             });
 
-            // 내 음원 직접 업로드 시 Blob 처리
             elements.customBgmInput.addEventListener('change', (e) => {
                 stopProceduralAmbient();
                 if(e.target.files[0]) {
-                    // Blob URL 생성 시 CORS 정책 해제 (Web Audio API 차단 해결)
                     elements.bgmAudio.removeAttribute('crossorigin'); 
                     elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]);
                     elements.customBgmName.textContent = e.target.files[0].name;
@@ -454,7 +400,6 @@
             renderStoryboard();
             updateDurations();
             
-            // 기본 BGM 초기 세팅 로직
             if (elements.bgmSelect.value !== 'procedural' && elements.bgmSelect.value !== 'custom' && elements.bgmSelect.value !== '') {
                 elements.bgmAudio.setAttribute('crossorigin', 'anonymous');
                 elements.bgmAudio.src = elements.bgmSelect.value;
@@ -599,7 +544,6 @@
             const files = Array.from(e.target.files);
             if (!files.length) return;
 
-            // 최대 재생 길이 체크 (5분 제한)
             let validFiles = [];
             let addedCount = 0;
             const maxDuration = 300; 
@@ -626,7 +570,7 @@
                         imgElement: img,
                         src: event.target.result,
                         effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
-                        phrase: getRandomPhrase(), // 로딩 지연 없이 즉시 기본 감성 문구 배정
+                        phrase: getRandomPhrase(),
                         duration: 4
                     });
                     img.src = event.target.result;
@@ -644,8 +588,6 @@
             e.target.value = '';
         }
 
-
-        // 스토리보드 UI 빌더
         function renderStoryboard() {
             elements.storyboardContainer.innerHTML = '';
             elements.storyboardContainer.appendChild(createSegmentCard('intro', null, state.intro));
@@ -759,6 +701,9 @@
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
         }
 
+        // ==========================================
+        // 동적 트랜지션 렌더링 엔진 (신규 기능 적용)
+        // ==========================================
         function getSceneContext(time) {
             if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
             
@@ -772,13 +717,63 @@
             return { type: 'outro', elapsed: time - acc, duration: state.outro.duration };
         }
 
+        // 고급 트랜지션 연산 처리
+        function renderSlideTransition(ctx, prevObj, currentObj, cw, ch, fadeElapsed, fadeDuration) {
+            // 진행률 (0.0 ~ 1.0) 클램핑 처리
+            const progress = Math.max(0, Math.min(fadeElapsed / fadeDuration, 1.0));
+            const theme = state.transitionEffect;
+
+            if (theme === 'crossfade') {
+                // 1. 기본 시네마틱 페이드 (부드럽게 겹침)
+                renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1 - progress);
+                renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, progress);
+            } 
+            else if (theme === 'fadeblack') {
+                // 2. 필름 블랙 아웃 (V자형 페이드 투 블랙)
+                if (progress < 0.5) {
+                    // 이전 화면이 어두워짐
+                    const fadeOutAlpha = 1 - (progress * 2);
+                    renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, fadeOutAlpha);
+                } else {
+                    // 새로운 화면이 밝아짐
+                    const fadeInAlpha = (progress - 0.5) * 2;
+                    renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, fadeInAlpha);
+                }
+            } 
+            else if (theme === 'slide') {
+                // 3. 포토 슬라이드 (동적 X/Y 좌표 계산)
+                // 현재 화면은 오른쪽에서 왼쪽으로 쓱 들어옴
+                const slideDistance = cw;
+                
+                ctx.save();
+                ctx.translate(-(progress * slideDistance), 0);
+                renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1.0);
+                ctx.restore();
+
+                ctx.save();
+                ctx.translate(slideDistance - (progress * slideDistance), 0);
+                renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, 1.0);
+                ctx.restore();
+                
+                // 프레임 겹치는 부분에 깊이감(그림자) 효과
+                const shadowX = slideDistance - (progress * slideDistance);
+                if(shadowX > 0 && shadowX < cw) {
+                    const grad = ctx.createLinearGradient(shadowX, 0, shadowX - 100, 0);
+                    grad.addColorStop(0, 'rgba(0,0,0,0.8)');
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(shadowX - 100, 0, 100, ch);
+                }
+            }
+        }
+
         function renderSlideImage(ctx, imgObj, cw, ch, elapsed, alpha) {
             ctx.globalAlpha = alpha;
             ctx.filter = 'blur(60px) brightness(0.25) sepia(0.2)';
             drawCoverImage(ctx, imgObj.imgElement, cw, ch);
             ctx.filter = 'none';
             
-            const p = elapsed / (imgObj.duration + 1.5); 
+            const p = Math.max(0, elapsed / (imgObj.duration + 1.5)); 
             let scale = 1.0, transX = 0, transY = 0;
             const drift = 40; 
             switch(imgObj.effect) {
@@ -881,18 +876,20 @@
             } 
             else if (scene.type === 'slide') {
                 const imgObj = state.images[scene.index];
-                const fadeDuration = 1.0; 
+                
+                // 테마에 따라 트랜지션 지속시간 유동적 조절
+                const fadeDuration = state.transitionEffect === 'fadeblack' ? 1.5 : 1.0; 
                 let isFading = (scene.elapsed < fadeDuration && scene.index > 0);
                 
                 if (isFading) {
                     const prevObj = state.images[scene.index - 1];
-                    const progress = scene.elapsed / fadeDuration; 
-                    renderSlideImage(ctx, prevObj, width, height, prevObj.duration + scene.elapsed, 1 - progress);
-                    renderSlideImage(ctx, imgObj, width, height, scene.elapsed, progress);
+                    // 신규 분리된 통합 트랜지션 함수 호출
+                    renderSlideTransition(ctx, prevObj, imgObj, width, height, scene.elapsed, fadeDuration);
                 } else {
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
 
+                // 비네팅 필터
                 ctx.globalAlpha = 1.0;
                 const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
@@ -927,10 +924,11 @@
 
                 const maxWidth = width * 0.85; 
 
+                // 자막 트랜지션은 항상 부드러운 페이드 교차 유지
                 if (isFading && prevPhrase !== currentPhrase) {
-                    ctx.globalAlpha = 1 - (scene.elapsed / fadeDuration);
+                    ctx.globalAlpha = 1 - Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
                     drawWrapText(ctx, prevPhrase, width / 2, textY, maxWidth, lineHeightSlide);
-                    ctx.globalAlpha = scene.elapsed / fadeDuration;
+                    ctx.globalAlpha = Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
                     drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
                 } else {
                     ctx.globalAlpha = 1.0; 
@@ -938,7 +936,6 @@
                 }
             }
             
-            // -- 4. 워터마크 로고 (고정 두께 3px 8방향 오프셋 렌더링) --
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
@@ -946,7 +943,7 @@
                 const logoX = width - logoW - (isVertical ? 60 : 50);
                 const logoY = isVertical ? 100 : 40;
 
-                const outline = 3; // 테두리 3px 고정
+                const outline = 3; 
                 
                 ctx.shadowColor = 'white';
                 ctx.shadowBlur = 2; 
@@ -1090,7 +1087,6 @@
 
             const combinedStream = new MediaStream(tracks);
 
-            // 범용 코덱 (AAC/H.264) 우선 지원
             let options = {};
             let ext = 'mp4';
             
