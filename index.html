@@ -8,11 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Firebase SDK 추가 (Compat 버전 활용) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-
     <!-- 구글 폰트 추가 -->
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -47,11 +42,8 @@
                 <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.style.display='none'">
                 <span class="hidden sm:inline border-l border-stone-300 pl-3 ml-1 text-lg lg:text-xl">통합 영상 제작소</span>
             </div>
-            <div class="text-sm lg:text-base font-gowun text-stone-400 hidden sm:flex items-center gap-3">
-                <!-- 🌟 내 작업물 보관소 열기 버튼 -->
-                <button id="my-projects-btn" class="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-700 px-4 py-2 rounded-full transition-colors font-bold shadow-sm">
-                    <i data-lucide="folder-open" class="w-4 h-4"></i> 내 작업물
-                </button>
+            <div class="text-sm lg:text-base font-gowun text-stone-400 hidden sm:flex items-center gap-2">
+                <i data-lucide="monitor-play" class="w-4 h-4"></i> 맞춤형 프리미엄 비디오 에디터
             </div>
         </header>
 
@@ -90,7 +82,6 @@
                             </div>
                         </div>
 
-                        <!-- 영상 내부 자막 글씨 크기 조절기 -->
                         <div class="flex flex-col gap-2 pt-3 border-t border-stone-200/80">
                             <div class="flex justify-between items-center text-sm lg:text-base text-stone-700 font-gowun">
                                 <span class="font-semibold">자막 글씨 크기</span>
@@ -148,6 +139,7 @@
                             </div>
                             <span class="text-stone-700 font-serif-kr text-base lg:text-lg font-bold">터치하여 사진 및 동영상 추가</span>
                             <span class="text-stone-400 font-gowun text-sm mt-1">드래그 앤 드롭으로 순서 변경 가능</span>
+                            <!-- accept 속성에 비디오 형식 대거 추가 -->
                             <input id="image-upload" type="file" multiple accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm" class="hidden" />
                         </label>
                     </section>
@@ -166,23 +158,14 @@
 
                 </div>
 
-                <!-- 하단 추출/저장 버튼 영역 -->
-                <div class="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.02)] flex flex-col gap-3">
-                    <div class="flex justify-between items-center">
+                <!-- 하단 추출 버튼 영역 -->
+                <div class="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
+                    <div class="flex justify-between items-center mb-3">
                         <span class="text-sm lg:text-base font-gowun text-stone-500">총 재생 시간</span>
                         <span id="estimated-time" class="text-lg lg:text-xl font-bold text-stone-800 font-mono">00:00</span>
                     </div>
-                    
-                    <!-- 🌟 저장 및 제목 입력 폼 -->
-                    <div class="flex gap-2">
-                        <input type="text" id="project-title" value="숲체원의 추억" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base" placeholder="프로젝트 제목 입력">
-                        <button id="save-btn" class="bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 font-serif-kr rounded-xl px-5 py-3 transition-colors text-sm lg:text-base flex items-center gap-2 shadow-sm font-bold">
-                            <i data-lucide="save" class="w-4 h-4"></i> 임시저장
-                        </button>
-                    </div>
-
                     <button id="export-btn" class="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-serif-kr text-lg lg:text-xl text-white bg-stone-800 hover:bg-stone-900 transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i data-lucide="download" class="w-5 h-5"></i> 고화질 영상 추출 (완료처리)
+                        <i data-lucide="download" class="w-5 h-5"></i> 고화질 영상 추출 (MP4)
                     </button>
                 </div>
             </aside>
@@ -192,21 +175,21 @@
                 
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center w-full h-full">
                     <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
-                    <h3 class="text-xl lg:text-2xl font-bold mb-3 text-stone-800 font-serif-kr">처리 중...</h3>
-                    <p class="text-stone-500 font-gowun mb-6 text-center text-sm lg:text-base">잠시만 기다려 주세요.</p>
+                    <h3 class="text-xl lg:text-2xl font-bold mb-3 text-stone-800 font-serif-kr">고화질 영상 렌더링 중...</h3>
+                    <p class="text-stone-500 font-gowun mb-6 text-center text-sm lg:text-base">브라우저 창을 유지해 주세요.</p>
                     <div class="w-64 lg:w-80 bg-stone-200 rounded-full h-2 overflow-hidden">
                       <div id="render-progress" class="bg-stone-800 h-full transition-all duration-300" style="width: 0%"></div>
                     </div>
-                    <p id="render-time-text" class="text-xs lg:text-sm mt-2 font-mono text-stone-500"></p>
+                    <p id="render-time-text" class="text-xs lg:text-sm mt-2 font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <!-- 캔버스 컨테이너 -->
+                <!-- 캔버스 컨테이너 (비율 반응형) -->
                 <div id="preview-wrapper" class="relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
                     <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800 p-4 text-center">
                         <i data-lucide="clapperboard" class="w-12 h-12 mb-3 opacity-50 stroke-[1]"></i>
-                        <p class="text-sm font-serif-kr text-stone-300">왼쪽에서 미디어를 추가하여 렌더링 미리보기를 활성화하세요</p>
+                        <p class="text-sm font-serif-kr text-stone-300">왼쪽에서 사진이나 동영상을 추가해 주세요.</p>
                     </div>
                 </div>
 
@@ -232,23 +215,6 @@
         </div>
     </div>
 
-    <!-- 🌟 내 작업물 보관소 모달 UI -->
-    <div id="projects-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-4">
-        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh] animate-fade-up">
-            <div class="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-                <h2 class="text-xl lg:text-2xl font-serif-kr font-bold text-stone-800 flex items-center gap-2">
-                    <i data-lucide="hard-drive" class="w-6 h-6 text-stone-600"></i> 내 작업물 보관소
-                </h2>
-                <button id="close-modal-btn" class="text-stone-400 hover:text-stone-700 transition-colors p-2 rounded-full hover:bg-stone-200">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            <div id="projects-list" class="p-6 overflow-y-auto flex-1 bg-white grid grid-cols-1 gap-4">
-                <!-- JS 동적 생성 위치 -->
-            </div>
-        </div>
-    </div>
-
     <script>
         lucide.createIcons();
 
@@ -262,20 +228,27 @@
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
+            
             paragraphs.forEach(p => {
                 const words = p.split(' ');
                 let currentLine = '';
+                
                 for(let n = 0; n < words.length; n++) {
                     const testLine = currentLine + words[n] + ' ';
                     const metrics = ctx.measureText(testLine);
                     if (metrics.width > maxWidth && n > 0) {
-                        lines.push(currentLine); currentLine = words[n] + ' ';
-                    } else { currentLine = testLine; }
+                        lines.push(currentLine);
+                        currentLine = words[n] + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
                 }
                 lines.push(currentLine);
             });
+            
             const totalHeight = lines.length * lineHeight;
             let startY = y - (totalHeight / 2) + (lineHeight / 2);
+            
             for(let i=0; i<lines.length; i++) {
                 ctx.fillText(lines[i].trim(), x, startY + (i * lineHeight));
             }
@@ -298,22 +271,24 @@
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
 
         const particles = Array.from({length: 60}, () => ({
-            x: Math.random() * 1920, y: Math.random() * 1920, radius: Math.random() * 3 + 1,
-            vx: (Math.random() - 0.5) * 0.5, vy: Math.random() * 0.5 + 0.2, alpha: Math.random() * 0.5 + 0.1
+            x: Math.random() * 1920,
+            y: Math.random() * 1920,
+            radius: Math.random() * 3 + 1,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: Math.random() * 0.5 + 0.2,
+            alpha: Math.random() * 0.5 + 0.1
         }));
 
         const watermarkLogo = new Image();
         watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
-        // 앱 전체 상태 관리
         const state = {
-            projectId: null, // 저장소 식별 ID
             aspectRatio: 'vertical', 
             fontFamily: 'Gowun Dodum',
             transitionEffect: 'crossfade', 
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
-            images: [], 
+            images: [], // 미디어 요소(이미지/비디오) 통합 보관소
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
             
             isPlaying: false, isRecording: false,
@@ -350,35 +325,12 @@
             bgmAudio: document.getElementById('bgm-audio'),
 
             canvasFontSize: document.getElementById('canvas-font-size'),
-            fontSizeVal: document.getElementById('font-size-val')
+            fontSizeVal: document.getElementById('font-size-val'),
+            transitionEffectSelect: document.getElementById('transition-effect-select')
         };
 
         let audioCtx, audioDest, audioSource;
         let windNode, windGain, chimeInterval;
-
-        // ==========================================
-        // Firebase 연동 설정 (IndexedDB 대체)
-        // ==========================================
-        // TODO: 파이어베이스 콘솔에서 발급받은 실제 설정값으로 아래 내용을 교체해주세요.
-        const firebaseConfig = {
-  apiKey: "AIzaSyBqatf97xWF726rX-NY-8iH_RmB_KZaMcs",
-  authDomain: "video-maker-27b93.firebaseapp.com",
-  projectId: "video-maker-27b93",
-  storageBucket: "video-maker-27b93.firebasestorage.app",
-  messagingSenderId: "941231393820",
-  appId: "1:941231393820:web:c5746450e30dab2372a3d9",
-  measurementId: "G-QLFFR08YSX"
-        };
-
-        // Firebase 초기화
-        let firebaseApp, db, storage;
-        try {
-            firebaseApp = firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            storage = firebase.storage();
-        } catch (e) {
-            console.error("Firebase 초기화 에러 (설정값을 확인하세요):", e);
-        }
 
         function init() {
             elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
@@ -402,10 +354,21 @@
             elements.imageUpload.addEventListener('change', handleImageUpload);
             elements.bgmSelect.addEventListener('change', (e) => {
                 stopProceduralAmbient();
-                if(e.target.value === 'custom') { elements.customBgmInput.click(); } 
-                else if (e.target.value === 'procedural') { elements.bgmAudio.removeAttribute('crossorigin'); elements.bgmAudio.src = ''; elements.customBgmInfo.classList.add('hidden'); } 
-                else if (e.target.value !== '') { elements.bgmAudio.setAttribute('crossorigin', 'anonymous'); elements.bgmAudio.src = e.target.value; elements.customBgmInfo.classList.add('hidden'); } 
-                else { elements.bgmAudio.removeAttribute('crossorigin'); elements.bgmAudio.src = ''; elements.customBgmInfo.classList.add('hidden'); }
+                if(e.target.value === 'custom') {
+                    elements.customBgmInput.click();
+                } else if (e.target.value === 'procedural') {
+                    elements.bgmAudio.removeAttribute('crossorigin');
+                    elements.bgmAudio.src = '';
+                    elements.customBgmInfo.classList.add('hidden');
+                } else if (e.target.value !== '') {
+                    elements.bgmAudio.setAttribute('crossorigin', 'anonymous');
+                    elements.bgmAudio.src = e.target.value;
+                    elements.customBgmInfo.classList.add('hidden');
+                } else {
+                    elements.bgmAudio.removeAttribute('crossorigin');
+                    elements.bgmAudio.src = '';
+                    elements.customBgmInfo.classList.add('hidden');
+                }
             });
 
             elements.customBgmInput.addEventListener('change', (e) => {
@@ -416,23 +379,24 @@
                     elements.customBgmName.textContent = e.target.files[0].name;
                     elements.customBgmInfo.classList.remove('hidden');
                     elements.bgmSelect.value = 'custom';
-                } else { elements.bgmSelect.value = ''; }
+                } else {
+                    elements.bgmSelect.value = '';
+                }
             });
 
             elements.customBgmRemove.addEventListener('click', () => {
-                stopProceduralAmbient(); elements.bgmSelect.value = 'procedural'; elements.bgmAudio.removeAttribute('crossorigin');
-                elements.bgmAudio.src = ''; elements.customBgmInput.value = ''; elements.customBgmInfo.classList.add('hidden');
+                stopProceduralAmbient();
+                elements.bgmSelect.value = 'procedural';
+                elements.bgmAudio.removeAttribute('crossorigin');
+                elements.bgmAudio.src = '';
+                elements.customBgmInput.value = '';
+                elements.customBgmInfo.classList.add('hidden');
             });
 
             elements.playBtn.addEventListener('click', togglePlay);
             elements.stopBtn.addEventListener('click', stopPlayback);
-            elements.exportBtn.addEventListener('click', () => exportVideoAndSave());
+            elements.exportBtn.addEventListener('click', exportVideo);
             elements.progressContainer.addEventListener('click', seekTime);
-
-            // 🌟 저장소 UI 이벤트 등록
-            elements.saveBtn.addEventListener('click', () => saveProject('draft'));
-            elements.myProjectsBtn.addEventListener('click', openProjectsModal);
-            elements.closeModalBtn.addEventListener('click', () => elements.projectsModal.classList.add('hidden'));
 
             renderStoryboard();
             updateDurations();
@@ -451,170 +415,7 @@
             });
         }
 
-        // ==========================================
-        // 프로젝트 저장 / 불러오기 로직 
-        // ==========================================
-        async function saveProject(statusStr) {
-            if (state.images.length === 0 && statusStr === 'draft') {
-                alert("최소 1개 이상의 미디어를 추가해야 저장할 수 있습니다.");
-                return;
-            }
-
-            elements.loadingOverlay.style.display = 'flex';
-            elements.loadingOverlay.querySelector('h3').textContent = "프로젝트 저장 중...";
-            elements.loadingOverlay.querySelector('p').textContent = "데이터를 로컬 저장소에 안전하게 기록합니다.";
-
-            if (!state.projectId) state.projectId = "proj_" + Date.now();
-
-            // 직렬화 (이미지/비디오 원본 File 객체 포함)
-            const projectData = {
-                id: state.projectId,
-                name: elements.projectTitle.value || "숲체원의 추억",
-                status: statusStr, // 'draft' or 'final'
-                updatedAt: new Date().getTime(),
-                data: {
-                    aspectRatio: state.aspectRatio,
-                    fontFamily: state.fontFamily,
-                    transitionEffect: state.transitionEffect,
-                    intro: state.intro,
-                    outro: state.outro,
-                    // 파일 객체를 직접 DB에 저장
-                    images: state.images.map(img => ({
-                        id: img.id, type: img.type, file: img.rawFile, effect: img.effect, phrase: img.phrase, duration: img.duration
-                    }))
-                }
-            };
-
-            try {
-                await saveToDB(projectData);
-                elements.loadingOverlay.style.display = 'none';
-                if(statusStr === 'draft') alert("성공적으로 임시저장 되었습니다! (내 작업물에서 확인 가능)");
-            } catch(e) {
-                elements.loadingOverlay.style.display = 'none';
-                console.error(e);
-                alert("저장 중 오류가 발생했습니다. 파일 용량이 너무 클 수 있습니다.");
-            }
-        }
-
-        async function openProjectsModal() {
-            elements.projectsModal.classList.remove('hidden');
-            elements.projectsList.innerHTML = '<div class="text-center text-stone-500 py-10">데이터를 불러오는 중...</div>';
-            
-            try {
-                const projects = await loadFromDB();
-                if (projects.length === 0) {
-                    elements.projectsList.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-16 text-stone-400 gap-3">
-                            <i data-lucide="inbox" class="w-12 h-12 opacity-50"></i>
-                            <p class="font-gowun text-sm">저장된 작업물이 없습니다.</p>
-                        </div>`;
-                } else {
-                    // 최신순 정렬
-                    projects.sort((a,b) => b.updatedAt - a.updatedAt);
-                    elements.projectsList.innerHTML = '';
-                    projects.forEach(p => {
-                        const dateObj = new Date(p.updatedAt);
-                        const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth()+1).padStart(2,'0')}.${String(dateObj.getDate()).padStart(2,'0')} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-                        const badgeObj = p.status === 'final' 
-                            ? `<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">최종완료</span>`
-                            : `<span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded-full font-bold">임시저장</span>`;
-
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = "flex items-center justify-between p-4 bg-white border border-stone-200 rounded-2xl hover:border-stone-400 transition-colors shadow-sm";
-                        itemDiv.innerHTML = `
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-serif-kr font-bold text-stone-800 text-base lg:text-lg">${p.name}</span>
-                                    ${badgeObj}
-                                </div>
-                                <span class="text-xs text-stone-400 font-mono"><i data-lucide="clock" class="w-3 h-3 inline pb-0.5"></i> ${dateStr}</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="loadProject('${p.id}')" class="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">이어서 편집</button>
-                                <button onclick="deleteProject('${p.id}')" class="bg-stone-100 hover:bg-red-50 text-stone-500 hover:text-red-500 px-3 py-2 rounded-xl transition-colors" title="삭제">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        `;
-                        elements.projectsList.appendChild(itemDiv);
-                    });
-                }
-                lucide.createIcons();
-            } catch (e) {
-                elements.projectsList.innerHTML = '<div class="text-center text-red-500 py-10">데이터를 불러오지 못했습니다.</div>';
-            }
-        }
-
-        window.loadProject = async (id) => {
-            elements.projectsModal.classList.add('hidden');
-            elements.loadingOverlay.style.display = 'flex';
-            elements.loadingOverlay.querySelector('h3').textContent = "프로젝트 불러오는 중...";
-            
-            try {
-                const projects = await loadFromDB();
-                const target = projects.find(p => p.id === id);
-                if(!target) throw "Not found";
-
-                // 기존 메모리 캐시 청소
-                state.images.forEach(img => {
-                    if (img.type === 'video') img.mediaElement.pause();
-                    URL.revokeObjectURL(img.src);
-                });
-
-                state.projectId = target.id;
-                elements.projectTitle.value = target.name;
-                
-                // 상태 복원
-                state.aspectRatio = target.data.aspectRatio;
-                state.fontFamily = target.data.fontFamily;
-                state.transitionEffect = target.data.transitionEffect;
-                state.intro = target.data.intro;
-                state.outro = target.data.outro;
-
-                setFont(state.fontFamily);
-                setAspectRatio(state.aspectRatio);
-                elements.transitionEffectSelect.value = state.transitionEffect;
-
-                // 파일 객체 복원 및 렌더링 미디어 재생성
-                const loadPromises = target.data.images.map(imgData => new Promise((resolve) => {
-                    const dataUrl = URL.createObjectURL(imgData.file);
-                    if (imgData.type === 'video') {
-                        const video = document.createElement('video');
-                        video.src = dataUrl; video.muted = true; video.playsInline = true; video.preload = "auto";
-                        video.onloadeddata = () => resolve({ ...imgData, rawFile: imgData.file, mediaElement: video, src: dataUrl });
-                        video.load();
-                    } else {
-                        const img = new Image();
-                        img.onload = () => resolve({ ...imgData, rawFile: imgData.file, mediaElement: img, src: dataUrl });
-                        img.src = dataUrl;
-                    }
-                }));
-
-                state.images = await Promise.all(loadPromises);
-                updateDurations();
-                renderStoryboard();
-                updateUI();
-                if(!state.isPlaying) drawFrame(0);
-
-            } catch(e) {
-                console.error(e);
-                alert("프로젝트 복구 중 문제가 발생했습니다.");
-            }
-            elements.loadingOverlay.style.display = 'none';
-        };
-
-        window.deleteProject = async (id) => {
-            if(!confirm("정말로 이 작업물을 삭제하시겠습니까? (복구할 수 없습니다)")) return;
-            try {
-                await deleteFromDB(id);
-                openProjectsModal(); // 리스트 갱신
-                if(state.projectId === id) state.projectId = null; // 현재 켜둔 프로젝트면 ID 날림
-            } catch(e) {
-                alert("삭제에 실패했습니다.");
-            }
-        };
-
-        // 오디오 라우팅 및 렌더링 엔진 로직
+        // 실시간 BGM 숲체원 힐링 합성 엔진
         function startProceduralAmbient() {
             stopProceduralAmbient();
             setupAudioRouting();
@@ -627,107 +428,211 @@
             let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
             for (let i = 0; i < bufferSize; i++) {
                 const white = Math.random() * 2 - 1;
-                b0 = 0.99886 * b0 + white * 0.0555179; b1 = 0.99332 * b1 + white * 0.0750759;
-                b2 = 0.96900 * b2 + white * 0.1538520; b3 = 0.86650 * b3 + white * 0.3104856;
-                b4 = 0.55000 * b4 + white * 0.5329522; b5 = -0.7616 * b5 - white * 0.0168980;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
                 output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-                output[i] *= 0.05; b6 = white * 0.115926;
+                output[i] *= 0.05; 
+                b6 = white * 0.115926;
             }
 
-            const noiseNode = audioCtx.createBufferSource(); noiseNode.buffer = noiseBuffer; noiseNode.loop = true;
-            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.setValueAtTime(250, audioCtx.currentTime); filter.Q.setValueAtTime(3, audioCtx.currentTime);
-            windGain = audioCtx.createGain(); windGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            noiseNode.connect(filter); filter.connect(windGain); windGain.connect(audioDest); noiseNode.start(); windNode = noiseNode;
+            const noiseNode = audioCtx.createBufferSource();
+            noiseNode.buffer = noiseBuffer;
+            noiseNode.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(250, audioCtx.currentTime);
+            filter.Q.setValueAtTime(3, audioCtx.currentTime);
+
+            windGain = audioCtx.createGain();
+            windGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+            noiseNode.connect(filter);
+            filter.connect(windGain);
+            windGain.connect(audioDest);
+            noiseNode.start();
+            windNode = noiseNode;
 
             let step = 0;
             function modulateWind() {
                 if (!state.isPlaying && !state.isRecording) return;
-                step += 0.03; filter.frequency.setValueAtTime(220 + Math.sin(step) * 100, audioCtx.currentTime); setTimeout(modulateWind, 60);
+                step += 0.03;
+                const targetFreq = 220 + Math.sin(step) * 100;
+                filter.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+                setTimeout(modulateWind, 60);
             }
             modulateWind();
 
             const chimeChords = [329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; 
             chimeInterval = setInterval(() => {
                 if (!state.isPlaying && !state.isRecording) return;
-                if (Math.random() > 0.45) playBell(chimeChords[Math.floor(Math.random() * chimeChords.length)]);
+                if (Math.random() > 0.45) { 
+                    const pitch = chimeChords[Math.floor(Math.random() * chimeChords.length)];
+                    playBell(pitch);
+                }
             }, 1400);
         }
 
         function playBell(pitch) {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.08); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5); 
-            osc.connect(gain); gain.connect(audioDest); osc.start(); osc.stop(audioCtx.currentTime + 3.6);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5); 
+
+            osc.connect(gain);
+            gain.connect(audioDest);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 3.6);
         }
 
         function stopProceduralAmbient() {
-            if (windNode) { try { windNode.stop(); } catch(e){} windNode = null; }
-            if (chimeInterval) { clearInterval(chimeInterval); chimeInterval = null; }
+            if (windNode) {
+                try { windNode.stop(); } catch(e){}
+                windNode = null;
+            }
+            if (chimeInterval) {
+                clearInterval(chimeInterval);
+                chimeInterval = null;
+            }
         }
 
         function setFont(fontName) {
             state.fontFamily = fontName;
             document.querySelectorAll('.font-btn').forEach(btn => {
-                if (btn.dataset.font === fontName) btn.className = "font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base";
-                else btn.className = "font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm lg:text-base";
+                if (btn.dataset.font === fontName) {
+                    btn.className = "font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base";
+                } else {
+                    btn.className = "font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm lg:text-base";
+                }
             });
             if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
         function setAspectRatio(ratio) {
             state.aspectRatio = ratio;
+            
             if (ratio === 'vertical') {
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
+                
                 elements.previewWrapper.className = "relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
-                elements.canvas.width = 1080; elements.canvas.height = 1920;
+                
+                elements.canvas.width = 1080;
+                elements.canvas.height = 1920;
             } else {
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
+                
                 elements.previewWrapper.className = "relative w-full max-w-[800px] aspect-video bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
-                elements.canvas.width = 1920; elements.canvas.height = 1080;
+                
+                elements.canvas.width = 1920;
+                elements.canvas.height = 1080;
             }
             if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
+        // 🌟 수정: 이미지와 동영상을 모두 수용하는 통합 업로더 엔진
         async function handleImageUpload(e) {
             const files = Array.from(e.target.files);
             if (!files.length) return;
 
-            let validFiles = []; let addedCount = 0; const maxDuration = 600; 
+            let validFiles = [];
+            let addedCount = 0;
+            const maxDuration = 600; // 동영상이 섞이므로 최대 10분 허용 제한 확장
+            
             for (const file of files) {
-                if ((state.images.length + addedCount + 1) * 4 > maxDuration) { if (addedCount === 0) alert(`최대 길이 제한에 도달했습니다.`); break; }
-                validFiles.push(file); addedCount++;
+                // 단순 방어 코드 
+                if ((state.images.length + addedCount + 1) * 4 > maxDuration) {
+                    if (addedCount === 0) alert(`최대 길이 제한에 도달했습니다.`);
+                    break;
+                }
+                validFiles.push(file);
+                addedCount++;
             }
-            if (validFiles.length === 0) { e.target.value = ''; return; }
+
+            if (validFiles.length === 0) {
+                e.target.value = '';
+                return;
+            }
 
             const loadPromises = validFiles.map(file => new Promise((resolve) => {
                 const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i);
-                const dataUrl = URL.createObjectURL(file); // 메모리 최적화 URL 생성
                 
                 if (isVideo) {
-                    const video = document.createElement('video'); video.src = dataUrl; video.muted = true; video.playsInline = true; video.preload = "auto";
-                    video.onloadeddata = () => resolve({ id: Date.now() + Math.random(), type: 'video', rawFile: file, mediaElement: video, src: dataUrl, effect: 'none', phrase: getRandomPhrase(), duration: Math.min(15, Math.max(3, Math.floor(video.duration))) });
-                    video.onerror = () => { resolve(null); }; video.load();
+                    // 동영상은 안정적인 메모리 관리를 위해 Blob URL 사용
+                    const dataUrl = URL.createObjectURL(file); 
+                    const video = document.createElement('video');
+                    video.src = dataUrl;
+                    video.muted = true; // 캔버스 복제 이슈 방지를 위한 기본 뮤트
+                    video.playsInline = true;
+                    video.preload = "auto";
+                    
+                    video.onloadeddata = () => {
+                        resolve({
+                            id: Date.now() + Math.random(),
+                            type: 'video', // 미디어 타입 구별 태그
+                            mediaElement: video,
+                            src: dataUrl,
+                            effect: 'none', // 동영상은 과도한 애니메이션을 막기 위해 고정
+                            phrase: getRandomPhrase(),
+                            // 영상 원본 길이를 반영하되 최대 15초 기본 커트, 사용자가 나중에 변경 가능
+                            duration: Math.min(15, Math.max(3, Math.floor(video.duration))) 
+                        });
+                    };
+                    video.onerror = () => {
+                        console.error("비디오 파일 로드에 실패했습니다.");
+                        resolve(null);
+                    };
+                    video.load();
                 } else {
-                    const img = new Image();
-                    img.onload = () => resolve({ id: Date.now() + Math.random(), type: 'image', rawFile: file, mediaElement: img, src: dataUrl, effect: effectTypes[Math.floor(Math.random() * effectTypes.length)], phrase: getRandomPhrase(), duration: 4 });
-                    img.src = dataUrl;
+                    // 기존 사진 로드 로직
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => resolve({
+                            id: Date.now() + Math.random(),
+                            type: 'image',
+                            mediaElement: img,
+                            src: event.target.result,
+                            effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
+                            phrase: getRandomPhrase(),
+                            duration: 4
+                        });
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
                 }
             }));
 
             let loadedMedia = await Promise.all(loadPromises);
-            state.images = [...state.images, ...loadedMedia.filter(item => item !== null)];
+            // 실패한 파일(null) 필터링
+            loadedMedia = loadedMedia.filter(item => item !== null);
+            state.images = [...state.images, ...loadedMedia];
             
-            updateDurations(); renderStoryboard(); updateUI();
-            if(!state.isPlaying) drawFrame(state.currentTime); e.target.value = '';
+            updateDurations();
+            renderStoryboard();
+            updateUI();
+            if(!state.isPlaying) drawFrame(state.currentTime);
+            e.target.value = '';
         }
 
+        // 스토리보드 렌더링 엔진 업데이트
         function renderStoryboard() {
             elements.storyboardContainer.innerHTML = '';
             elements.storyboardContainer.appendChild(createSegmentCard('intro', null, state.intro));
-            state.images.forEach((mediaObj, idx) => elements.storyboardContainer.appendChild(createSegmentCard('slide', idx, mediaObj)));
+            state.images.forEach((mediaObj, idx) => {
+                elements.storyboardContainer.appendChild(createSegmentCard('slide', idx, mediaObj));
+            });
             elements.storyboardContainer.appendChild(createSegmentCard('outro', null, state.outro));
             lucide.createIcons();
         }
@@ -749,45 +654,99 @@
                 div.addEventListener('drop', (e) => {
                     e.preventDefault();
                     if(state.draggedItemIndex === null || state.draggedItemIndex === index) return;
-                    const item = state.images.splice(state.draggedItemIndex, 1)[0]; state.images.splice(index, 0, item);
-                    updateDurations(); renderStoryboard(); if(!state.isPlaying) drawFrame(0);
+                    const item = state.images.splice(state.draggedItemIndex, 1)[0];
+                    state.images.splice(index, 0, item);
+                    updateDurations(); renderStoryboard();
+                    if(!state.isPlaying) drawFrame(0);
                 });
 
+                // 🌟 동영상 파일일 경우 비디오 썸네일과 영화 필름 아이콘 표시
                 const isVideo = data.type === 'video';
                 const iconOverlay = isVideo ? `<div class="absolute top-1.5 right-1.5 bg-stone-900/80 p-1 rounded text-white shadow"><i data-lucide="video" class="w-3.5 h-3.5"></i></div>` : '';
-                const mediaTag = isVideo ? `<video src="${data.src}#t=1" class="w-full h-full object-cover" muted preload="metadata"></video>` : `<img src="${data.src}" class="w-full h-full object-cover">`;
+                const mediaTag = isVideo 
+                    ? `<video src="${data.src}#t=1" class="w-full h-full object-cover" muted preload="metadata"></video>` 
+                    : `<img src="${data.src}" class="w-full h-full object-cover">`;
 
-                thumbHTML = `<div class="w-16 lg:w-20 h-24 lg:h-28 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner">${mediaTag}<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><i data-lucide="grip-vertical" class="text-white w-5 h-5"></i></div>${iconOverlay}</div>`;
+                thumbHTML = `
+                    <div class="w-16 lg:w-20 h-24 lg:h-28 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner">
+                        ${mediaTag}
+                        <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <i data-lucide="grip-vertical" class="text-white w-5 h-5"></i>
+                        </div>
+                        ${iconOverlay}
+                    </div>`;
             } else {
-                thumbHTML = `<div class="w-16 lg:w-20 h-24 lg:h-28 shrink-0 rounded-lg bg-stone-800 text-stone-300 flex flex-col items-center justify-center gap-1"><i data-lucide="${icon}" class="w-5 h-5 lg:w-6 lg:h-6"></i><span class="text-[10px] lg:text-xs font-semibold">${label}</span></div>`;
+                thumbHTML = `
+                    <div class="w-16 lg:w-20 h-24 lg:h-28 shrink-0 rounded-lg bg-stone-800 text-stone-300 flex flex-col items-center justify-center gap-1">
+                        <i data-lucide="${icon}" class="w-5 h-5 lg:w-6 lg:h-6"></i>
+                        <span class="text-[10px] lg:text-xs font-semibold">${label}</span>
+                    </div>`;
             }
 
             let inputsHTML = '';
             if (type === 'intro' || type === 'outro') {
-                inputsHTML = `<textarea class="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs lg:text-sm font-serif-kr text-stone-800 resize-none h-[44px] mb-1 focus:outline-none focus:border-stone-400" onchange="updateState('${type}', ${index}, 'title', this.value)" placeholder="위쪽 메인 문구">${data.title}</textarea>
-                    <input type="text" class="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-[11px] lg:text-xs font-gowun text-stone-500 focus:outline-none focus:border-stone-400" value="${data.subtitle}" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="아래쪽 서브 문구">`;
+                inputsHTML = `
+                    <textarea class="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs lg:text-sm font-serif-kr text-stone-800 resize-none h-[44px] mb-1 focus:outline-none focus:border-stone-400" onchange="updateState('${type}', ${index}, 'title', this.value)" placeholder="위쪽 메인 문구">${data.title}</textarea>
+                    <input type="text" class="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-[11px] lg:text-xs font-gowun text-stone-500 focus:outline-none focus:border-stone-400" value="${data.subtitle}" onchange="updateState('${type}', ${index}, 'subtitle', this.value)" placeholder="아래쪽 서브 문구">
+                `;
             } else {
-                inputsHTML = `<div class="flex gap-1 w-full relative"><textarea class="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs lg:text-sm font-gowun text-stone-700 resize-none h-[60px] focus:outline-none focus:border-stone-400" onchange="updateState('slide', ${index}, 'phrase', this.value)" placeholder="감성 문구">${data.phrase}</textarea><button onclick="applyRandomPhrase(${index})" class="absolute bottom-1.5 right-1.5 bg-stone-100 p-1 rounded-md text-stone-500 hover:bg-stone-200 transition-colors" title="랜덤 추천"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i></button></div>`;
+                inputsHTML = `
+                    <div class="flex gap-1 w-full relative">
+                        <textarea class="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs lg:text-sm font-gowun text-stone-700 resize-none h-[60px] focus:outline-none focus:border-stone-400" onchange="updateState('slide', ${index}, 'phrase', this.value)" placeholder="감성 문구">${data.phrase}</textarea>
+                        <button onclick="applyRandomPhrase(${index})" class="absolute bottom-1.5 right-1.5 bg-stone-100 p-1 rounded-md text-stone-500 hover:bg-stone-200 transition-colors" title="랜덤 추천">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
             }
 
-            const controlsHTML = `<div class="flex justify-between items-center mt-2"><div class="flex items-center gap-1 text-[11px] lg:text-xs text-stone-500 font-gowun"><i data-lucide="clock" class="w-3.5 h-3.5"></i><input type="number" min="1" max="100" class="w-10 bg-transparent border-b border-stone-300 text-center font-bold text-stone-700 focus:outline-none" value="${data.duration}" onchange="updateState('${type}', ${index}, 'duration', parseInt(this.value)||3)"> 초 재생</div>${type === 'slide' ? `<button onclick="removeImage(${index})" class="text-stone-400 hover:text-red-500 transition-colors p-1" title="제거"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</div>`;
-            div.innerHTML = `${thumbHTML}<div class="flex-1 flex flex-col justify-between h-full">${inputsHTML}${controlsHTML}</div>`;
+            const controlsHTML = `
+                <div class="flex justify-between items-center mt-2">
+                    <div class="flex items-center gap-1 text-[11px] lg:text-xs text-stone-500 font-gowun">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                        <input type="number" min="1" max="100" class="w-10 bg-transparent border-b border-stone-300 text-center font-bold text-stone-700 focus:outline-none" value="${data.duration}" onchange="updateState('${type}', ${index}, 'duration', parseInt(this.value)||3)"> 초 재생
+                    </div>
+                    ${type === 'slide' ? `<button onclick="removeImage(${index})" class="text-stone-400 hover:text-red-500 transition-colors p-1" title="제거"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                </div>
+            `;
+
+            div.innerHTML = `
+                ${thumbHTML}
+                <div class="flex-1 flex flex-col justify-between h-full">
+                    ${inputsHTML}
+                    ${controlsHTML}
+                </div>
+            `;
             return div;
         }
 
         window.updateState = (type, index, key, value) => {
-            if(type === 'intro') state.intro[key] = value; else if(type === 'outro') state.outro[key] = value; else if(type === 'slide') state.images[index][key] = value;
-            updateDurations(); if(!state.isPlaying) drawFrame(state.currentTime);
+            if(type === 'intro') state.intro[key] = value;
+            else if(type === 'outro') state.outro[key] = value;
+            else if(type === 'slide') state.images[index][key] = value;
+            updateDurations();
+            if(!state.isPlaying) drawFrame(state.currentTime);
         };
 
-        window.applyRandomPhrase = (index) => { state.images[index].phrase = getRandomPhrase(); renderStoryboard(); if(!state.isPlaying) drawFrame(state.currentTime); };
+        window.applyRandomPhrase = (index) => {
+            state.images[index].phrase = getRandomPhrase();
+            renderStoryboard();
+            if(!state.isPlaying) drawFrame(state.currentTime);
+        };
 
+        // 🌟 메모리 누수 방지(Memory Leak Prevention) 로직 적용된 삭제 함수
         window.removeImage = (index) => {
             const item = state.images[index];
-            if (item.type === 'video') { item.mediaElement.pause(); item.mediaElement.removeAttribute('src'); item.mediaElement.load(); }
-            URL.revokeObjectURL(item.src); // 메모리 해제
+            if (item.type === 'video') {
+                // 비디오 백그라운드 구동 해제 및 캐시 반환
+                item.mediaElement.pause();
+                item.mediaElement.removeAttribute('src');
+                item.mediaElement.load();
+                URL.revokeObjectURL(item.src);
+            }
             state.images.splice(index, 1);
-            updateDurations(); renderStoryboard(); updateUI(); if(!state.isPlaying) drawFrame(0);
+            updateDurations(); renderStoryboard(); updateUI();
+            if(!state.isPlaying) drawFrame(0);
         };
 
         function updateDurations() {
@@ -799,209 +758,16 @@
         }
 
         // ==========================================
-        // 프로젝트 저장 / 불러오기 로직 (Firebase Cloud 연동)
-        // ==========================================
-        async function saveProject(statusStr) {
-            if (!db || !storage) {
-                alert("Firebase 설정(API Key 등)이 완료되지 않아 저장할 수 없습니다.");
-                return;
-            }
-            if (state.images.length === 0 && statusStr === 'draft') {
-                alert("최소 1개 이상의 미디어를 추가해야 저장할 수 있습니다.");
-                return;
-            }
-
-            elements.loadingOverlay.style.display = 'flex';
-            elements.loadingOverlay.querySelector('h3').textContent = "클라우드 저장 중...";
-            elements.loadingOverlay.querySelector('p').textContent = "미디어 파일을 안전하게 클라우드로 업로드하고 있습니다.";
-
-            if (!state.projectId) state.projectId = "proj_" + Date.now();
-
-            try {
-                // 1. 미디어 파일 Firebase Storage 업로드
-                const uploadedImages = [];
-                for (let i = 0; i < state.images.length; i++) {
-                    const img = state.images[i];
-                    elements.renderTimeText.textContent = `미디어 클라우드 업로드 중... (${i+1}/${state.images.length})`;
-                    
-                    let mediaUrl = img.src;
-                    // 새롭게 업로드한 로컬 파일(File 객체)일 경우 클라우드에 업로드
-                    if (img.rawFile) {
-                        const fileExt = img.rawFile.name.split('.').pop();
-                        const fileName = `${state.projectId}_${img.id}.${fileExt}`;
-                        const storageRef = storage.ref(`projects/${state.projectId}/${fileName}`);
-                        await storageRef.put(img.rawFile);
-                        mediaUrl = await storageRef.getDownloadURL();
-                    }
-                    
-                    uploadedImages.push({
-                        id: img.id, type: img.type, src: mediaUrl, effect: img.effect, phrase: img.phrase, duration: img.duration
-                        // rawFile은 데이터베이스에 직렬화 불가하므로 제외
-                    });
-                }
-
-                // 2. 프로젝트 메타데이터 Firestore 저장
-                elements.renderTimeText.textContent = "데이터베이스 기록 중...";
-                const projectData = {
-                    id: state.projectId,
-                    name: elements.projectTitle.value || "숲체원의 추억",
-                    status: statusStr,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    data: {
-                        aspectRatio: state.aspectRatio, fontFamily: state.fontFamily, transitionEffect: state.transitionEffect,
-                        intro: state.intro, outro: state.outro, images: uploadedImages
-                    }
-                };
-
-                await db.collection("projects").doc(state.projectId).set(projectData);
-                
-                elements.loadingOverlay.style.display = 'none';
-                if(statusStr === 'draft') alert("클라우드 보관소에 성공적으로 임시저장 되었습니다!");
-            } catch(e) {
-                elements.loadingOverlay.style.display = 'none';
-                console.error(e);
-                alert("클라우드 저장 중 오류가 발생했습니다. 파이어베이스 권한 설정(Rules)을 확인하세요.");
-            }
-        }
-
-        async function openProjectsModal() {
-            elements.projectsModal.classList.remove('hidden');
-            elements.projectsList.innerHTML = '<div class="text-center text-stone-500 py-10">클라우드에서 데이터를 불러오는 중...</div>';
-            
-            if (!db) {
-                elements.projectsList.innerHTML = '<div class="text-center text-red-500 py-10">Firebase가 연결되지 않았습니다.</div>';
-                return;
-            }
-
-            try {
-                // 최신순 정렬 호출
-                const snapshot = await db.collection("projects").orderBy("updatedAt", "desc").get();
-                if (snapshot.empty) {
-                    elements.projectsList.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-16 text-stone-400 gap-3">
-                            <i data-lucide="cloud-off" class="w-12 h-12 opacity-50"></i>
-                            <p class="font-gowun text-sm">클라우드에 저장된 작업물이 없습니다.</p>
-                        </div>`;
-                } else {
-                    elements.projectsList.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const p = doc.data();
-                        const dateObj = p.updatedAt ? p.updatedAt.toDate() : new Date();
-                        const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth()+1).padStart(2,'0')}.${String(dateObj.getDate()).padStart(2,'0')} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-                        const badgeObj = p.status === 'final' 
-                            ? `<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">최종완료</span>`
-                            : `<span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded-full font-bold">임시저장</span>`;
-
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = "flex items-center justify-between p-4 bg-white border border-stone-200 rounded-2xl hover:border-stone-400 transition-colors shadow-sm";
-                        itemDiv.innerHTML = `
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-serif-kr font-bold text-stone-800 text-base lg:text-lg">${p.name}</span>
-                                    ${badgeObj}
-                                </div>
-                                <span class="text-xs text-stone-400 font-mono"><i data-lucide="clock" class="w-3 h-3 inline pb-0.5"></i> ${dateStr}</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="loadProject('${p.id}')" class="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">이어서 편집</button>
-                                <button onclick="deleteProject('${p.id}')" class="bg-stone-100 hover:bg-red-50 text-stone-500 hover:text-red-500 px-3 py-2 rounded-xl transition-colors" title="삭제">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        `;
-                        elements.projectsList.appendChild(itemDiv);
-                    });
-                }
-                lucide.createIcons();
-            } catch (e) {
-                console.error(e);
-                elements.projectsList.innerHTML = '<div class="text-center text-red-500 py-10">데이터를 불러오지 못했습니다. 파이어베이스 읽기 권한을 확인하세요.</div>';
-            }
-        }
-
-        window.loadProject = async (id) => {
-            elements.projectsModal.classList.add('hidden');
-            elements.loadingOverlay.style.display = 'flex';
-            elements.loadingOverlay.querySelector('h3').textContent = "클라우드에서 불러오는 중...";
-            elements.loadingOverlay.querySelector('p').textContent = "저장된 고화질 원본 데이터를 동기화 중입니다.";
-            elements.renderTimeText.textContent = "";
-            
-            try {
-                const docSnap = await db.collection("projects").doc(id).get();
-                if(!docSnap.exists) throw "데이터베이스에 프로젝트가 없습니다.";
-                const target = docSnap.data();
-
-                // 기존 메모리 캐시 청소
-                state.images.forEach(img => {
-                    if (img.type === 'video') img.mediaElement.pause();
-                    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-                });
-
-                state.projectId = target.id;
-                elements.projectTitle.value = target.name;
-                
-                // 상태 복원
-                state.aspectRatio = target.data.aspectRatio;
-                state.fontFamily = target.data.fontFamily;
-                state.transitionEffect = target.data.transitionEffect;
-                state.intro = target.data.intro;
-                state.outro = target.data.outro;
-
-                setFont(state.fontFamily);
-                setAspectRatio(state.aspectRatio);
-                elements.transitionEffectSelect.value = state.transitionEffect;
-
-                // 클라우드 URL을 기반으로 미디어 파일 복원 (CORS 허용)
-                const loadPromises = target.data.images.map(imgData => new Promise((resolve) => {
-                    if (imgData.type === 'video') {
-                        const video = document.createElement('video');
-                        video.crossOrigin = "anonymous"; // 클라우드 영상 추출을 위한 필수 속성
-                        video.src = imgData.src; 
-                        video.muted = true; video.playsInline = true; video.preload = "auto";
-                        video.onloadeddata = () => resolve({ ...imgData, rawFile: null, mediaElement: video });
-                        video.onerror = () => resolve({ ...imgData, rawFile: null, mediaElement: video });
-                        video.load();
-                    } else {
-                        const img = new Image();
-                        img.crossOrigin = "anonymous"; // 클라우드 사진 추출을 위한 필수 속성
-                        img.onload = () => resolve({ ...imgData, rawFile: null, mediaElement: img });
-                        img.onerror = () => resolve({ ...imgData, rawFile: null, mediaElement: img });
-                        img.src = imgData.src;
-                    }
-                }));
-
-                state.images = await Promise.all(loadPromises);
-                updateDurations();
-                renderStoryboard();
-                updateUI();
-                if(!state.isPlaying) drawFrame(0);
-
-            } catch(e) {
-                console.error(e);
-                alert("프로젝트 복구 중 문제가 발생했습니다.");
-            }
-            elements.loadingOverlay.style.display = 'none';
-        };
-
-        window.deleteProject = async (id) => {
-            if(!confirm("정말로 이 작업물을 삭제하시겠습니까? (클라우드에서도 완전히 삭제됩니다)")) return;
-            try {
-                await db.collection("projects").doc(id).delete();
-                openProjectsModal(); // 리스트 갱신
-                if(state.projectId === id) state.projectId = null; 
-            } catch(e) {
-                alert("삭제 권한이 없거나 실패했습니다.");
-            }
-        };
-
-        // ==========================================
         // 동적 트랜지션 렌더링 엔진 (사진 및 비디오 모두 처리)
         // ==========================================
         function getSceneContext(time) {
             if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
+            
             let acc = state.intro.duration;
             for (let i = 0; i < state.images.length; i++) {
-                if (time < acc + state.images[i].duration) return { type: 'slide', index: i, elapsed: time - acc, duration: state.images[i].duration };
+                if (time < acc + state.images[i].duration) {
+                    return { type: 'slide', index: i, elapsed: time - acc, duration: state.images[i].duration };
+                }
                 acc += state.images[i].duration;
             }
             return { type: 'outro', elapsed: time - acc, duration: state.outro.duration };
@@ -1010,227 +776,447 @@
         function renderSlideTransition(ctx, prevObj, currentObj, cw, ch, fadeElapsed, fadeDuration) {
             const progress = Math.max(0, Math.min(fadeElapsed / fadeDuration, 1.0));
             const theme = state.transitionEffect;
+
             if (theme === 'crossfade') {
                 renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1 - progress);
                 renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, progress);
             } 
             else if (theme === 'fadeblack') {
-                if (progress < 0.5) renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1 - (progress * 2));
-                else renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, (progress - 0.5) * 2);
+                if (progress < 0.5) {
+                    const fadeOutAlpha = 1 - (progress * 2);
+                    renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, fadeOutAlpha);
+                } else {
+                    const fadeInAlpha = (progress - 0.5) * 2;
+                    renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, fadeInAlpha);
+                }
             } 
             else if (theme === 'slide') {
                 const slideDistance = cw;
-                ctx.save(); ctx.translate(-(progress * slideDistance), 0); renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1.0); ctx.restore();
-                ctx.save(); ctx.translate(slideDistance - (progress * slideDistance), 0); renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, 1.0); ctx.restore();
+                
+                ctx.save();
+                ctx.translate(-(progress * slideDistance), 0);
+                renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1.0);
+                ctx.restore();
+
+                ctx.save();
+                ctx.translate(slideDistance - (progress * slideDistance), 0);
+                renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, 1.0);
+                ctx.restore();
+                
                 const shadowX = slideDistance - (progress * slideDistance);
                 if(shadowX > 0 && shadowX < cw) {
                     const grad = ctx.createLinearGradient(shadowX, 0, shadowX - 100, 0);
-                    grad.addColorStop(0, 'rgba(0,0,0,0.8)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
-                    ctx.fillStyle = grad; ctx.fillRect(shadowX - 100, 0, 100, ch);
+                    grad.addColorStop(0, 'rgba(0,0,0,0.8)');
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(shadowX - 100, 0, 100, ch);
                 }
             }
         }
 
         function renderSlideImage(ctx, mediaObj, cw, ch, elapsed, alpha) {
-            ctx.globalAlpha = alpha; ctx.filter = 'blur(60px) brightness(0.25) sepia(0.2)';
+            ctx.globalAlpha = alpha;
+            ctx.filter = 'blur(60px) brightness(0.25) sepia(0.2)';
             
+            // 🌟 비디오 엘리먼트 플레이백 타임라인 동기화 로직 🌟
             if (mediaObj.type === 'video') {
                 const vid = mediaObj.mediaElement;
-                if (!state.isPlaying && !state.isRecording) { vid.currentTime = elapsed % vid.duration; if (!vid.paused) vid.pause(); } 
-                else { if (vid.paused) vid.play().catch(e=>{}); if (Math.abs(vid.currentTime - (elapsed % vid.duration)) > 0.4) vid.currentTime = elapsed % vid.duration; }
+                if (!state.isPlaying && !state.isRecording) {
+                    // 일시정지 상태일 때 프레임 고정
+                    vid.currentTime = elapsed % vid.duration;
+                    if (!vid.paused) vid.pause();
+                } else {
+                    // 재생 상태일 때 자연스럽게 렌더링 스트림 편승
+                    if (vid.paused) vid.play().catch(e=>{});
+                    // 심각한 싱크 이탈 시에만 강제 타임랩스 조절 (부드러운 영상 재생 확보)
+                    if (Math.abs(vid.currentTime - (elapsed % vid.duration)) > 0.4) {
+                        vid.currentTime = elapsed % vid.duration;
+                    }
+                }
             }
 
-            drawCoverImage(ctx, mediaObj.mediaElement, cw, ch); ctx.filter = 'none';
+            drawCoverImage(ctx, mediaObj.mediaElement, cw, ch);
+            ctx.filter = 'none';
+            
             const p = Math.max(0, elapsed / (mediaObj.duration + 1.5)); 
-            let scale = 1.0, transX = 0, transY = 0; const drift = 40; 
+            let scale = 1.0, transX = 0, transY = 0;
+            const drift = 40; 
             switch(mediaObj.effect) {
-                case 'zoom-in':   scale = 1.0 + (p * 0.08); break; case 'zoom-out':  scale = 1.08 - (p * 0.08); break;
-                case 'pan-left':  scale = 1.05; transX = (drift/2) - (p*drift); break; case 'pan-right': scale = 1.05; transX = -(drift/2) + (p*drift); break;
-                case 'pan-up':    scale = 1.05; transY = (drift/2) - (p*drift); break; case 'pan-down':  scale = 1.05; transY = -(drift/2) + (p*drift); break;
-                case 'none':      break; 
+                case 'zoom-in':   scale = 1.0 + (p * 0.08); break;
+                case 'zoom-out':  scale = 1.08 - (p * 0.08); break;
+                case 'pan-left':  scale = 1.05; transX = (drift/2) - (p*drift); break;
+                case 'pan-right': scale = 1.05; transX = -(drift/2) + (p*drift); break;
+                case 'pan-up':    scale = 1.05; transY = (drift/2) - (p*drift); break;
+                case 'pan-down':  scale = 1.05; transY = -(drift/2) + (p*drift); break;
+                case 'none':      break; // 비디오 기본값 (왜곡 방지)
             }
-            ctx.save(); ctx.translate(cw/2 + transX, ch/2 + transY); ctx.scale(scale, scale); ctx.translate(-cw/2, -ch/2);
+            
+            ctx.save();
+            ctx.translate(cw/2 + transX, ch/2 + transY);
+            ctx.scale(scale, scale);
+            ctx.translate(-cw/2, -ch/2);
+            
             ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 80; ctx.shadowOffsetY = 30;
-            drawDynamicFineArtFrame(ctx, mediaObj.mediaElement, cw, ch); ctx.restore();
+            drawDynamicFineArtFrame(ctx, mediaObj.mediaElement, cw, ch);
+            ctx.restore();
         }
 
+        // 🌟 수정됨: 이미지와 비디오의 각기 다른 객체 프로퍼티(Width/Height)를 통합 수용
         function drawDynamicFineArtFrame(ctx, media, cw, ch) {
-            const isVertical = ch > cw; const paddingX = isVertical ? 120 : 250; const paddingTop = isVertical ? 300 : 150; const paddingBottom = isVertical ? 450 : 250;
-            const availW = cw - (paddingX * 2); const availH = ch - paddingTop - paddingBottom;
-            const mediaW = media.videoWidth || media.width || cw; const mediaH = media.videoHeight || media.height || ch;
-            const mediaRatio = mediaW / mediaH; const availRatio = availW / availH;
+            const isVertical = ch > cw;
+            const paddingX = isVertical ? 120 : 250;
+            const paddingTop = isVertical ? 300 : 150;
+            const paddingBottom = isVertical ? 450 : 250;
+
+            const availW = cw - (paddingX * 2);
+            const availH = ch - paddingTop - paddingBottom;
+            
+            const mediaW = media.videoWidth || media.width || cw;
+            const mediaH = media.videoHeight || media.height || ch;
+            
+            const mediaRatio = mediaW / mediaH; 
+            const availRatio = availW / availH;
+            
             let drawW = availW, drawH = availH;
-            if (mediaRatio > availRatio) drawH = availW / mediaRatio; else drawW = availH * mediaRatio;
+            if (mediaRatio > availRatio) drawH = availW / mediaRatio; 
+            else drawW = availH * mediaRatio;
+            
             const offsetX = (cw - drawW) / 2, offsetY = paddingTop + (availH - drawH) / 2;
 
             ctx.fillStyle = '#fefefe'; const borderSize = isVertical ? 20 : 16;
             ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize*2), drawH + (borderSize*2));
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.strokeRect(offsetX, offsetY, drawW, drawH);
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2;
+            ctx.strokeRect(offsetX, offsetY, drawW, drawH);
             ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
         }
 
         function drawFrame(timeInSeconds) {
-            const ctx = elements.ctx; const width = elements.canvas.width; const height = elements.canvas.height; const isVertical = height > width;
-            ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, width, height);
+            const ctx = elements.ctx;
+            const width = elements.canvas.width;  
+            const height = elements.canvas.height;
+            const isVertical = height > width;
+            
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, width, height);
 
             if(state.images.length === 0) return;
             const scene = getSceneContext(timeInSeconds);
+
             const userFontSize = parseInt(elements.canvasFontSize.value);
-            let fontSizeIntroTitle = isVertical ? 80 : 110; let fontSizeIntroSubtitle = isVertical ? 48 : 64; let fontSizeSlide = isVertical ? 56 : 72; let lineHeightSlide = isVertical ? 72 : 96;
-            if (userFontSize > 0) { fontSizeSlide = userFontSize; lineHeightSlide = Math.round(userFontSize * 1.3); fontSizeIntroTitle = Math.round(userFontSize * 1.4); fontSizeIntroSubtitle = Math.round(userFontSize * 0.85); }
+            let fontSizeIntroTitle = isVertical ? 80 : 110;
+            let fontSizeIntroSubtitle = isVertical ? 48 : 64;
+            let fontSizeSlide = isVertical ? 56 : 72;
+            let lineHeightSlide = isVertical ? 72 : 96;
+
+            if (userFontSize > 0) {
+                fontSizeSlide = userFontSize;
+                lineHeightSlide = Math.round(userFontSize * 1.3);
+                fontSizeIntroTitle = Math.round(userFontSize * 1.4);
+                fontSizeIntroSubtitle = Math.round(userFontSize * 0.85);
+            }
 
             if (scene.type === 'intro') {
-                let alpha = Math.min(scene.elapsed / 1.5, 1); if (scene.duration - scene.elapsed < 1) alpha = scene.duration - scene.elapsed;
-                ctx.globalAlpha = alpha; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15; ctx.fillStyle = '#f5f5f4'; ctx.font = `400 ${fontSizeIntroTitle}px "${state.fontFamily}", sans-serif`;
+                let alpha = Math.min(scene.elapsed / 1.5, 1);
+                if (scene.duration - scene.elapsed < 1) alpha = scene.duration - scene.elapsed;
+                ctx.globalAlpha = alpha;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
+                ctx.fillStyle = '#f5f5f4'; 
+                ctx.font = `400 ${fontSizeIntroTitle}px "${state.fontFamily}", sans-serif`;
                 drawWrapText(ctx, state.intro.title, width/2, height/2 - (isVertical?60:40), width * 0.85, Math.round(fontSizeIntroTitle * 1.25));
-                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10; ctx.fillStyle = '#a8a29e'; ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
+
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#a8a29e'; 
+                ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
                 drawWrapText(ctx, state.intro.subtitle, width/2, height/2 + (isVertical?80:90), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
             } 
             else if (scene.type === 'outro') {
-                let alpha = Math.min(scene.elapsed / 1.5, 1); ctx.globalAlpha = alpha; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15; ctx.fillStyle = '#f5f5f4'; ctx.font = `300 ${Math.round(fontSizeIntroTitle * 0.7)}px "${state.fontFamily}", sans-serif`;
+                let alpha = Math.min(scene.elapsed / 1.5, 1);
+                ctx.globalAlpha = alpha;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15;
+                ctx.fillStyle = '#f5f5f4'; 
+                ctx.font = `300 ${Math.round(fontSizeIntroTitle * 0.7)}px "${state.fontFamily}", sans-serif`;
                 drawWrapText(ctx, state.outro.title, width/2, height/2 - (isVertical?60:50), width * 0.85, Math.round(fontSizeIntroTitle * 0.9));
-                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10; ctx.fillStyle = '#a8a29e'; ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
+                
+                ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#a8a29e'; 
+                ctx.font = `300 ${fontSizeIntroSubtitle}px "Pretendard", sans-serif`;
                 drawWrapText(ctx, state.outro.subtitle, width/2, height/2 + (isVertical?80:80), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
             } 
             else if (scene.type === 'slide') {
                 const imgObj = state.images[scene.index];
+                
                 const fadeDuration = state.transitionEffect === 'fadeblack' ? 1.5 : 1.0; 
                 let isFading = (scene.elapsed < fadeDuration && scene.index > 0);
-                if (isFading) { const prevObj = state.images[scene.index - 1]; renderSlideTransition(ctx, prevObj, imgObj, width, height, scene.elapsed, fadeDuration); } 
-                else { renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0); }
+                
+                if (isFading) {
+                    const prevObj = state.images[scene.index - 1];
+                    renderSlideTransition(ctx, prevObj, imgObj, width, height, scene.elapsed, fadeDuration);
+                } else {
+                    renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
+                }
 
-                ctx.globalAlpha = 1.0; const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
-                vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)'); ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
+                ctx.globalAlpha = 1.0;
+                const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
+                ctx.fillStyle = vignette; ctx.fillRect(0, 0, width, height);
 
                 ctx.globalAlpha = 1.0; ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 particles.forEach(p => {
-                    if(state.isPlaying || state.isRecording) { p.x += p.vx; p.y += p.vy; if(p.x < 0) p.x = width; if(p.x > width) p.x = 0; if(p.y < 0) p.y = height; if(p.y > height) p.y = 0; }
+                    if(state.isPlaying || state.isRecording) {
+                        p.x += p.vx; p.y += p.vy;
+                        if(p.x < 0) p.x = width; if(p.x > width) p.x = 0;
+                        if(p.y < 0) p.y = height; if(p.y > height) p.y = 0;
+                    }
                     ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
                 });
 
-                const gradHeight = isVertical ? 600 : 400; const gradient = ctx.createLinearGradient(0, height - gradHeight, 0, height);
-                gradient.addColorStop(0, 'rgba(15, 15, 15, 0)'); gradient.addColorStop(0.7, 'rgba(15, 15, 15, 0.9)'); gradient.addColorStop(1, 'rgba(15, 15, 15, 1)');
+                const gradHeight = isVertical ? 600 : 400; 
+                const gradient = ctx.createLinearGradient(0, height - gradHeight, 0, height);
+                gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
+                gradient.addColorStop(0.7, 'rgba(15, 15, 15, 0.9)');
+                gradient.addColorStop(1, 'rgba(15, 15, 15, 1)');
                 ctx.fillStyle = gradient; ctx.fillRect(0, height - gradHeight, width, gradHeight);
 
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const currentPhrase = imgObj.phrase || ""; const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
+                const currentPhrase = imgObj.phrase || "";
+                const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
                 const textY = height - (isVertical ? 220 : 160);
 
-                ctx.fillStyle = '#e7e5e4'; ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
+                ctx.fillStyle = '#e7e5e4'; 
+                ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`;
+                ctx.shadowColor = 'rgba(0,0,0,0.9)'; 
+                ctx.shadowBlur = 15;
+
                 const maxWidth = width * 0.85; 
 
                 if (isFading && prevPhrase !== currentPhrase) {
-                    ctx.globalAlpha = 1 - Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0)); drawWrapText(ctx, prevPhrase, width / 2, textY, maxWidth, lineHeightSlide);
-                    ctx.globalAlpha = Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0)); drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
-                } else { ctx.globalAlpha = 1.0; drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide); }
+                    ctx.globalAlpha = 1 - Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
+                    drawWrapText(ctx, prevPhrase, width / 2, textY, maxWidth, lineHeightSlide);
+                    ctx.globalAlpha = Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
+                    drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
+                } else {
+                    ctx.globalAlpha = 1.0; 
+                    drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
+                }
             }
             
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = isVertical ? 350 : 280; const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
-                const logoX = width - logoW - (isVertical ? 60 : 50); const logoY = isVertical ? 100 : 40; const outline = 3; 
-                ctx.shadowColor = 'white'; ctx.shadowBlur = 2; 
-                const offsets = [ [-outline, 0], [outline, 0], [0, -outline], [0, outline], [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline] ];
-                offsets.forEach(off => { ctx.shadowOffsetX = off[0]; ctx.shadowOffsetY = off[1]; ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH); });
-                ctx.shadowColor = 'transparent'; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
+                const logoW = isVertical ? 350 : 280;
+                const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
+                const logoX = width - logoW - (isVertical ? 60 : 50);
+                const logoY = isVertical ? 100 : 40;
+
+                const outline = 3; 
+                
+                ctx.shadowColor = 'white';
+                ctx.shadowBlur = 2; 
+                
+                const offsets = [
+                    [-outline, 0], [outline, 0], [0, -outline], [0, outline],
+                    [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline]
+                ];
+                
+                offsets.forEach(off => {
+                    ctx.shadowOffsetX = off[0];
+                    ctx.shadowOffsetY = off[1];
+                    ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
+                });
+
+                ctx.shadowColor = 'transparent';
+                ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+                ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
-            ctx.globalAlpha = 1.0; ctx.shadowBlur = 0; updateProgressUI(timeInSeconds);
+
+            ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
+            updateProgressUI(timeInSeconds);
         }
 
         function drawCoverImage(ctx, media, cw, ch) {
-            const mediaW = media.videoWidth || media.width || cw; const mediaH = media.videoHeight || media.height || ch;
-            const mediaRatio = mediaW / mediaH; const canvasRatio = cw / ch;
+            const mediaW = media.videoWidth || media.width || cw;
+            const mediaH = media.videoHeight || media.height || ch;
+            
+            const mediaRatio = mediaW / mediaH; 
+            const canvasRatio = cw / ch;
+            
             let drawW = cw, drawH = ch, offsetX = 0, offsetY = 0;
-            if (mediaRatio > canvasRatio) { drawW = ch * mediaRatio; offsetX = (cw - drawW) / 2; } else { drawH = cw / mediaRatio; offsetY = (ch - drawH) / 2; }
+            if (mediaRatio > canvasRatio) { drawW = ch * mediaRatio; offsetX = (cw - drawW) / 2; } 
+            else { drawH = cw / mediaRatio; offsetY = (ch - drawH) / 2; }
             ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
         }
 
         function updateUI() {
-            const hasImages = state.images.length > 0; elements.emptyState.style.display = hasImages ? 'none' : 'flex';
+            const hasImages = state.images.length > 0;
+            elements.emptyState.style.display = hasImages ? 'none' : 'flex';
             elements.playBtn.disabled = !hasImages; elements.stopBtn.disabled = !hasImages; elements.exportBtn.disabled = !hasImages;
-            elements.playBtn.innerHTML = state.isPlaying ? '<i data-lucide="pause" class="w-4 h-4"></i>' : '<i data-lucide="play" class="w-4 h-4 ml-1"></i>'; lucide.createIcons();
+            elements.playBtn.innerHTML = state.isPlaying 
+                ? '<i data-lucide="pause" class="w-4 h-4"></i>' : '<i data-lucide="play" class="w-4 h-4 ml-1"></i>';
+            lucide.createIcons();
         }
 
         function setupAudioRouting() {
             if (!audioCtx) {
-                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); audioDest = audioCtx.createMediaStreamDestination(); audioSource = audioCtx.createMediaElementSource(elements.bgmAudio); audioSource.connect(audioDest); audioSource.connect(audioCtx.destination); } catch(e) {}
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    audioDest = audioCtx.createMediaStreamDestination();
+                    audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
+                    audioSource.connect(audioDest); 
+                    audioSource.connect(audioCtx.destination); 
+                } catch(e) {
+                    console.error("Audio routing error:", e);
+                }
             }
         }
 
         function togglePlay() {
-            if (state.images.length === 0) return; setupAudioRouting(); if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            if (state.isPlaying) { state.isPlaying = false; cancelAnimationFrame(state.animationFrameId); elements.bgmAudio.pause(); stopProceduralAmbient(); } 
-            else {
-                state.isPlaying = true; state.lastTimestamp = performance.now(); if (state.currentTime >= state.totalDuration) state.currentTime = 0;
-                if (elements.bgmSelect.value === 'procedural') startProceduralAmbient(); else if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1); elements.bgmAudio.play().catch(e => {}); }
+            if (state.images.length === 0) return;
+            
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
+            if (state.isPlaying) {
+                state.isPlaying = false; 
+                cancelAnimationFrame(state.animationFrameId); 
+                elements.bgmAudio.pause();
+                stopProceduralAmbient();
+            } else {
+                state.isPlaying = true; 
+                state.lastTimestamp = performance.now();
+                if (state.currentTime >= state.totalDuration) state.currentTime = 0;
+                
+                if (elements.bgmSelect.value === 'procedural') {
+                    startProceduralAmbient();
+                } else if(elements.bgmAudio.src) {
+                    elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+                    elements.bgmAudio.play().catch(e => console.log("Audio prevent:", e));
+                }
                 animationLoop(performance.now());
             }
             updateUI();
         }
 
         function stopPlayback() {
-            state.isPlaying = false; cancelAnimationFrame(state.animationFrameId); state.currentTime = 0; elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0;
-            stopProceduralAmbient(); state.images.forEach(img => { if(img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause(); }); drawFrame(0); updateUI();
+            state.isPlaying = false; 
+            cancelAnimationFrame(state.animationFrameId);
+            state.currentTime = 0; 
+            elements.bgmAudio.pause(); 
+            elements.bgmAudio.currentTime = 0;
+            stopProceduralAmbient();
+            
+            // 모든 비디오 일괄 정지 (안정성)
+            state.images.forEach(img => {
+                if(img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause();
+            });
+            
+            drawFrame(0); 
+            updateUI();
         }
 
         function seekTime(e) {
-            if (state.images.length === 0) return; const rect = elements.progressContainer.getBoundingClientRect(); state.currentTime = Math.max(0, Math.min(((e.clientX - rect.left) / rect.width) * state.totalDuration, state.totalDuration));
-            if (elements.bgmAudio.src && elements.bgmSelect.value !== 'procedural') elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1); drawFrame(state.currentTime);
+            if (state.images.length === 0) return;
+            const rect = elements.progressContainer.getBoundingClientRect();
+            state.currentTime = Math.max(0, Math.min(((e.clientX - rect.left) / rect.width) * state.totalDuration, state.totalDuration));
+            if (elements.bgmAudio.src && elements.bgmSelect.value !== 'procedural') {
+                elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+            }
+            drawFrame(state.currentTime);
         }
 
         function animationLoop(timestamp) {
-            if (!state.isPlaying) return; state.currentTime += (timestamp - state.lastTimestamp) / 1000; state.lastTimestamp = timestamp;
+            if (!state.isPlaying) return;
+            state.currentTime += (timestamp - state.lastTimestamp) / 1000;
+            state.lastTimestamp = timestamp;
             if (state.currentTime >= state.totalDuration) { state.currentTime = state.totalDuration; drawFrame(state.currentTime); stopPlayback(); return; }
-            drawFrame(state.currentTime); state.animationFrameId = requestAnimationFrame(animationLoop);
+            drawFrame(state.currentTime);
+            state.animationFrameId = requestAnimationFrame(animationLoop);
         }
 
         function updateProgressUI(time) {
-            if (state.totalDuration > 0) { elements.progressBar.style.width = `${(time / state.totalDuration) * 100}%`; elements.currentTimeDisplay.textContent = formatTime(time); }
+            if (state.totalDuration > 0) {
+                elements.progressBar.style.width = `${(time / state.totalDuration) * 100}%`;
+                elements.currentTimeDisplay.textContent = formatTime(time);
+            }
         }
 
-        async function exportVideoAndSave() {
-            await saveProject('final'); // 영상 추출 전 최종본으로 상태 업데이트 저장
+        async function exportVideo() {
             if (state.images.length === 0 || state.isRecording) return;
             if(state.isPlaying) stopPlayback();
             
             state.isRecording = true; elements.loadingOverlay.style.display = 'flex'; elements.exportBtn.disabled = true;
-            elements.loadingOverlay.querySelector('h3').textContent = "고화질 영상 렌더링 중...";
-            elements.loadingOverlay.querySelector('p').textContent = "브라우저 창을 유지해 주세요.";
+            setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
-            setupAudioRouting(); if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            const fps = 30; let canvasStream;
-            try { canvasStream = elements.canvas.captureStream(fps); } catch (err) { alert("보안 정책(CORS)으로 추출이 차단되었습니다."); elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return; }
+            const fps = 30;
+            let canvasStream;
+            try { canvasStream = elements.canvas.captureStream(fps); } 
+            catch (err) {
+                alert("보안 정책(CORS)으로 추출이 차단되었습니다. 로컬 웹 서버 환경에서 실행해주세요.");
+                elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return;
+            }
             
             let tracks = [...canvasStream.getVideoTracks()];
-            if (audioDest) { const audioTracks = audioDest.stream.getAudioTracks(); if (audioTracks.length > 0) tracks = [...tracks, ...audioTracks]; }
+            if (audioDest) {
+                const audioTracks = audioDest.stream.getAudioTracks();
+                if (audioTracks.length > 0) tracks = [...tracks, ...audioTracks];
+            }
+
             const combinedStream = new MediaStream(tracks);
 
-            let options = {}; let ext = 'mp4';
-            if (MediaRecorder.isTypeSupported('video/mp4; codecs="avc1, mp4a.40.2"')) options = { mimeType: 'video/mp4; codecs="avc1, mp4a.40.2"' };
-            else if (MediaRecorder.isTypeSupported('video/mp4')) options = { mimeType: 'video/mp4' };
-            else if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9,opus')) { options = { mimeType: 'video/webm; codecs=vp9,opus' }; ext = 'webm'; } 
-            else { options = { mimeType: 'video/webm' }; ext = 'webm'; }
+            let options = {};
+            let ext = 'mp4';
             
-            const recorder = new MediaRecorder(combinedStream, options); const chunks = [];
+            if (MediaRecorder.isTypeSupported('video/mp4; codecs="avc1, mp4a.40.2"')) {
+                options = { mimeType: 'video/mp4; codecs="avc1, mp4a.40.2"' };
+            } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+                options = { mimeType: 'video/mp4' };
+            } else if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9,opus')) {
+                options = { mimeType: 'video/webm; codecs=vp9,opus' }; 
+                ext = 'webm'; 
+            } else {
+                options = { mimeType: 'video/webm' }; 
+                ext = 'webm'; 
+            }
+            
+            const recorder = new MediaRecorder(combinedStream, options);
+            const chunks = [];
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
-                if(elements.bgmAudio.src) { elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0; } stopProceduralAmbient();
-                state.images.forEach(img => { if(img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause(); });
-                const a = document.createElement('a'); a.style.display = 'none'; a.href = URL.createObjectURL(new Blob(chunks, { type: options.mimeType || 'video/mp4' }));
-                a.download = `숲체원_영상_${Date.now()}.${ext}`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                if(elements.bgmAudio.src) { elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0; }
+                stopProceduralAmbient();
+                
+                // 일괄 비디오 정지 처리
+                state.images.forEach(img => {
+                    if(img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause();
+                });
+
+                const a = document.createElement('a'); a.style.display = 'none';
+                a.href = URL.createObjectURL(new Blob(chunks, { type: options.mimeType || 'video/mp4' }));
+                a.download = `숲체원_영상_${Date.now()}.${ext}`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 state.isRecording = false; elements.loadingOverlay.style.display = 'none'; elements.exportBtn.disabled = false; drawFrame(0);
             };
             
-            if (elements.bgmSelect.value === 'procedural') startProceduralAmbient(); else if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = 0; try { elements.bgmAudio.play(); } catch(e) {} }
+            if (elements.bgmSelect.value === 'procedural') {
+                startProceduralAmbient();
+            } else if(elements.bgmAudio.src) { 
+                elements.bgmAudio.currentTime = 0; 
+                try { await elements.bgmAudio.play(); } catch(e) { console.log(e); }
+            }
+            
             recorder.start();
             
             let renderTime = 0; const timeStep = 1 / fps;
             function renderNextFrame() {
-                if (renderTime > state.totalDuration) { recorder.stop(); return; } drawFrame(renderTime);
-                elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`; elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
-                renderTime += timeStep; setTimeout(renderNextFrame, 1000 / fps);
+                if (renderTime > state.totalDuration) { recorder.stop(); return; }
+                drawFrame(renderTime);
+                elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`;
+                elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
+                renderTime += timeStep;
+                setTimeout(renderNextFrame, 1000 / fps);
             }
             renderNextFrame();
         }
