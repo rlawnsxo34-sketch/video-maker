@@ -342,9 +342,42 @@
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
         const particles = Array.from({length: 60}, () => ({ x: Math.random() * 1920, y: Math.random() * 1920, radius: Math.random() * 3 + 1, vx: (Math.random() - 0.5) * 0.5, vy: Math.random() * 0.5 + 0.2 }));
 
+        let processedLogoCanvas = null; // 최적화된 로고 보관용
         const watermarkLogo = new Image();
         watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
+        
+        watermarkLogo.onload = () => {
+            // 로고가 로드되면 딱 한 번만 테두리를 계산하여 메모리(임시 캔버스)에 렌더링해 둡니다.
+            const outline = 6; // 흰색 테두리 두께 지정
+            const silhouetteCanvas = document.createElement('canvas');
+            silhouetteCanvas.width = watermarkLogo.naturalWidth + outline * 2;
+            silhouetteCanvas.height = watermarkLogo.naturalHeight + outline * 2;
+            const sCtx = silhouetteCanvas.getContext('2d');
+            
+            // 1. 하얀색 실루엣 생성
+            sCtx.drawImage(watermarkLogo, outline, outline);
+            sCtx.globalCompositeOperation = 'source-in';
+            sCtx.fillStyle = '#ffffff';
+            sCtx.fillRect(0, 0, silhouetteCanvas.width, silhouetteCanvas.height);
+            
+            // 2. 테두리 확장 및 완성본 결합
+            const finalLogoCanvas = document.createElement('canvas');
+            finalLogoCanvas.width = silhouetteCanvas.width;
+            finalLogoCanvas.height = silhouetteCanvas.height;
+            const fCtx = finalLogoCanvas.getContext('2d');
+            
+            // 실루엣을 둥글게 퍼뜨려 테두리 생성 (단 1회만 연산되므로 과부하 없음)
+            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+                fCtx.drawImage(silhouetteCanvas, Math.cos(angle) * outline, Math.sin(angle) * outline);
+            }
+            
+            // 3. 그 위에 원본 로고 얹기
+            fCtx.globalCompositeOperation = 'source-over';
+            fCtx.drawImage(watermarkLogo, outline, outline);
+            
+            processedLogoCanvas = finalLogoCanvas; // 준비된 이미지를 저장
+        };
 
         const state = {
             projectId: null, aspectRatio: 'vertical', fontFamily: 'Gowun Dodum', transitionEffect: 'crossfade', 
@@ -730,14 +763,27 @@
             }
             
             ctx.globalAlpha = 1.0;
-            if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
+            if (processedLogoCanvas) {
+                // 사전 렌더링된 '테두리가 포함된 로고' 사용 (프레임 과부하 없음)
+                const originalLogoW = isVertical ? 350 : 280;
+                const scale = originalLogoW / watermarkLogo.naturalWidth;
+                const outline = 6;
+                const logoW = processedLogoCanvas.width * scale;
+                const logoH = processedLogoCanvas.height * scale;
+                const logoX = width - originalLogoW - (isVertical ? 60 : 50) - (outline * scale); 
+                const logoY = (isVertical ? 100 : 40) - (outline * scale);
+                
+                // 테두리가 잘 보이도록 연하게 그림자 추가
+                ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+                ctx.drawImage(processedLogoCanvas, logoX, logoY, logoW, logoH);
+            } else if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
                 const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
                 const logoX = width - logoW - (isVertical ? 60 : 50); const logoY = isVertical ? 100 : 40;
                 ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6; 
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
-            ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.shadowOffsetY = 0;
         }
 
         function togglePlay() {
