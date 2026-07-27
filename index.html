@@ -38,7 +38,7 @@
         
         <header class="px-6 py-4 flex justify-between items-center border-b border-stone-100 bg-white z-20">
             <div class="flex items-center gap-3 text-stone-800 font-serif-kr text-xl lg:text-2xl font-bold">
-                <img src="https://placehold.co/100x40/transparent/333?text=Logo" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.style.display='none'">
+                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.src='https://placehold.co/100x40/transparent/333?text=Logo'">
                 <span class="hidden sm:inline border-l border-stone-300 pl-3 ml-1 text-lg lg:text-xl">통합 영상 제작소</span>
             </div>
             
@@ -47,7 +47,7 @@
                 <button id="login-btn" class="px-4 py-2 bg-stone-800 text-white rounded-xl text-sm font-gowun hover:bg-stone-700 transition shadow-sm flex items-center gap-2">
                     <i data-lucide="log-in" class="w-4 h-4"></i> 로그인
                 </button>
-                <div id="user-menu" class="hidden flex items-center gap-3">
+                <div id="user-menu" class="hidden items-center gap-3">
                     <button id="workspace-btn" class="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 border border-stone-200 rounded-xl text-sm font-gowun hover:bg-stone-200 transition shadow-sm font-bold">
                         <i data-lucide="folder-open" class="w-4 h-4 text-stone-500"></i> 내 작업물
                     </button>
@@ -154,9 +154,9 @@
                             <!-- JS 동적 렌더링 영역 -->
                         </div>
                     </section>
-
                 </div>
 
+                <!-- 하단 기능/저장 영역 -->
                 <div class="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
                     <div class="flex justify-between items-center mb-3">
                         <span class="text-sm lg:text-base font-gowun text-stone-500">총 재생 시간</span>
@@ -173,7 +173,6 @@
                 </div>
             </aside>
 
-            <!-- 오른쪽: 플레이어 영역 -->
             <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden items-center justify-center p-4">
                 
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center w-full h-full">
@@ -186,7 +185,6 @@
                     <p id="render-time-text" class="text-xs lg:text-sm mt-2 font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <!-- 캔버스 컨테이너 (비율 반응형) -->
                 <div id="preview-wrapper" class="relative w-full max-w-[340px] xs:max-w-[360px] md:max-w-[420px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
@@ -234,14 +232,26 @@
         </div>
     </div>
 
-    <!-- 내 작업물(보관소) 모달 -->
+    <!-- 내 작업물(보관소) 모달 (내보내기/불러오기 버튼 추가됨) -->
     <div id="workspace-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center">
         <div class="bg-white rounded-2xl w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl animate-fade-up overflow-hidden">
             <div class="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                 <h2 class="text-xl font-serif-kr font-bold text-stone-800 flex items-center gap-2">
                     <i data-lucide="folder-open" class="text-stone-500 w-5 h-5"></i> 내 작업 보관소
                 </h2>
-                <button id="close-workspace-btn" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+                
+                <!-- 파일 입출력(Export/Import) 액션 영역 -->
+                <div class="flex items-center gap-2">
+                    <label class="cursor-pointer px-3 py-1.5 bg-white border border-stone-200 text-stone-700 rounded-lg text-xs font-gowun hover:bg-stone-50 transition flex items-center gap-1 shadow-sm font-bold">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> 파일 열기
+                        <input type="file" id="import-project-input" accept=".json" class="hidden">
+                    </label>
+                    <button id="export-project-btn" class="px-3 py-1.5 bg-stone-800 text-white rounded-lg text-xs font-gowun hover:bg-stone-700 transition flex items-center gap-1 shadow-sm font-bold">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 파일로 저장
+                    </button>
+                    <div class="w-px h-5 bg-stone-200 mx-1"></div>
+                    <button id="close-workspace-btn" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
             </div>
             
             <div class="flex border-b border-stone-100 px-6 pt-2 bg-stone-50 gap-4">
@@ -262,7 +272,7 @@
     </div>
 
     <!-- 자체 커스텀 알림(Notification) 및 확인창(Confirm) 모달 (기본 Alert 대체용) -->
-    <div id="custom-notification" class="fixed top-5 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full shadow-lg z-[9999] hidden transition-opacity duration-300 opacity-0 font-gowun font-bold"></div>
+    <div id="custom-notification" class="fixed top-5 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full shadow-lg z-[9999] hidden transition-opacity duration-300 opacity-0 font-gowun font-bold flex items-center gap-2"></div>
 
     <div id="custom-confirm-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[9999] hidden items-center justify-center">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-up">
@@ -281,7 +291,8 @@
         // Custom Notification (alert 대체)
         function showNotification(msg) {
             const noti = document.getElementById('custom-notification');
-            noti.textContent = msg;
+            noti.innerHTML = `<i data-lucide="info" class="w-4 h-4"></i> ${msg}`;
+            lucide.createIcons();
             noti.classList.remove('hidden');
             setTimeout(() => noti.classList.remove('opacity-0'), 10);
             setTimeout(() => {
@@ -357,13 +368,15 @@
             vy: Math.random() * 0.5 + 0.2, alpha: Math.random() * 0.5 + 0.1
         }));
 
+        // 워터마크 로고 적용
         const watermarkLogo = new Image();
         watermarkLogo.crossOrigin = "anonymous"; 
-        watermarkLogo.src = 'https://placehold.co/100x40/transparent/eee?text=Logo'; // Fallback 로고 URL
+        watermarkLogo.onerror = function() { this.style.display = 'none'; };
+        watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
         // 앱 데이터 상태 관리
         const state = {
-            projectId: null, 
+            projectId: null,
             aspectRatio: 'vertical', 
             fontFamily: 'Gowun Dodum',
             transitionEffect: 'crossfade', 
@@ -377,8 +390,8 @@
             draggedItemIndex: null
         };
 
-        // 인증 상태 관리
-        let currentUser = null; 
+        // 인증 상태 관리 (로컬스토리지 연동하여 새로고침 유지)
+        let currentUser = JSON.parse(localStorage.getItem('forestUser')) || null; 
 
         const elements = {
             ratioVertical: document.getElementById('ratio-vertical'),
@@ -418,17 +431,15 @@
             tabDraft: document.getElementById('tab-draft'),
             tabFinal: document.getElementById('tab-final'),
             projectList: document.getElementById('project-list'),
-            emptyProjects: document.getElementById('empty-projects')
+            emptyProjects: document.getElementById('empty-projects'),
+            exportProjectBtn: document.getElementById('export-project-btn'),
+            importProjectInput: document.getElementById('import-project-input')
         };
 
         let currentTab = 'draft';
-
         let audioCtx, audioDest, audioSource;
         let windNode, windGain, chimeInterval;
 
-        // ==========================================
-        // IndexedDB 로컬 클라우드 셋팅
-        // ==========================================
         const DB_NAME = 'ForestVideoDB';
         const STORE_NAME = 'projects';
 
@@ -590,26 +601,137 @@
                 tx.oncomplete = () => {
                     if(state.projectId === id) state.projectId = null;
                     renderWorkspaceTab(currentTab);
+                    showNotification("작업물이 삭제되었습니다.");
                 };
             });
         }
         window.restoreProject = restoreProject;
         window.deleteProject = deleteProject;
 
-        // ==========================================
-        // 기본 초기화 (UI 리스너 연결)
-        // ==========================================
+        function exportProjectFile() {
+            if (state.images.length === 0) {
+                showNotification("파일로 내보낼 작업 내역이 없습니다.");
+                return;
+            }
+            
+            const dataToExport = {
+                version: 1,
+                aspectRatio: state.aspectRatio,
+                fontFamily: state.fontFamily,
+                transitionEffect: state.transitionEffect,
+                intro: state.intro,
+                outro: state.outro,
+                images: state.images.map(img => ({
+                    id: img.id, type: img.type, src: img.src,
+                    effect: img.effect, phrase: img.phrase, duration: img.duration
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(dataToExport)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `숲체원_프로젝트_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification("프로젝트 파일(.json)이 다운로드되었습니다.");
+        }
+
+        function importProjectFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    elements.workspaceModal.style.display = 'none';
+                    elements.loadingOverlay.style.display = 'flex';
+                    elements.loadingOverlay.querySelector('h3').textContent = "프로젝트 파일 여는 중...";
+                    
+                    stopPlayback();
+                    state.images.forEach(img => {
+                        if (img.type === 'video') URL.revokeObjectURL(img.src);
+                    });
+
+                    state.projectId = null; // 새 파일 임포트이므로 ID 초기화
+                    state.aspectRatio = data.aspectRatio || 'vertical';
+                    state.fontFamily = data.fontFamily || 'Gowun Dodum';
+                    state.transitionEffect = data.transitionEffect || 'crossfade';
+                    state.intro = data.intro;
+                    state.outro = data.outro;
+
+                    elements.transitionEffectSelect.value = state.transitionEffect;
+                    setFont(state.fontFamily);
+                    setAspectRatio(state.aspectRatio);
+
+                    const loadPromises = data.images.map(imgData => new Promise((resolve) => {
+                        if (imgData.type === 'video') {
+                            const video = document.createElement('video');
+                            video.src = imgData.src; 
+                            video.muted = true;
+                            video.playsInline = true;
+                            video.preload = "auto";
+                            video.onloadeddata = () => resolve({...imgData, mediaElement: video});
+                            video.onerror = () => resolve(null); // 로컬 환경 차이로 인한 연결 실패 방어
+                            video.load();
+                        } else {
+                            const img = new Image();
+                            img.onload = () => resolve({...imgData, mediaElement: img});
+                            img.onerror = () => resolve(null);
+                            img.src = imgData.src;
+                        }
+                    }));
+
+                    const loadedMedia = await Promise.all(loadPromises);
+                    state.images = loadedMedia.filter(item => item !== null);
+                    
+                    if (state.images.length !== data.images.length) {
+                        showNotification("경고: 파일 내 일부 동영상 경로를 현재 기기에서 찾을 수 없어 제외되었습니다.");
+                    } else {
+                        showNotification("프로젝트를 성공적으로 불러왔습니다.");
+                    }
+
+                    elements.loadingOverlay.style.display = 'none';
+                    updateDurations();
+                    renderStoryboard();
+                    updateUI();
+                    drawFrame(0);
+                } catch(err) {
+                    showNotification("유효하지 않은 숲체원 프로젝트 파일입니다.");
+                    elements.loadingOverlay.style.display = 'none';
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // 초기화
+        }
+
+        function updateLoginUI() {
+            if(currentUser) {
+                elements.loginBtn.classList.add('hidden');
+                elements.userMenu.classList.remove('hidden');
+                elements.userMenu.classList.add('flex');
+            } else {
+                elements.loginBtn.classList.remove('hidden');
+                elements.userMenu.classList.add('hidden');
+                elements.userMenu.classList.remove('flex');
+            }
+        }
+
         function init() {
+            updateLoginUI();
+
             // 로그인 UI 이벤트
             elements.loginBtn.addEventListener('click', () => elements.loginModal.style.display = 'flex');
             elements.closeLoginBtn.addEventListener('click', () => elements.loginModal.style.display = 'none');
             elements.mockLoginBtn.addEventListener('click', () => {
                 currentUser = { id: 'user_123', name: '숲체원 매니저' };
+                localStorage.setItem('forestUser', JSON.stringify(currentUser)); // 로컬스토리지에 저장!
                 elements.loginModal.style.display = 'none';
-                elements.loginBtn.classList.add('hidden');
-                elements.userMenu.classList.remove('hidden');
-                elements.userMenu.classList.add('flex');
-                showNotification("성공적으로 로그인되었습니다.");
+                updateLoginUI();
+                showNotification("성공적으로 로그인되었습니다. 작업물이 안전하게 유지됩니다.");
             });
 
             // 내 작업물 모달 UI 이벤트
@@ -621,6 +743,10 @@
             
             elements.tabDraft.addEventListener('click', () => renderWorkspaceTab('draft'));
             elements.tabFinal.addEventListener('click', () => renderWorkspaceTab('final'));
+
+            // 프로젝트 내보내기/불러오기 이벤트
+            elements.exportProjectBtn.addEventListener('click', exportProjectFile);
+            elements.importProjectInput.addEventListener('change', importProjectFile);
 
             // 저장 버튼
             elements.saveDraftBtn.addEventListener('click', () => saveProjectToDB('draft'));
@@ -710,9 +836,6 @@
             }
         }
 
-        // ==========================================
-        // 오디오 시스템
-        // ==========================================
         function setupAudioRouting() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -741,7 +864,6 @@
             filter.frequency.setValueAtTime(250, audioCtx.currentTime); filter.Q.setValueAtTime(3, audioCtx.currentTime);
             windGain = audioCtx.createGain(); windGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
             noiseNode.connect(filter); filter.connect(windGain); windGain.connect(audioDest);
-            // 라우팅: 오디오 컨텍스트의 목적지로도 연결하여 사용자에게 들리게 함
             windGain.connect(audioCtx.destination); 
             noiseNode.start(); windNode = noiseNode;
             
@@ -780,9 +902,6 @@
             if (chimeInterval) { clearInterval(chimeInterval); chimeInterval = null; }
         }
 
-        // ==========================================
-        // 렌더링 및 UI 업데이트
-        // ==========================================
         function setFont(fontName) {
             state.fontFamily = fontName;
             document.querySelectorAll('.font-btn').forEach(btn => {
@@ -956,9 +1075,6 @@
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
         }
 
-        // ==========================================
-        // 동적 트랜지션 렌더링 
-        // ==========================================
         function getSceneContext(time) {
             if (time < state.intro.duration) return { type: 'intro', elapsed: time, duration: state.intro.duration };
             let acc = state.intro.duration;
@@ -1235,7 +1351,7 @@
             const fps = 30; let canvasStream;
             try { canvasStream = elements.canvas.captureStream(fps); } 
             catch (err) {
-                showNotification("보안 정책(CORS)으로 추출이 차단되었습니다. 로컬 환경에서 실행해주세요.");
+                showNotification("보안 정책(CORS)으로 자동 추출이 차단되었습니다.");
                 elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return;
             }
             
@@ -1267,7 +1383,7 @@
                 
                 state.isRecording = false; elements.loadingOverlay.style.display = 'none'; elements.exportBtn.disabled = false; drawFrame(0);
                 
-                // 영상 추출 완료 후 '최종 결과물' 자동 저장 로직
+                // 영상 추출 완료 후 '최종 결과물' 자동 저장 및 파일(.json) 자동 내보내기 병행 추천
                 saveProjectToDB('final');
             };
             
