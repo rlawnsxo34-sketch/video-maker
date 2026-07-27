@@ -20,23 +20,42 @@
         @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
         
         .video-container { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+
         .storyboard-item.dragging { opacity: 0.5; border: 2px dashed #a8a29e; }
         .storyboard-item { transition: transform 0.2s, box-shadow 0.2s; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-0 md:p-6 relative">
 
-    <div class="w-full max-w-[1600px] bg-white md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-[90vh] md:max-h-[95vh] border border-stone-200 animate-fade-up">
+    <div id="toast-container" class="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-up">
+            <h3 class="text-lg font-serif-kr font-bold text-stone-800 mb-2" id="confirm-title">확인</h3>
+            <p class="text-stone-600 font-gowun mb-6 text-sm" id="confirm-message">진행하시겠습니까?</p>
+            <div class="flex gap-2 justify-end">
+                <button id="confirm-cancel-btn" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 font-gowun hover:bg-stone-50 transition">취소</button>
+                <button id="confirm-ok-btn" class="px-4 py-2 rounded-xl bg-stone-800 text-white font-gowun hover:bg-stone-900 transition shadow-md">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-[1600px] bg-white md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-[90vh] md:max-h-[95vh] border border-stone-200 animate-fade-up relative">
         
-        <header class="px-6 py-4 flex justify-between items-center border-b border-stone-100 bg-white z-20 shrink-0">
+        <!-- 헤더 -->
+        <header class="px-6 py-4 flex justify-between items-center border-b border-stone-100 bg-white z-20">
             <div class="flex items-center gap-3 text-stone-800 font-serif-kr text-xl lg:text-2xl font-bold">
-                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.style.display='none'">
+                <!-- 로고 이미지 업데이트 -->
+                <img src="국립장성숲체원-_국문좌우_이미지형 (2).png" alt="국립장성숲체원 로고" class="h-8 lg:h-10 object-contain" onerror="this.src='https://placehold.co/200x60/ffffff/57534e?text=국립장성숲체원&font=noto-serif'">
                 <span class="hidden sm:inline border-l border-stone-300 pl-3 ml-1 text-lg lg:text-xl">통합 영상 제작소</span>
             </div>
             
@@ -48,17 +67,18 @@
                     <button id="workspace-btn" class="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 border border-stone-200 rounded-xl text-sm font-gowun hover:bg-stone-200 transition shadow-sm font-bold">
                         <i data-lucide="folder-open" class="w-4 h-4 text-stone-500"></i> 내 작업물
                     </button>
-                    <button id="logout-btn" class="px-3 py-2 bg-stone-50 text-stone-500 rounded-xl text-xs hover:bg-stone-200 transition">로그아웃</button>
-                    <div class="w-9 h-9 rounded-full bg-stone-800 text-white flex items-center justify-center font-bold text-sm shadow-sm" title="숲체원 매니저">숲</div>
+                    <button id="logout-btn" class="w-9 h-9 rounded-full bg-stone-800 text-white flex items-center justify-center font-bold text-sm shadow-sm hover:bg-stone-700 transition" title="로그아웃">
+                        숲
+                    </button>
                 </div>
             </div>
         </header>
 
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
-            <aside class="w-full lg:w-[520px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] shrink-0">
+            <aside class="w-full lg:w-[520px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
                 <div class="flex-1 overflow-y-auto p-6 space-y-6">
                     
-                    <!-- 1. 화면 비율 -->
+                    <!-- 화면 비율 설정 -->
                     <section class="flex flex-col gap-2">
                         <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
                             <i data-lucide="ratio" class="w-5 h-5 text-stone-400"></i> 화면 비율 선택
@@ -73,11 +93,11 @@
                         </div>
                     </section>
 
-                    <!-- 2. 글씨체 및 화면 전환 -->
+                    <!-- 글씨체 및 트랜지션 -->
                     <section class="flex flex-col gap-4 p-4 lg:p-5 bg-stone-50 rounded-2xl border border-stone-100">
                         <div class="flex flex-col gap-2">
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
-                                <i data-lucide="type" class="w-5 h-5 text-stone-400"></i> 스타일 설정
+                                <i data-lucide="type" class="w-5 h-5 text-stone-400"></i> 글씨체 설정
                             </h2>
                             <div class="grid grid-cols-2 gap-2" id="font-selector">
                                 <button data-font="Gowun Dodum" class="font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base" style="font-family: 'Gowun Dodum';">고운 돋움</button>
@@ -93,26 +113,28 @@
                                 <span class="font-semibold">화면 전환 효과 (트랜지션)</span>
                             </div>
                             <select id="transition-effect-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base cursor-pointer shadow-sm">
-                                <option value="crossfade" selected>🌬️ 시네마틱 페이드 (부드럽게 겹침 - 기본)</option>
+                                <option value="crossfade" selected>🌬️ 시네마틱 페이드 (부드럽게 겹침)</option>
                                 <option value="fadeblack">🎬 필름 블랙 아웃 (영화처럼 어두워짐)</option>
                                 <option value="slide">📸 포토 슬라이드 (옆으로 밀려남)</option>
                             </select>
                         </div>
                     </section>
 
-                    <!-- 3. 프리미엄 BGM 설정 -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <h2 class="text-base lg:text-xl font-serif-kr mb-3 text-stone-800 flex items-center gap-2 font-bold">
                             <i data-lucide="music" class="w-5 h-5 text-stone-400"></i> 배경음악 (BGM)
                         </h2>
                         <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base cursor-pointer">
-                            <option value="procedural" selected>🌿 실시간 힐링 사운드 (자연 합성음 - 100% 재생 보장)</option>
+                            <option value="procedural" selected>🌿 실시간 힐링 사운드 (자연 합성음)</option>
                             <option value="https://ia802508.us.archive.org/5/items/relaxing-piano-music-royalty-free/Relaxing%20Piano%20Music.mp3">🎹 평온한 편백숲 (피아노 앰비언트)</option>
                             <option value="https://ia802506.us.archive.org/16/items/nature-sounds-birds-singing-relaxing/nature-sounds-birds-singing.mp3">🐤 아침 숲의 소리 (실제 새 지저귐)</option>
+                            <option value="https://ia801402.us.archive.org/20/items/free_music_archive_instrumental/FMA_Instrumental_Selection_-_01_-_Gillicuddy_-_Springish.mp3">🎸 숲속의 봄날 (어쿠스틱 기타)</option>
                             <option value="custom">🎧 내 음원 직접 업로드...</option>
                             <option value="">소리 없음</option>
                         </select>
+                        <!-- 숨겨진 파일 인풋 (커스텀 BGM용) -->
                         <input type="file" id="custom-bgm-input" accept="audio/*" class="hidden">
+                        
                         <div id="custom-bgm-info" class="hidden flex items-center justify-between bg-stone-100 rounded-xl px-4 py-3 border border-stone-200 mt-2">
                             <div class="flex items-center gap-2 overflow-hidden">
                                 <i data-lucide="file-audio" class="w-5 h-5 text-stone-500 shrink-0"></i>
@@ -125,19 +147,19 @@
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
                     </section>
 
-                    <!-- 4. 미디어 업로드 -->
+                    <!-- 미디어 업로드 -->
                     <section>
                         <label class="cursor-pointer w-full py-8 rounded-2xl border-2 border-dashed border-stone-300 flex flex-col items-center justify-center transition-all hover:bg-stone-50 group bg-white shadow-sm">
                             <div class="w-14 h-14 rounded-full bg-stone-100 group-hover:bg-white flex items-center justify-center mb-2 transition-colors">
                                 <i data-lucide="image-plus" class="w-6 h-6 text-stone-600"></i>
                             </div>
-                            <span class="text-stone-700 font-serif-kr text-base lg:text-lg font-bold">터치하여 사진 및 동영상 추가</span>
+                            <span class="text-stone-700 font-serif-kr text-base lg:text-lg font-bold">터치하여 사진/동영상 추가</span>
                             <span class="text-stone-400 font-gowun text-sm mt-1">드래그 앤 드롭으로 순서 변경 가능</span>
-                            <input id="image-upload" type="file" multiple accept="image/*,video/*,.mp4,.mov,.avi" class="hidden" />
+                            <input id="image-upload" type="file" multiple accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm" class="hidden" />
                         </label>
                     </section>
 
-                    <!-- 5. 스토리보드 -->
+                    <!-- 스토리보드 -->
                     <section>
                         <div class="flex justify-between items-end mb-3">
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
@@ -150,7 +172,7 @@
                     </section>
                 </div>
 
-                <div class="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.02)] shrink-0">
+                <div class="p-6 border-t border-stone-100 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.02)] z-20">
                     <div class="flex justify-between items-center mb-3">
                         <span class="text-sm lg:text-base font-gowun text-stone-500">총 재생 시간</span>
                         <span id="estimated-time" class="text-lg lg:text-xl font-bold text-stone-800 font-mono">00:00</span>
@@ -166,7 +188,7 @@
                 </div>
             </aside>
 
-            <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden items-center justify-center p-4">
+            <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden items-center justify-center p-4 min-h-[500px]">
                 
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center w-full h-full">
                     <div class="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-6"></div>
@@ -178,8 +200,8 @@
                     <p id="render-time-text" class="text-xs lg:text-sm mt-2 font-mono text-stone-500">00:00 / 00:00</p>
                 </div>
 
-                <!-- 캔버스 (크기 고정 및 비율 반응형 처리 완벽 수정) -->
-                <div id="preview-wrapper" class="relative w-full max-w-[420px] aspect-[9/16] max-h-[70vh] lg:max-h-[80vh] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto">
+                <!-- 캔버스 (크기 고정 및 비율 반응형 처리 완벽 수정 - 높이 기준 반응형 적용) -->
+                <div id="preview-wrapper" class="relative w-full bg-black rounded-2xl md:rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto" style="max-width: min(400px, calc((100vh - 300px) * 9 / 16)); aspect-ratio: 9/16;">
                     <canvas id="preview-canvas" width="1080" height="1920" class="w-full h-full object-contain"></canvas>
                     
                     <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-stone-400 bg-stone-800 p-4 text-center">
@@ -188,7 +210,8 @@
                     </div>
                 </div>
 
-                <div class="mt-6 w-full max-w-[420px] bg-white rounded-2xl p-3 lg:p-4 shadow-sm border border-stone-200 flex items-center gap-3 shrink-0">
+                <!-- 플레이어 컨트롤 -->
+                <div class="mt-6 w-full max-w-sm lg:max-w-md bg-white rounded-2xl p-3 lg:p-4 shadow-sm border border-stone-200 flex items-center gap-3 relative z-10">
                     <button id="play-btn" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-700 transition active:scale-95 disabled:opacity-50">
                         <i data-lucide="play" class="w-4 h-4 lg:w-5 lg:h-5 ml-1"></i>
                     </button>
@@ -215,7 +238,7 @@
                 <h2 class="text-xl font-serif-kr font-bold text-stone-800">서비스 로그인</h2>
                 <button id="close-login-btn" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <p class="text-stone-500 text-sm font-gowun mb-6">작업물을 안전하게 클라우드에 보관하고 나중에 이어서 편집하려면 로그인해 주세요.</p>
+            <p class="text-stone-500 text-sm font-gowun mb-6">작업물을 안전하게 기기에 보관하고 나중에 이어서 편집하려면 로그인해 주세요.</p>
             <div class="space-y-3">
                 <button id="mock-login-btn" class="w-full py-3 rounded-xl border border-stone-200 flex items-center justify-center gap-3 hover:bg-stone-50 transition active:scale-95">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google">
@@ -232,22 +255,27 @@
                 <h2 class="text-xl font-serif-kr font-bold text-stone-800 flex items-center gap-2">
                     <i data-lucide="folder-open" class="text-stone-500 w-5 h-5"></i> 내 작업 보관소
                 </h2>
-                <div class="flex items-center gap-3">
-                    <button id="export-json-btn" class="text-sm font-gowun font-bold text-stone-600 bg-white border border-stone-200 px-3 py-1.5 rounded-lg hover:bg-stone-100 flex items-center gap-1 shadow-sm">
-                        <i data-lucide="download-cloud" class="w-4 h-4"></i> 백업 다운로드
+                <div class="flex items-center gap-2">
+                    <button id="export-projects-btn" class="flex items-center gap-2 px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-sm font-gowun text-stone-600 hover:bg-stone-50 transition shadow-sm" title="모든 프로젝트를 파일로 저장">
+                        <i data-lucide="download-cloud" class="w-4 h-4"></i> 백업 저장
                     </button>
-                    <button id="close-workspace-btn" class="text-stone-400 hover:text-stone-600 ml-2"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    <button id="import-projects-btn" class="flex items-center gap-2 px-3 py-1.5 bg-stone-800 text-white rounded-lg text-sm font-gowun hover:bg-stone-700 transition shadow-sm" title="파일에서 프로젝트 불러오기">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i> 백업 열기
+                    </button>
+                    <input type="file" id="import-file-input" accept=".json" class="hidden">
+                    <div class="w-px h-6 bg-stone-300 mx-2"></div>
+                    <button id="close-workspace-btn" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
             </div>
             
             <div class="flex border-b border-stone-100 px-6 pt-2 bg-stone-50 gap-4">
                 <button id="tab-draft" class="px-4 py-2 font-gowun font-bold text-stone-800 border-b-2 border-stone-800 transition-colors">임시저장 (작업 중)</button>
-                <button id="tab-final" class="px-4 py-2 font-gowun text-stone-400 hover:text-stone-600 transition-colors border-b-2 border-transparent">최종 결과물</button>
+                <button id="tab-final" class="px-4 py-2 font-gowun text-stone-400 hover:text-stone-600 transition-colors">최종 결과물</button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-6 bg-stone-100/50">
-                <div id="project-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <!-- 프로젝트 카드 렌더링 영역 -->
+                <div id="project-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <!-- JS: 프로젝트 카드가 여기에 렌더링됩니다 -->
                 </div>
                 <div id="empty-projects" class="hidden flex-col items-center justify-center h-full text-stone-400 font-gowun">
                     <i data-lucide="inbox" class="w-12 h-12 mb-3 opacity-50"></i>
@@ -257,36 +285,10 @@
         </div>
     </div>
 
-    <!-- 토스트 알림창 컨테이너 (alert 대체) -->
-    <div id="toast-container" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-3 pointer-events-none"></div>
-
     <script>
         lucide.createIcons();
 
-        // 커스텀 토스트 알림창 (alert 교체용)
-        window.showToast = function(message, type = 'info') {
-            const toast = document.createElement('div');
-            const bgClass = type === 'error' ? 'bg-red-600' : (type === 'success' ? 'bg-green-600' : 'bg-stone-800');
-            toast.className = `px-6 py-3 rounded-full shadow-2xl text-sm font-gowun font-bold text-white transition-all duration-300 transform translate-y-10 opacity-0 flex items-center gap-2 ${bgClass}`;
-            
-            let icon = 'info';
-            if(type === 'success') icon = 'check-circle';
-            if(type === 'error') icon = 'alert-triangle';
-            
-            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${message}`;
-            document.getElementById('toast-container').appendChild(toast);
-            lucide.createIcons();
-
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            });
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
-
+        // --- 유틸리티 및 커스텀 알림 시스템 ---
         function formatTime(seconds) {
             if(isNaN(seconds) || seconds < 0) return "00:00";
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -294,9 +296,47 @@
             return `${m}:${s}`;
         }
 
-        // 텍스트 줄바꿈 렌더링 헬퍼
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>' : '<i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>';
+            toast.className = `bg-white border border-stone-200 shadow-xl rounded-xl p-4 flex items-center gap-3 toast-enter font-gowun text-stone-700 font-bold z-[200]`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showConfirm(message, onConfirmCallback) {
+            const modal = document.getElementById('confirm-modal');
+            const msgEl = document.getElementById('confirm-message');
+            const okBtn = document.getElementById('confirm-ok-btn');
+            const cancelBtn = document.getElementById('confirm-cancel-btn');
+            
+            msgEl.innerHTML = message.replace(/\n/g, '<br>');
+            modal.style.display = 'flex';
+            
+            const cleanup = () => {
+                modal.style.display = 'none';
+                okBtn.removeEventListener('click', handleOk);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+            
+            const handleOk = () => { cleanup(); onConfirmCallback(); };
+            const handleCancel = () => { cleanup(); };
+            
+            okBtn.addEventListener('click', handleOk);
+            cancelBtn.addEventListener('click', handleCancel);
+        }
+
+        // --- 텍스트 래핑 헬퍼 ---
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
-            if(!text) return;
             const paragraphs = text.split('\n');
             let lines = [];
             paragraphs.forEach(p => {
@@ -306,72 +346,84 @@
                     const testLine = currentLine + words[n] + ' ';
                     const metrics = ctx.measureText(testLine);
                     if (metrics.width > maxWidth && n > 0) {
-                        lines.push(currentLine);
-                        currentLine = words[n] + ' ';
-                    } else currentLine = testLine;
+                        lines.push(currentLine); currentLine = words[n] + ' ';
+                    } else { currentLine = testLine; }
                 }
                 lines.push(currentLine);
             });
             const totalHeight = lines.length * lineHeight;
             let startY = y - (totalHeight / 2) + (lineHeight / 2);
-            for(let i=0; i<lines.length; i++) ctx.fillText(lines[i].trim(), x, startY + (i * lineHeight));
+            for(let i=0; i<lines.length; i++) {
+                ctx.fillText(lines[i].trim(), x, startY + (i * lineHeight));
+            }
         }
 
         const premiumPhrases = [
-            "따스한 햇살 아래, 오롯이 나를 만나는 시간", "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
-            "바람이 들려주는 고요하고 다정한 이야기", "한 걸음 느리게, 찬란했던 계절과 동화되는 순간",
-            "나무 사이로 스며든 눈부신 숲의 활기", "마음의 무거운 짐을 잠시 내려놓습니다"
+            "따스한 햇살 아래, 오롯이 나를 만나는 시간",
+            "초록빛 숨결 속에서 일상의 피로를 씻어냅니다",
+            "바람이 들려주는 고요하고 다정한 이야기",
+            "한 걸음 느리게, 찬란했던 계절과 동화되는 순간",
+            "나무 사이로 스며든 눈부신 숲의 활기",
+            "마음의 무거운 짐을 잠시 내려놓습니다"
         ];
         function getRandomPhrase() { return premiumPhrases[Math.floor(Math.random() * premiumPhrases.length)]; }
 
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
         const particles = Array.from({length: 60}, () => ({
-            x: Math.random() * 1920, y: Math.random() * 1920, radius: Math.random() * 3 + 1,
-            vx: (Math.random() - 0.5) * 0.5, vy: Math.random() * 0.5 + 0.2
+            x: Math.random() * 1920, y: Math.random() * 1920,
+            radius: Math.random() * 3 + 1, vx: (Math.random() - 0.5) * 0.5,
+            vy: Math.random() * 0.5 + 0.2, alpha: Math.random() * 0.5 + 0.1
         }));
 
-        // 크로스 오리진 허용(CORS 에러 방지용 중요 코드)
         const watermarkLogo = new Image();
         watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
-        // 전역 상태
+        // --- 앱 상태 관리 ---
         const state = {
-            projectId: null, aspectRatio: 'vertical', fontFamily: 'Gowun Dodum', transitionEffect: 'crossfade', 
+            projectId: null,
+            aspectRatio: 'vertical', 
+            fontFamily: 'Gowun Dodum',
+            transitionEffect: 'crossfade', 
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
-            isPlaying: false, isRecording: false, currentTime: 0, totalDuration: 0,
-            animationFrameId: null, lastTimestamp: 0, draggedItemIndex: null
+            isPlaying: false, isRecording: false,
+            currentTime: 0, totalDuration: 0,
+            animationFrameId: null, lastTimestamp: 0,
+            draggedItemIndex: null
         };
 
+        // --- 인증 상태 (LocalStorage 적용) ---
         let currentUser = null; 
+        const storedUser = localStorage.getItem('forestAppUser');
+        if (storedUser) currentUser = JSON.parse(storedUser);
 
-        // DOM Elements 참조
+        // --- DOM 요소 참조 ---
         const elements = {
             ratioVertical: document.getElementById('ratio-vertical'), ratioHorizontal: document.getElementById('ratio-horizontal'),
             previewWrapper: document.getElementById('preview-wrapper'), imageUpload: document.getElementById('image-upload'),
-            storyboardContainer: document.getElementById('storyboard-container'),
-            canvas: document.getElementById('preview-canvas'), ctx: document.getElementById('preview-canvas').getContext('2d'),
-            emptyState: document.getElementById('empty-state'), playBtn: document.getElementById('play-btn'),
-            stopBtn: document.getElementById('stop-btn'), exportBtn: document.getElementById('export-btn'),
-            saveDraftBtn: document.getElementById('save-draft-btn'), progressBar: document.getElementById('progress-bar'),
-            progressContainer: document.getElementById('progress-bar-container'), currentTimeDisplay: document.getElementById('current-time-display'),
-            totalTimeDisplay: document.getElementById('total-time-display'), estimatedTimeDisplay: document.getElementById('estimated-time'),
-            loadingOverlay: document.getElementById('loading-overlay'), renderProgress: document.getElementById('render-progress'),
-            renderTimeText: document.getElementById('render-time-text'), bgmSelect: document.getElementById('bgm-select'),
-            customBgmInput: document.getElementById('custom-bgm-input'), bgmAudio: document.getElementById('bgm-audio'),
-            customBgmInfo: document.getElementById('custom-bgm-info'), customBgmName: document.getElementById('custom-bgm-name'),
-            customBgmRemove: document.getElementById('custom-bgm-remove'), transitionEffectSelect: document.getElementById('transition-effect-select'),
-            
-            // UI
+            storyboardContainer: document.getElementById('storyboard-container'), canvas: document.getElementById('preview-canvas'),
+            ctx: document.getElementById('preview-canvas').getContext('2d'), emptyState: document.getElementById('empty-state'),
+            playBtn: document.getElementById('play-btn'), stopBtn: document.getElementById('stop-btn'),
+            exportBtn: document.getElementById('export-btn'), saveDraftBtn: document.getElementById('save-draft-btn'),
+            progressBar: document.getElementById('progress-bar'), progressContainer: document.getElementById('progress-bar-container'),
+            currentTimeDisplay: document.getElementById('current-time-display'), totalTimeDisplay: document.getElementById('total-time-display'),
+            estimatedTimeDisplay: document.getElementById('estimated-time'), loadingOverlay: document.getElementById('loading-overlay'),
+            renderProgress: document.getElementById('render-progress'), renderTimeText: document.getElementById('render-time-text'),
+            bgmSelect: document.getElementById('bgm-select'), customBgmInput: document.getElementById('custom-bgm-input'),
+            bgmAudio: document.getElementById('bgm-audio'), customBgmInfo: document.getElementById('custom-bgm-info'),
+            customBgmName: document.getElementById('custom-bgm-name'), customBgmRemove: document.getElementById('custom-bgm-remove'),
+            transitionEffectSelect: document.getElementById('transition-effect-select'),
             loginBtn: document.getElementById('login-btn'), userMenu: document.getElementById('user-menu'),
-            loginModal: document.getElementById('login-modal'), closeLoginBtn: document.getElementById('close-login-btn'),
-            mockLoginBtn: document.getElementById('mock-login-btn'), logoutBtn: document.getElementById('logout-btn'),
+            logoutBtn: document.getElementById('logout-btn'), loginModal: document.getElementById('login-modal'),
+            closeLoginBtn: document.getElementById('close-login-btn'), mockLoginBtn: document.getElementById('mock-login-btn'),
             workspaceBtn: document.getElementById('workspace-btn'), workspaceModal: document.getElementById('workspace-modal'),
             closeWorkspaceBtn: document.getElementById('close-workspace-btn'), tabDraft: document.getElementById('tab-draft'),
             tabFinal: document.getElementById('tab-final'), projectList: document.getElementById('project-list'),
-            emptyProjects: document.getElementById('empty-projects'), exportJsonBtn: document.getElementById('export-json-btn')
+            emptyProjects: document.getElementById('empty-projects'),
+            exportProjectsBtn: document.getElementById('export-projects-btn'), importProjectsBtn: document.getElementById('import-projects-btn'),
+            importFileInput: document.getElementById('import-file-input')
         };
 
         let currentTab = 'draft';
@@ -386,31 +438,18 @@
                 const request = indexedDB.open(DB_NAME, 1);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
                 };
                 request.onsuccess = () => resolve(request.result);
                 request.onerror = () => reject('DB 로드 에러');
             });
         }
 
-        function checkLoginUI() {
-            const savedUser = localStorage.getItem('forestUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                elements.loginBtn.classList.add('hidden');
-                elements.userMenu.classList.remove('hidden');
-                elements.userMenu.classList.add('flex');
-            } else {
-                currentUser = null;
-                elements.loginBtn.classList.remove('hidden');
-                elements.userMenu.classList.add('hidden');
-                elements.userMenu.classList.remove('flex');
-            }
-        }
-
         async function saveProjectToDB(type) {
             if (!currentUser) { elements.loginModal.style.display = 'flex'; return; }
-            if (state.images.length === 0) { showToast('저장할 미디어가 없습니다. 왼쪽에서 사진을 추가해 주세요.', 'error'); return; }
+            if (state.images.length === 0) { showToast('저장할 미디어(사진/영상)가 없습니다.', 'error'); return; }
 
             elements.loadingOverlay.style.display = 'flex';
             elements.loadingOverlay.querySelector('h3').textContent = type === 'draft' ? "임시저장 중..." : "결과물 동기화 중...";
@@ -419,6 +458,7 @@
 
             if (!state.projectId) state.projectId = "proj_" + Date.now();
 
+            // 백업을 위해 이미지는 데이터로 저장 시도, 영상은 Object URL이므로 한계가 있음. (구조만 유지)
             const projectData = {
                 id: state.projectId, userId: currentUser.id, type: type,
                 title: state.intro.title || "숲체원 힐링 영상", updatedAt: Date.now(),
@@ -439,12 +479,11 @@
                     setTimeout(() => {
                         elements.renderProgress.classList.remove('animate-pulse');
                         elements.loadingOverlay.style.display = 'none';
-                        if(type === 'draft') showToast('보관소에 안전하게 임시저장되었습니다.', 'success');
+                        if(type === 'draft') showToast('작업 내용이 보관소에 안전하게 임시저장되었습니다.');
                     }, 500);
                 };
             } catch (err) {
-                console.error(err);
-                showToast("저장 중 오류가 발생했습니다.", 'error');
+                console.error(err); showToast("저장 중 오류가 발생했습니다.", "error");
                 elements.loadingOverlay.style.display = 'none';
             }
         }
@@ -455,7 +494,9 @@
                 const tx = db.transaction(STORE_NAME, 'readonly');
                 const req = tx.objectStore(STORE_NAME).getAll();
                 req.onsuccess = () => {
-                    const filtered = req.result.filter(p => p.userId === currentUser.id && p.type === typeFilter).sort((a, b) => b.updatedAt - a.updatedAt);
+                    const filtered = req.result
+                        .filter(p => p.userId === currentUser.id && p.type === typeFilter)
+                        .sort((a, b) => b.updatedAt - a.updatedAt);
                     resolve(filtered);
                 };
             });
@@ -472,8 +513,7 @@
                 elements.workspaceModal.style.display = 'none';
                 elements.loadingOverlay.style.display = 'flex';
                 elements.loadingOverlay.querySelector('h3').textContent = "프로젝트 불러오는 중...";
-                elements.renderProgress.style.width = "100%";
-                elements.renderProgress.classList.add('animate-pulse');
+                elements.renderProgress.style.width = "100%"; elements.renderProgress.classList.add('animate-pulse');
                 
                 stopPlayback();
                 state.images.forEach(img => { if (img.type === 'video') URL.revokeObjectURL(img.src); });
@@ -490,26 +530,30 @@
                         const video = document.createElement('video');
                         video.src = imgData.src; video.muted = true; video.playsInline = true; video.preload = "auto";
                         video.onloadeddata = () => resolve({...imgData, mediaElement: video});
-                        video.onerror = () => resolve(null); // 만료 방지
+                        video.onerror = () => resolve(null); // 캐시 만료 대비
                         video.load();
                     } else {
-                        const img = new Image(); img.onload = () => resolve({...imgData, mediaElement: img});
-                        img.onerror = () => resolve(null); img.src = imgData.src;
+                        const img = new Image();
+                        img.onload = () => resolve({...imgData, mediaElement: img});
+                        img.onerror = () => resolve(null);
+                        img.src = imgData.src;
                     }
                 }));
 
                 const loadedMedia = await Promise.all(loadPromises);
                 state.images = loadedMedia.filter(item => item !== null);
-                
+                if(state.images.length !== project.data.images.length) showToast("일부 미디어 파일이 만료되어 제외되었습니다.", "error");
+
                 elements.renderProgress.classList.remove('animate-pulse');
                 elements.loadingOverlay.style.display = 'none';
+                
                 updateDurations(); renderStoryboard(); updateUI(); drawFrame(0);
-                showToast("작업물을 성공적으로 불러왔습니다.", "success");
+                showToast("프로젝트를 성공적으로 불러왔습니다.");
             };
         }
 
         async function deleteProject(id) {
-            if(confirm("정말 이 작업물을 삭제하시겠습니까? 복구할 수 없습니다.")) {
+            showConfirm("정말 이 작업물을 삭제하시겠습니까?\n복구할 수 없습니다.", async () => {
                 const db = await initDB();
                 const tx = db.transaction(STORE_NAME, 'readwrite');
                 tx.objectStore(STORE_NAME).delete(id);
@@ -518,162 +562,168 @@
                     renderWorkspaceTab(currentTab);
                     showToast("삭제되었습니다.");
                 };
-            }
+            });
         }
         window.restoreProject = restoreProject;
         window.deleteProject = deleteProject;
 
-        // JSON 백업 내보내기 기능 추가
-        async function exportWorkspaceJSON() {
-            if(!currentUser) return showToast("로그인이 필요합니다.", "error");
-            const projects = await loadProjectsFromDB(currentTab);
-            if(projects.length === 0) return showToast("내보낼 작업물이 없습니다.", "error");
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projects));
-            const dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `숲체원_백업_${currentTab}_${Date.now()}.json`);
-            dlAnchor.click();
-            showToast("백업 파일이 다운로드 되었습니다.", "success");
+        async function exportProjectsToFile() {
+            const db = await initDB();
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const req = tx.objectStore(STORE_NAME).getAll();
+            req.onsuccess = () => {
+                const projects = req.result.filter(p => p.userId === currentUser.id);
+                if(projects.length === 0) { showToast("내보낼 프로젝트가 없습니다.", "error"); return; }
+                
+                const dataStr = JSON.stringify(projects);
+                const blob = new Blob([dataStr], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `forest_projects_backup_${Date.now()}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("백업 파일이 다운로드되었습니다.");
+            };
         }
 
-        function startProceduralAmbient() {
-            stopProceduralAmbient(); setupAudioRouting();
-            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const bufferSize = 2 * audioCtx.sampleRate;
-            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const output = noiseBuffer.getChannelData(0);
-            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-            for (let i = 0; i < bufferSize; i++) {
-                const white = Math.random() * 2 - 1;
-                b0 = 0.99886 * b0 + white * 0.0555179; b1 = 0.99332 * b1 + white * 0.0750759;
-                b2 = 0.96900 * b2 + white * 0.1538520; b3 = 0.86650 * b3 + white * 0.3104856;
-                b4 = 0.55000 * b4 + white * 0.5329522; b5 = -0.7616 * b5 - white * 0.0168980;
-                output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05; b6 = white * 0.115926;
-            }
-            const noiseNode = audioCtx.createBufferSource(); noiseNode.buffer = noiseBuffer; noiseNode.loop = true;
-            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.setValueAtTime(250, audioCtx.currentTime);
-            windGain = audioCtx.createGain(); windGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            noiseNode.connect(filter); filter.connect(windGain); windGain.connect(audioDest);
-            noiseNode.start(); windNode = noiseNode;
-            
-            let step = 0;
-            function modulateWind() {
-                if (!state.isPlaying && !state.isRecording) return;
-                step += 0.03; filter.frequency.setValueAtTime(220 + Math.sin(step) * 100, audioCtx.currentTime);
-                setTimeout(modulateWind, 60);
-            }
-            modulateWind();
-
-            const chimeChords = [329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; 
-            chimeInterval = setInterval(() => {
-                if ((state.isPlaying || state.isRecording) && Math.random() > 0.45) playBell(chimeChords[Math.floor(Math.random() * chimeChords.length)]);
-            }, 1400);
-        }
-
-        function playBell(pitch) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5); 
-            osc.connect(gain); gain.connect(audioDest);
-            osc.start(); osc.stop(audioCtx.currentTime + 3.6);
-        }
-
-        function stopProceduralAmbient() {
-            if (windNode) { try { windNode.stop(); } catch(e){} windNode = null; }
-            if (chimeInterval) { clearInterval(chimeInterval); chimeInterval = null; }
-        }
-
-        function setupAudioRouting() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioDest = audioCtx.createMediaStreamDestination();
+        function importProjectsFromFile(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
                 try {
-                    if (!audioSource) {
-                        audioSource = audioCtx.createMediaElementSource(elements.bgmAudio);
-                        audioSource.connect(audioDest);
-                        audioSource.connect(audioCtx.destination);
-                    }
-                } catch(e) { console.log("Audio routing error:", e); }
-            }
+                    const projects = JSON.parse(event.target.result);
+                    if(!Array.isArray(projects)) throw new Error("Invalid format");
+                    
+                    const db = await initDB();
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    let count = 0;
+                    projects.forEach(p => {
+                        if(p.userId === currentUser.id) { tx.objectStore(STORE_NAME).put(p); count++; }
+                    });
+                    
+                    tx.oncomplete = () => {
+                        showToast(`${count}개의 프로젝트를 성공적으로 불러왔습니다.`);
+                        renderWorkspaceTab(currentTab);
+                    };
+                } catch(err) {
+                    showToast("지원하지 않는 파일 형식이거나 데이터가 손상되었습니다.", "error");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
         }
 
         function init() {
-            checkLoginUI();
+            // 로그인 상태 유지 검사
+            if (currentUser) {
+                elements.loginBtn.classList.add('hidden');
+                elements.userMenu.classList.remove('hidden');
+            }
 
             elements.loginBtn.addEventListener('click', () => elements.loginModal.style.display = 'flex');
             elements.closeLoginBtn.addEventListener('click', () => elements.loginModal.style.display = 'none');
             elements.mockLoginBtn.addEventListener('click', () => {
-                const user = { id: 'user_123', name: '숲체원 매니저' };
-                localStorage.setItem('forestUser', JSON.stringify(user));
+                currentUser = { id: 'user_123', name: '숲체원 매니저' };
+                localStorage.setItem('forestAppUser', JSON.stringify(currentUser)); // 상태 저장
                 elements.loginModal.style.display = 'none';
-                checkLoginUI();
-                showToast("로그인되었습니다. 이제 클라우드 보관소를 사용할 수 있습니다.", "success");
+                elements.loginBtn.classList.add('hidden');
+                elements.userMenu.classList.remove('hidden');
+                showToast("성공적으로 로그인되었습니다.");
             });
             elements.logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('forestUser');
-                checkLoginUI();
-                showToast("로그아웃 되었습니다.");
+                showConfirm("로그아웃 하시겠습니까?", () => {
+                    currentUser = null;
+                    localStorage.removeItem('forestAppUser');
+                    elements.loginBtn.classList.remove('hidden');
+                    elements.userMenu.classList.add('hidden');
+                    elements.workspaceModal.style.display = 'none';
+                    showToast("로그아웃 되었습니다.");
+                });
             });
 
-            elements.workspaceBtn.addEventListener('click', () => { elements.workspaceModal.style.display = 'flex'; renderWorkspaceTab('draft'); });
+            elements.workspaceBtn.addEventListener('click', () => {
+                elements.workspaceModal.style.display = 'flex'; renderWorkspaceTab('draft');
+            });
             elements.closeWorkspaceBtn.addEventListener('click', () => elements.workspaceModal.style.display = 'none');
             elements.tabDraft.addEventListener('click', () => renderWorkspaceTab('draft'));
             elements.tabFinal.addEventListener('click', () => renderWorkspaceTab('final'));
-            elements.saveDraftBtn.addEventListener('click', () => saveProjectToDB('draft'));
-            elements.exportJsonBtn.addEventListener('click', exportWorkspaceJSON);
+            
+            elements.exportProjectsBtn.addEventListener('click', exportProjectsToFile);
+            elements.importProjectsBtn.addEventListener('click', () => elements.importFileInput.click());
+            elements.importFileInput.addEventListener('change', importProjectsFromFile);
 
-            // BGM 드롭다운 이벤트 완벽 연결
+            elements.saveDraftBtn.addEventListener('click', () => saveProjectToDB('draft'));
+            elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
+            elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
+            document.querySelectorAll('.font-btn').forEach(btn => btn.addEventListener('click', () => setFont(btn.dataset.font)));
+
+            elements.transitionEffectSelect.addEventListener('change', (e) => {
+                state.transitionEffect = e.target.value;
+                if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            });
+
+            // BGM 설정 버그 수정 (커스텀 업로드 연결)
             elements.bgmSelect.addEventListener('change', (e) => {
-                const val = e.target.value;
-                stopProceduralAmbient(); elements.bgmAudio.pause(); elements.bgmAudio.removeAttribute('src');
-                elements.customBgmInfo.classList.add('hidden'); elements.customBgmInfo.classList.remove('flex');
-                
-                if (val === 'custom') elements.customBgmInput.click();
-                else if (val !== 'procedural' && val !== '') {
-                    elements.bgmAudio.src = val; elements.bgmAudio.load();
+                if (e.target.value === 'custom') {
+                    elements.customBgmInput.click();
+                } else if (e.target.value === 'procedural') {
+                    elements.bgmAudio.pause();
+                    elements.customBgmInfo.classList.add('hidden');
+                    if (state.isPlaying) startProceduralAmbient();
+                } else if (e.target.value === '') {
+                    elements.bgmAudio.pause(); stopProceduralAmbient();
+                    elements.customBgmInfo.classList.add('hidden');
+                } else {
+                    stopProceduralAmbient();
+                    elements.bgmAudio.src = e.target.value;
+                    elements.customBgmInfo.classList.add('hidden');
+                    if (state.isPlaying) elements.bgmAudio.play().catch(console.error);
                 }
             });
 
             elements.customBgmInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
-                    elements.bgmAudio.src = URL.createObjectURL(file); elements.bgmAudio.load();
+                    const url = URL.createObjectURL(file);
+                    elements.bgmAudio.src = url;
+                    elements.customBgmInfo.classList.remove('hidden');
+                    elements.customBgmInfo.classList.add('flex');
                     elements.customBgmName.textContent = file.name;
-                    elements.customBgmInfo.classList.remove('hidden'); elements.customBgmInfo.classList.add('flex');
-                } else elements.bgmSelect.value = 'procedural';
+                    elements.bgmSelect.value = 'custom';
+                    stopProceduralAmbient();
+                    if (state.isPlaying) elements.bgmAudio.play().catch(console.error);
+                } else {
+                    elements.bgmSelect.value = 'procedural';
+                }
             });
 
             elements.customBgmRemove.addEventListener('click', () => {
-                elements.bgmAudio.pause(); elements.bgmAudio.removeAttribute('src'); elements.bgmSelect.value = 'procedural';
-                elements.customBgmInfo.classList.add('hidden'); elements.customBgmInfo.classList.remove('flex'); elements.customBgmInput.value = '';
+                elements.bgmAudio.pause(); elements.bgmAudio.removeAttribute('src');
+                elements.customBgmInfo.classList.add('hidden');
+                elements.customBgmInfo.classList.remove('flex');
+                elements.bgmSelect.value = 'procedural';
             });
 
-            elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
-            elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
-            document.querySelectorAll('.font-btn').forEach(btn => { btn.addEventListener('click', () => setFont(btn.dataset.font)); });
-            elements.transitionEffectSelect.addEventListener('change', (e) => {
-                state.transitionEffect = e.target.value; if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
-            });
             elements.imageUpload.addEventListener('change', handleImageUpload);
-            
             elements.playBtn.addEventListener('click', togglePlay);
             elements.stopBtn.addEventListener('click', stopPlayback);
             elements.exportBtn.addEventListener('click', exportVideo);
             elements.progressContainer.addEventListener('click', seekTime);
 
             renderStoryboard(); updateDurations();
+            
             document.fonts.ready.then(() => {
                 elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0);
                 elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0);
                 if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
+            
+            // 초기 비율 적용
+            setAspectRatio('vertical');
         }
 
+        // 워크스페이스(내 작업물) 렌더링
         async function renderWorkspaceTab(type) {
             currentTab = type;
             const activeClass = "px-4 py-2 font-gowun font-bold text-stone-800 border-b-2 border-stone-800 transition-colors";
@@ -683,15 +733,23 @@
             else { elements.tabDraft.className = inactiveClass; elements.tabFinal.className = activeClass; }
 
             const projects = await loadProjectsFromDB(type);
+            
             if(projects.length === 0) {
-                elements.projectList.innerHTML = ''; elements.emptyProjects.classList.remove('hidden'); elements.emptyProjects.classList.add('flex');
+                elements.projectList.innerHTML = '';
+                elements.emptyProjects.classList.remove('hidden'); elements.emptyProjects.classList.add('flex');
             } else {
                 elements.emptyProjects.classList.add('hidden'); elements.emptyProjects.classList.remove('flex');
+                
                 elements.projectList.innerHTML = projects.map(p => {
                     const thumbUrl = p.data.images.length > 0 ? p.data.images[0].src : '';
                     const dateStr = new Date(p.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
-                    const badgeHtml = type === 'draft' ? `<div class="absolute top-2 right-2 bg-white/90 text-stone-600 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">임시저장</div>` : `<div class="absolute top-2 right-2 bg-stone-800 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">최종완료</div>`;
-                    const mediaHtml = thumbUrl.startsWith('blob:') ? `<video src="${thumbUrl}#t=1" class="w-full h-full object-cover"></video>` : `<img src="${thumbUrl}" class="w-full h-full object-cover">`;
+                    const badgeHtml = type === 'draft' 
+                        ? `<div class="absolute top-2 right-2 bg-white/90 text-stone-600 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">임시저장</div>`
+                        : `<div class="absolute top-2 right-2 bg-stone-800 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">최종완료</div>`;
+                    
+                    const mediaHtml = thumbUrl.startsWith('blob:') || thumbUrl.match(/\.(mp4|mov|webm)$/i)
+                        ? `<video src="${thumbUrl}#t=1" class="w-full h-full object-cover"></video>`
+                        : `<img src="${thumbUrl}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/300x200/eee/999?text=Image+Missing'">`;
 
                     return `
                     <div class="bg-white rounded-xl p-3 border border-stone-200 shadow-sm flex flex-col gap-3 group hover:border-stone-400 transition-colors">
@@ -712,6 +770,77 @@
             }
         }
 
+        function setupAudioRouting() {
+            if(!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if(!AudioContext) return;
+                audioCtx = new AudioContext();
+                audioDest = audioCtx.createMediaStreamDestination();
+                
+                // BGM Audio Tag 라우팅
+                const source = audioCtx.createMediaElementSource(elements.bgmAudio);
+                source.connect(audioCtx.destination); // 스피커로 출력
+                source.connect(audioDest);            // 레코더로 출력
+            }
+        }
+
+        function startProceduralAmbient() {
+            stopProceduralAmbient(); setupAudioRouting();
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const bufferSize = 2 * audioCtx.sampleRate;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179; b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520; b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522; b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                output[i] *= 0.05; b6 = white * 0.115926;
+            }
+            const noiseNode = audioCtx.createBufferSource(); noiseNode.buffer = noiseBuffer; noiseNode.loop = true;
+            const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(250, audioCtx.currentTime); filter.Q.setValueAtTime(3, audioCtx.currentTime);
+            windGain = audioCtx.createGain(); windGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            
+            noiseNode.connect(filter); filter.connect(windGain); 
+            windGain.connect(audioCtx.destination); windGain.connect(audioDest);
+            noiseNode.start(); windNode = noiseNode;
+            
+            let step = 0;
+            function modulateWind() {
+                if (!state.isPlaying && !state.isRecording) return;
+                step += 0.03; const targetFreq = 220 + Math.sin(step) * 100;
+                filter.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+                setTimeout(modulateWind, 60);
+            }
+            modulateWind();
+
+            const chimeChords = [329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; 
+            chimeInterval = setInterval(() => {
+                if (!state.isPlaying && !state.isRecording) return;
+                if (Math.random() > 0.45) playBell(chimeChords[Math.floor(Math.random() * chimeChords.length)]);
+            }, 1400);
+        }
+
+        function playBell(pitch) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5); 
+            osc.connect(gain); gain.connect(audioCtx.destination); gain.connect(audioDest);
+            osc.start(); osc.stop(audioCtx.currentTime + 3.6);
+        }
+
+        function stopProceduralAmbient() {
+            if (windNode) { try { windNode.stop(); } catch(e){} windNode = null; }
+            if (chimeInterval) { clearInterval(chimeInterval); chimeInterval = null; }
+        }
+
         function setFont(fontName) {
             state.fontFamily = fontName;
             document.querySelectorAll('.font-btn').forEach(btn => {
@@ -726,12 +855,20 @@
             if (ratio === 'vertical') {
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
-                elements.previewWrapper.className = "relative w-full max-w-[420px] aspect-[9/16] max-h-[70vh] lg:max-h-[80vh] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
+                
+                // 완벽한 비율 반응형 크기 조절 (화면 위아래 잘림 방지)
+                elements.previewWrapper.style.maxWidth = "min(400px, calc((100vh - 300px) * 9 / 16))";
+                elements.previewWrapper.style.aspectRatio = "9/16";
+                
                 elements.canvas.width = 1080; elements.canvas.height = 1920;
             } else {
                 elements.ratioHorizontal.className = "flex-1 py-3 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun flex justify-center items-center gap-2 transition-all text-sm lg:text-base";
                 elements.ratioVertical.className = "flex-1 py-3 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun flex justify-center items-center gap-2 transition-all hover:bg-stone-50 text-sm lg:text-base";
-                elements.previewWrapper.className = "relative w-full max-w-[800px] aspect-video max-h-[70vh] lg:max-h-[80vh] bg-black rounded-[2rem] overflow-hidden video-container flex-shrink-0 transition-all mx-auto";
+                
+                // 가로형 반응형 비율
+                elements.previewWrapper.style.maxWidth = "min(800px, calc((100vh - 300px) * 16 / 9))";
+                elements.previewWrapper.style.aspectRatio = "16/9";
+                
                 elements.canvas.width = 1920; elements.canvas.height = 1080;
             }
             if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
@@ -743,7 +880,9 @@
 
             let validFiles = []; let addedCount = 0; const maxDuration = 300; 
             for (const file of files) {
-                if ((state.images.length + addedCount + 1) * 4 > maxDuration) { if (addedCount === 0) showToast(`최대 5분 분량까지만 제작할 수 있습니다.`, 'error'); break; }
+                if ((state.images.length + addedCount + 1) * 4 > maxDuration) {
+                    if (addedCount === 0) showToast(`최대 5분 분량까지만 제작할 수 있습니다.`, "error"); break;
+                }
                 validFiles.push(file); addedCount++;
             }
             if (validFiles.length === 0) { e.target.value = ''; return; }
@@ -756,16 +895,19 @@
                     video.src = dataUrl; video.muted = true; video.playsInline = true; video.preload = "auto";
                     video.onloadeddata = () => resolve({
                         id: Date.now() + Math.random(), type: 'video', mediaElement: video, src: dataUrl,
-                        effect: 'none', phrase: getRandomPhrase(), duration: Math.min(15, Math.max(3, Math.floor(video.duration))) 
+                        effect: 'none', phrase: getRandomPhrase(),
+                        duration: Math.min(15, Math.max(3, Math.floor(video.duration))) 
                     });
-                    video.onerror = () => resolve(null); video.load();
+                    video.onerror = () => resolve(null);
+                    video.load();
                 } else {
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         const img = new Image();
                         img.onload = () => resolve({
                             id: Date.now() + Math.random(), type: 'image', mediaElement: img, src: event.target.result,
-                            effect: effectTypes[Math.floor(Math.random() * effectTypes.length)], phrase: getRandomPhrase(), duration: 4
+                            effect: effectTypes[Math.floor(Math.random() * effectTypes.length)],
+                            phrase: getRandomPhrase(), duration: 4
                         });
                         img.src = event.target.result;
                     };
@@ -792,6 +934,7 @@
         function createSegmentCard(type, index, data) {
             const div = document.createElement('div');
             div.className = 'bg-stone-50 border border-stone-200 rounded-xl p-4 flex gap-4 storyboard-item items-start shadow-sm';
+            
             let label = '', icon = '';
             if(type === 'intro') { label = '인트로'; icon = 'play-square'; }
             if(type === 'outro') { label = '아웃트로'; icon = 'film'; }
@@ -803,10 +946,12 @@
                 div.addEventListener('dragend', () => { div.classList.remove('dragging'); state.draggedItemIndex = null; });
                 div.addEventListener('dragover', (e) => e.preventDefault());
                 div.addEventListener('drop', (e) => {
-                    e.preventDefault(); if(state.draggedItemIndex === null || state.draggedItemIndex === index) return;
+                    e.preventDefault();
+                    if(state.draggedItemIndex === null || state.draggedItemIndex === index) return;
                     const item = state.images.splice(state.draggedItemIndex, 1)[0];
                     state.images.splice(index, 0, item);
-                    updateDurations(); renderStoryboard(); if(!state.isPlaying) drawFrame(0);
+                    updateDurations(); renderStoryboard();
+                    if(!state.isPlaying) drawFrame(0);
                 });
 
                 const isVideo = data.type === 'video';
@@ -814,7 +959,9 @@
                 const mediaTag = isVideo ? `<video src="${data.src}#t=1" class="w-full h-full object-cover" muted preload="metadata"></video>` : `<img src="${data.src}" class="w-full h-full object-cover">`;
 
                 thumbHTML = `<div class="w-16 lg:w-20 h-24 lg:h-28 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner">
-                        ${mediaTag} <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><i data-lucide="grip-vertical" class="text-white w-5 h-5"></i></div> ${iconOverlay}
+                        ${mediaTag}
+                        <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><i data-lucide="grip-vertical" class="text-white w-5 h-5"></i></div>
+                        ${iconOverlay}
                     </div>`;
             } else {
                 thumbHTML = `<div class="w-16 lg:w-20 h-24 lg:h-28 shrink-0 rounded-lg bg-stone-800 text-stone-300 flex flex-col items-center justify-center gap-1">
@@ -840,6 +987,7 @@
                     </div>
                     ${type === 'slide' ? `<button onclick="removeImage(${index})" class="text-stone-400 hover:text-red-500 transition-colors p-1" title="제거"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
                 </div>`;
+
             div.innerHTML = `${thumbHTML}<div class="flex-1 flex flex-col justify-between h-full">${inputsHTML}${controlsHTML}</div>`;
             return div;
         }
@@ -850,12 +998,22 @@
             else if(type === 'slide') state.images[index][key] = value;
             updateDurations(); if(!state.isPlaying) drawFrame(state.currentTime);
         };
-        window.applyRandomPhrase = (index) => { state.images[index].phrase = getRandomPhrase(); renderStoryboard(); if(!state.isPlaying) drawFrame(state.currentTime); };
+
+        window.applyRandomPhrase = (index) => {
+            state.images[index].phrase = getRandomPhrase();
+            renderStoryboard(); if(!state.isPlaying) drawFrame(state.currentTime);
+        };
+
         window.removeImage = (index) => {
             const item = state.images[index];
-            if (item.type === 'video') { item.mediaElement.pause(); item.mediaElement.removeAttribute('src'); item.mediaElement.load(); URL.revokeObjectURL(item.src); }
-            state.images.splice(index, 1); updateDurations(); renderStoryboard(); updateUI(); if(!state.isPlaying) drawFrame(0);
+            if (item.type === 'video') {
+                item.mediaElement.pause(); item.mediaElement.removeAttribute('src'); item.mediaElement.load(); URL.revokeObjectURL(item.src);
+            }
+            state.images.splice(index, 1);
+            updateDurations(); renderStoryboard(); updateUI();
+            if(!state.isPlaying) drawFrame(0);
         };
+
         function updateDurations() {
             let total = state.intro.duration + state.outro.duration;
             state.images.forEach(img => total += img.duration);
@@ -883,13 +1041,21 @@
                 renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, progress);
             } 
             else if (theme === 'fadeblack') {
-                if (progress < 0.5) renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1 - (progress * 2));
-                else renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, (progress - 0.5) * 2);
+                if (progress < 0.5) {
+                    renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1 - (progress * 2));
+                } else {
+                    renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, (progress - 0.5) * 2);
+                }
             } 
             else if (theme === 'slide') {
                 const slideDistance = cw;
-                ctx.save(); ctx.translate(-(progress * slideDistance), 0); renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1.0); ctx.restore();
-                ctx.save(); ctx.translate(slideDistance - (progress * slideDistance), 0); renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, 1.0); ctx.restore();
+                ctx.save(); ctx.translate(-(progress * slideDistance), 0);
+                renderSlideImage(ctx, prevObj, cw, ch, prevObj.duration + fadeElapsed, 1.0);
+                ctx.restore();
+
+                ctx.save(); ctx.translate(slideDistance - (progress * slideDistance), 0);
+                renderSlideImage(ctx, currentObj, cw, ch, fadeElapsed, 1.0);
+                ctx.restore();
                 
                 const shadowX = slideDistance - (progress * slideDistance);
                 if(shadowX > 0 && shadowX < cw) {
@@ -902,15 +1068,19 @@
 
         function renderSlideImage(ctx, mediaObj, cw, ch, elapsed, alpha) {
             ctx.globalAlpha = alpha; ctx.filter = 'blur(60px) brightness(0.25) sepia(0.2)';
+            
             if (mediaObj.type === 'video') {
                 const vid = mediaObj.mediaElement;
-                if (!state.isPlaying && !state.isRecording) { vid.currentTime = elapsed % vid.duration; if (!vid.paused) vid.pause(); } 
-                else {
+                if (!state.isPlaying && !state.isRecording) {
+                    vid.currentTime = elapsed % vid.duration; if (!vid.paused) vid.pause();
+                } else {
                     if (vid.paused) vid.play().catch(e=>{});
                     if (Math.abs(vid.currentTime - (elapsed % vid.duration)) > 0.4) vid.currentTime = elapsed % vid.duration;
                 }
             }
-            drawCoverImage(ctx, mediaObj.mediaElement, cw, ch); ctx.filter = 'none';
+
+            drawCoverImage(ctx, mediaObj.mediaElement, cw, ch);
+            ctx.filter = 'none';
             
             const p = Math.max(0, elapsed / (mediaObj.duration + 1.5)); 
             let scale = 1.0, transX = 0, transY = 0; const drift = 40; 
@@ -957,7 +1127,8 @@
 
         function drawFrame(timeInSeconds) {
             const ctx = elements.ctx; const width = elements.canvas.width; const height = elements.canvas.height;
-            const isVertical = height > width; ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, width, height);
+            const isVertical = height > width;
+            ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, width, height);
 
             if(state.images.length === 0) return;
             const scene = getSceneContext(timeInSeconds);
@@ -994,8 +1165,12 @@
                 const fadeDuration = state.transitionEffect === 'fadeblack' ? 1.5 : 1.0; 
                 let isFading = (scene.elapsed < fadeDuration && scene.index > 0);
                 
-                if (isFading) renderSlideTransition(ctx, state.images[scene.index - 1], imgObj, width, height, scene.elapsed, fadeDuration);
-                else renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
+                if (isFading) {
+                    const prevObj = state.images[scene.index - 1];
+                    renderSlideTransition(ctx, prevObj, imgObj, width, height, scene.elapsed, fadeDuration);
+                } else {
+                    renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
+                }
 
                 ctx.globalAlpha = 1.0;
                 const vignette = ctx.createRadialGradient(width/2, height/2, width/2.5, width/2, height/2, width*1.2);
@@ -1018,27 +1193,42 @@
                 ctx.fillStyle = gradient; ctx.fillRect(0, height - gradHeight, width, gradHeight);
 
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                const currentPhrase = imgObj.phrase || ""; const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
+                const currentPhrase = imgObj.phrase || "";
+                const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
                 const textY = height - (isVertical ? 220 : 160);
-                ctx.fillStyle = '#e7e5e4'; ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`; ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
+
+                ctx.fillStyle = '#e7e5e4'; ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`;
+                ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 15;
 
                 const maxWidth = width * 0.85; 
                 if (isFading && prevPhrase !== currentPhrase) {
-                    ctx.globalAlpha = 1 - Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0)); drawWrapText(ctx, prevPhrase, width / 2, textY, maxWidth, lineHeightSlide);
-                    ctx.globalAlpha = Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0)); drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
-                } else { ctx.globalAlpha = 1.0; drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide); }
+                    ctx.globalAlpha = 1 - Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
+                    drawWrapText(ctx, prevPhrase, width / 2, textY, maxWidth, lineHeightSlide);
+                    ctx.globalAlpha = Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
+                    drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
+                } else {
+                    ctx.globalAlpha = 1.0; 
+                    drawWrapText(ctx, currentPhrase, width / 2, textY, maxWidth, lineHeightSlide);
+                }
             }
             
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = isVertical ? 350 : 280; const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
+                const logoW = isVertical ? 350 : 280;
+                const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
                 const logoX = width - logoW - (isVertical ? 60 : 50); const logoY = isVertical ? 100 : 40;
-                ctx.shadowColor = 'white'; ctx.shadowBlur = 2; const outline = 3; 
-                [[-outline, 0], [outline, 0], [0, -outline], [0, outline], [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline]].forEach(off => { ctx.shadowOffsetX = off[0]; ctx.shadowOffsetY = off[1]; ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH); });
+                const outline = 3; 
+                ctx.shadowColor = 'white'; ctx.shadowBlur = 2; 
+                const offsets = [
+                    [-outline, 0], [outline, 0], [0, -outline], [0, outline],
+                    [-outline, -outline], [outline, -outline], [-outline, outline], [outline, outline]
+                ];
+                offsets.forEach(off => { ctx.shadowOffsetX = off[0]; ctx.shadowOffsetY = off[1]; ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH); });
                 ctx.shadowColor = 'transparent'; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
-            ctx.globalAlpha = 1.0; ctx.shadowBlur = 0; updateProgressUI(timeInSeconds);
+            ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
+            updateProgressUI(timeInSeconds);
         }
 
         function updateUI() {
@@ -1053,12 +1243,17 @@
             if (state.images.length === 0) return;
             setupAudioRouting(); if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
-            if (state.isPlaying) { state.isPlaying = false; cancelAnimationFrame(state.animationFrameId); elements.bgmAudio.pause(); stopProceduralAmbient(); } 
-            else {
+            if (state.isPlaying) {
+                state.isPlaying = false; cancelAnimationFrame(state.animationFrameId); elements.bgmAudio.pause(); stopProceduralAmbient();
+            } else {
                 state.isPlaying = true; state.lastTimestamp = performance.now();
                 if (state.currentTime >= state.totalDuration) state.currentTime = 0;
-                if (elements.bgmSelect.value === 'procedural') startProceduralAmbient(); 
-                else if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1); elements.bgmAudio.play().catch(e => console.log(e)); }
+                
+                if (elements.bgmSelect.value === 'procedural') { startProceduralAmbient(); } 
+                else if(elements.bgmAudio.src) {
+                    elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
+                    elements.bgmAudio.play().catch(e => console.log(e));
+                }
                 animationLoop(performance.now());
             }
             updateUI();
@@ -1104,14 +1299,17 @@
             const fps = 30; let canvasStream;
             try { canvasStream = elements.canvas.captureStream(fps); } 
             catch (err) {
-                showToast("보안(CORS) 에러: 로컬 환경(file://)이거나 교차 출처 미디어로 인해 영상 추출이 차단되었습니다.", "error");
+                showToast("브라우저 보안 정책으로 차단되었습니다. 로컬 파일에서 실행해주세요.", "error");
                 elements.loadingOverlay.style.display = 'none'; state.isRecording = false; elements.exportBtn.disabled = false; return;
             }
             
             let tracks = [...canvasStream.getVideoTracks()];
-            if (audioDest && audioDest.stream.getAudioTracks().length > 0) tracks = [...tracks, ...audioDest.stream.getAudioTracks()];
+            if (audioDest) {
+                const audioTracks = audioDest.stream.getAudioTracks();
+                if (audioTracks.length > 0) tracks = [...tracks, ...audioTracks];
+            }
+
             const combinedStream = new MediaStream(tracks);
-            
             let options = {}; let ext = 'mp4';
             if (MediaRecorder.isTypeSupported('video/mp4; codecs="avc1, mp4a.40.2"')) options = { mimeType: 'video/mp4; codecs="avc1, mp4a.40.2"' };
             else if (MediaRecorder.isTypeSupported('video/mp4')) options = { mimeType: 'video/mp4' };
@@ -1123,7 +1321,8 @@
             recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 if(elements.bgmAudio.src) { elements.bgmAudio.pause(); elements.bgmAudio.currentTime = 0; }
-                stopProceduralAmbient(); state.images.forEach(img => { if(img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause(); });
+                stopProceduralAmbient();
+                state.images.forEach(img => { if(img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause(); });
 
                 const a = document.createElement('a'); a.style.display = 'none';
                 a.href = URL.createObjectURL(new Blob(chunks, { type: options.mimeType || 'video/mp4' }));
@@ -1150,6 +1349,7 @@
             renderNextFrame();
         }
 
+        // 앱 시작
         init();
     </script>
 </body>
