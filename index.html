@@ -67,7 +67,7 @@
                     <button id="workspace-btn" class="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 border border-stone-200 rounded-xl text-sm font-gowun hover:bg-stone-200 transition shadow-sm font-bold">
                         <i data-lucide="folder-open" class="w-4 h-4 text-stone-500"></i> 내 작업물
                     </button>
-                    <button id="logout-btn" class="w-9 h-9 rounded-full bg-stone-800 text-white flex items-center justify-center font-bold text-sm shadow-sm hover:bg-stone-700 transition" title="로그아웃">
+                    <button id="logout-btn" class="w-9 h-9 rounded-full bg-stone-800 text-white flex items-center justify-center font-bold text-sm shadow-sm hover:bg-stone-700 transition cursor-pointer" title="로그아웃">
                         숲
                     </button>
                 </div>
@@ -75,6 +75,7 @@
         </header>
 
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
+            <!-- 왼쪽: 설정 패널 -->
             <aside class="w-full lg:w-[520px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
                 <div class="flex-1 overflow-y-auto p-6 space-y-6">
                     
@@ -188,6 +189,7 @@
                 </div>
             </aside>
 
+            <!-- 오른쪽: 플레이어 영역 -->
             <main class="flex-1 flex flex-col relative bg-stone-200/50 overflow-hidden items-center justify-center p-4 min-h-[500px]">
                 
                 <div id="loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center w-full h-full">
@@ -344,7 +346,6 @@
         watermarkLogo.crossOrigin = "anonymous"; 
         watermarkLogo.src = '국립장성숲체원-_국문좌우_이미지형 (2).png';
 
-        // 앱 상태
         const state = {
             projectId: null, aspectRatio: 'vertical', fontFamily: 'Gowun Dodum', transitionEffect: 'crossfade', 
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
@@ -415,6 +416,112 @@
             } catch (err) { console.error(err); showToast("저장 오류", "error"); elements.loadingOverlay.style.display = 'none'; }
         }
 
+        async function loadProjectsFromDB(typeFilter) {
+            const db = await initDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readonly'); const req = tx.objectStore(STORE_NAME).getAll();
+                req.onsuccess = () => {
+                    const filtered = req.result.filter(p => p.userId === currentUser.id && p.type === typeFilter).sort((a, b) => b.updatedAt - a.updatedAt);
+                    resolve(filtered);
+                };
+            });
+        }
+
+        async function deleteProject(id) {
+            showConfirm("정말 이 작업물을 삭제하시겠습니까? 복구할 수 없습니다.", async () => {
+                const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).delete(id);
+                tx.oncomplete = () => { if(state.projectId === id) state.projectId = null; renderWorkspaceTab(currentTab); showToast("삭제되었습니다."); };
+            });
+        }
+
+        async function restoreProject(id) {
+            const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readonly'); const req = tx.objectStore(STORE_NAME).get(id);
+            req.onsuccess = async () => {
+                const project = req.result; if (!project) return;
+                elements.workspaceModal.style.display = 'none'; elements.loadingOverlay.style.display = 'flex';
+                elements.loadingOverlay.querySelector('h3').textContent = "프로젝트 불러오는 중..."; elements.renderProgress.style.width = "100%"; elements.renderProgress.classList.add('animate-pulse');
+                
+                stopPlayback(); state.images.forEach(img => { if (img.type === 'video') URL.revokeObjectURL(img.src); });
+
+                state.projectId = project.id; state.aspectRatio = project.data.aspectRatio; state.fontFamily = project.data.fontFamily; state.transitionEffect = project.data.transitionEffect;
+                state.intro = project.data.intro; state.outro = project.data.outro;
+
+                elements.transitionEffectSelect.value = state.transitionEffect; setFont(state.fontFamily); setAspectRatio(state.aspectRatio);
+
+                const loadPromises = project.data.images.map(imgData => new Promise((resolve) => {
+                    if (imgData.type === 'video') {
+                        const video = document.createElement('video'); video.src = imgData.src; video.muted = true; video.playsInline = true; video.preload = "auto";
+                        video.onloadeddata = () => resolve({...imgData, mediaElement: video}); video.onerror = () => resolve(null); video.load();
+                    } else {
+                        const img = new Image(); img.onload = () => resolve({...imgData, mediaElement: img}); img.onerror = () => resolve(null); img.src = imgData.src;
+                    }
+                }));
+
+                const loadedMedia = await Promise.all(loadPromises); state.images = loadedMedia.filter(item => item !== null);
+                if(state.images.length !== project.data.images.length) showToast("일부 동영상 파일이 기기에서 만료되어 제외되었습니다.", "error");
+
+                elements.renderProgress.classList.remove('animate-pulse'); elements.loadingOverlay.style.display = 'none';
+                updateDurations(); renderStoryboard(); updateUI(); drawFrame(0);
+            };
+        }
+
+        async function renderWorkspaceTab(type) {
+            currentTab = type;
+            const activeClass = "px-4 py-2 font-gowun font-bold text-stone-800 border-b-2 border-stone-800 transition-colors";
+            const inactiveClass = "px-4 py-2 font-gowun text-stone-400 hover:text-stone-600 transition-colors border-b-2 border-transparent";
+            elements.tabDraft.className = type === 'draft' ? activeClass : inactiveClass;
+            elements.tabFinal.className = type === 'final' ? activeClass : inactiveClass;
+
+            const projects = await loadProjectsFromDB(type);
+            if(projects.length === 0) {
+                elements.projectList.innerHTML = ''; elements.emptyProjects.classList.remove('hidden'); elements.emptyProjects.classList.add('flex');
+            } else {
+                elements.emptyProjects.classList.add('hidden'); elements.emptyProjects.classList.remove('flex');
+                elements.projectList.innerHTML = projects.map(p => {
+                    const thumbUrl = p.data.images.length > 0 ? p.data.images[0].src : '';
+                    const dateStr = new Date(p.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
+                    const badgeHtml = type === 'draft' ? `<div class="absolute top-2 right-2 bg-white/90 text-stone-600 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">임시저장</div>` : `<div class="absolute top-2 right-2 bg-stone-800 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">최종완료</div>`;
+                    const mediaHtml = thumbUrl.startsWith('blob:') ? `<video src="${thumbUrl}#t=1" class="w-full h-full object-cover"></video>` : `<img src="${thumbUrl}" class="w-full h-full object-cover">`;
+                    return `<div class="bg-white rounded-xl p-3 border border-stone-200 shadow-sm flex flex-col gap-3 group hover:border-stone-400 transition-colors">
+                        <div class="aspect-video bg-stone-100 rounded-lg overflow-hidden relative">${mediaHtml}${badgeHtml}</div>
+                        <div class="px-1"><h3 class="font-serif-kr font-bold text-stone-800 truncate" title="${p.title}">${p.title}</h3><p class="text-xs font-mono text-stone-400 mt-1">${dateStr}</p></div>
+                        <div class="flex gap-2 mt-auto pt-2 border-t border-stone-100">
+                            <button onclick="restoreProject('${p.id}')" class="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 py-2 rounded-lg text-sm font-gowun font-bold transition">불러오기</button>
+                            <button onclick="deleteProject('${p.id}')" class="px-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition" title="삭제"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            }
+        }
+
+        async function exportProjectsToFile() {
+            if(!currentUser) return;
+            const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readonly'); const req = tx.objectStore(STORE_NAME).getAll();
+            req.onsuccess = () => {
+                const userProjects = req.result.filter(p => p.userId === currentUser.id);
+                if(userProjects.length === 0) { showToast("백업할 데이터가 없습니다.", "error"); return; }
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userProjects));
+                const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", `숲체원_백업_${Date.now()}.json`); dlAnchorElem.click();
+            };
+        }
+
+        function importProjectsFromFile(e) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const importedProjects = JSON.parse(event.target.result);
+                    if(!Array.isArray(importedProjects)) throw new Error("Invalid format");
+                    const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readwrite');
+                    importedProjects.forEach(p => tx.objectStore(STORE_NAME).put(p));
+                    tx.oncomplete = () => { showToast("프로젝트가 성공적으로 복원되었습니다."); renderWorkspaceTab(currentTab); };
+                } catch(err) { showToast("파일을 읽는 중 오류가 발생했습니다.", "error"); }
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
         function setupAudioRouting() {
             if(!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -456,33 +563,6 @@
 
         function stopProceduralAmbient() { if (windNode) { try { windNode.stop(); } catch(e){} windNode = null; } if (chimeInterval) { clearInterval(chimeInterval); chimeInterval = null; } }
 
-        function init() {
-            if (currentUser) { elements.loginBtn.classList.add('hidden'); elements.userMenu.classList.remove('hidden'); elements.userMenu.classList.add('flex'); }
-            
-            // UI 리스너
-            elements.bgmSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'custom') elements.customBgmInput.click();
-                else if (e.target.value === 'procedural') { elements.bgmAudio.pause(); elements.customBgmInfo.classList.add('hidden'); if (state.isPlaying) startProceduralAmbient(); }
-                else if (e.target.value === '') { elements.bgmAudio.pause(); stopProceduralAmbient(); elements.customBgmInfo.classList.add('hidden'); }
-                else { stopProceduralAmbient(); elements.bgmAudio.src = e.target.value; elements.customBgmInfo.classList.add('hidden'); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); }
-            });
-            elements.customBgmInput.addEventListener('change', (e) => {
-                if (e.target.files[0]) { elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]); elements.customBgmInfo.classList.remove('hidden'); elements.customBgmInfo.classList.add('flex'); elements.customBgmName.textContent = e.target.files[0].name; elements.bgmSelect.value = 'custom'; stopProceduralAmbient(); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); }
-            });
-            
-            elements.saveDraftBtn.addEventListener('click', () => saveProjectToDB('draft'));
-            elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
-            elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
-            document.querySelectorAll('.font-btn').forEach(btn => btn.addEventListener('click', () => setFont(btn.dataset.font)));
-            elements.imageUpload.addEventListener('change', handleImageUpload);
-            elements.playBtn.addEventListener('click', togglePlay); elements.stopBtn.addEventListener('click', stopPlayback);
-            elements.exportBtn.addEventListener('click', exportVideo); elements.progressContainer.addEventListener('click', seekTime);
-            
-            renderStoryboard(); updateDurations();
-            document.fonts.ready.then(() => { elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0); elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0); if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime); });
-            setAspectRatio('vertical');
-        }
-
         function setFont(fontName) {
             state.fontFamily = fontName;
             document.querySelectorAll('.font-btn').forEach(btn => btn.className = btn.dataset.font === fontName ? "font-btn py-2.5 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base" : "font-btn py-2.5 border-2 border-stone-200 bg-white text-stone-600 rounded-xl flex justify-center items-center transition-all hover:bg-stone-50 text-sm lg:text-base");
@@ -510,11 +590,8 @@
             return { type: 'outro', elapsed: time - acc, duration: state.outro.duration };
         }
 
-        // 🌟 렌더링 최적화 1: 무거운 블러 제거 및 단순화
         function renderSlideImage(ctx, mediaObj, cw, ch, elapsed, alpha) {
-            ctx.globalAlpha = alpha; 
-            // 흐림 효과를 과감하게 낮춰 성능 확보 (60px -> 20px)
-            ctx.filter = 'blur(20px) brightness(0.3) sepia(0.2)';
+            ctx.globalAlpha = alpha; ctx.filter = 'blur(20px) brightness(0.3) sepia(0.2)'; // Optimized blur
             
             if (mediaObj.type === 'video') {
                 const vid = mediaObj.mediaElement;
@@ -522,14 +599,10 @@
                     vid.currentTime = elapsed % vid.duration; if (!vid.paused) vid.pause();
                 } else {
                     if (vid.paused) vid.play().catch(e=>{});
-                    // 🌟 비디오 싱크 최적화: 녹화 중일 때는 억지로 프레임을 당겨오지 않도록 여유값 부여 (버벅임 방지)
                     const threshold = state.isRecording ? 1.5 : 0.4;
-                    if (Math.abs(vid.currentTime - (elapsed % vid.duration)) > threshold) {
-                         vid.currentTime = elapsed % vid.duration;
-                    }
+                    if (Math.abs(vid.currentTime - (elapsed % vid.duration)) > threshold) vid.currentTime = elapsed % vid.duration;
                 }
             }
-            
             drawCoverImage(ctx, mediaObj.mediaElement, cw, ch);
             ctx.filter = 'none';
             
@@ -545,8 +618,7 @@
             }
             
             ctx.save(); ctx.translate(cw/2 + transX, ch/2 + transY); ctx.scale(scale, scale); ctx.translate(-cw/2, -ch/2);
-            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 40; // 최적화 (80->40)
-            ctx.shadowOffsetY = 20;
+            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 20;
             drawDynamicFineArtFrame(ctx, mediaObj.mediaElement, cw, ch);
             ctx.restore();
         }
@@ -614,7 +686,7 @@
                     } else if (state.transitionEffect === 'fadeblack') {
                         if (progress < 0.5) renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1 - (progress * 2));
                         else renderSlideImage(ctx, imgObj, width, height, scene.elapsed, (progress - 0.5) * 2);
-                    } else { // slide
+                    } else { 
                         ctx.save(); ctx.translate(-(progress * width), 0); renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1.0); ctx.restore();
                         ctx.save(); ctx.translate(width - (progress * width), 0); renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0); ctx.restore();
                     }
@@ -657,14 +729,11 @@
                 }
             }
             
-            // 🌟 렌더링 최적화 2: 워터마크 루프 제거 (가장 심각한 렉 유발 원인 해결)
             ctx.globalAlpha = 1.0;
             if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
                 const logoW = isVertical ? 350 : 280;
                 const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
                 const logoX = width - logoW - (isVertical ? 60 : 50); const logoY = isVertical ? 100 : 40;
-                
-                // 불필요한 9번 그리기 제거하고 단순 섀도우 처리로 90% 성능 향상
                 ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 6; 
                 ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
@@ -748,16 +817,13 @@
             else if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = 0; try { await elements.bgmAudio.play(); } catch(e) {} }
             
             recorder.start();
-            const startRecordingTime = performance.now();
-            let lastUiUpdateTime = 0;
+            const startRecordingTime = performance.now(); let lastUiUpdateTime = 0;
 
             function renderNextFrame(timestamp) {
                 const renderTime = (timestamp - startRecordingTime) / 1000;
                 if (renderTime > state.totalDuration) { recorder.stop(); return; }
                 
                 drawFrame(renderTime);
-
-                // 🌟 렌더링 최적화 3: UI 업데이트 횟수를 제한하여 DOM 과부하 방지 (1초에 약 5번만 업데이트)
                 if (timestamp - lastUiUpdateTime > 200) {
                     elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`;
                     elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
@@ -769,8 +835,7 @@
         }
 
         async function handleImageUpload(e) {
-            const files = Array.from(e.target.files);
-            if (!files.length) return;
+            const files = Array.from(e.target.files); if (!files.length) return;
             let validFiles = []; let addedCount = 0; const maxDuration = 300; 
             for (const file of files) {
                 if ((state.images.length + addedCount + 1) * 4 > maxDuration) { if (addedCount === 0) showToast(`최대 5분 분량까지만 제작할 수 있습니다.`, "error"); break; }
@@ -848,7 +913,66 @@
         window.updateState = (type, index, key, value) => { if(type === 'intro') state.intro[key] = value; else if(type === 'outro') state.outro[key] = value; else state.images[index][key] = value; updateDurations(); if(!state.isPlaying) drawFrame(state.currentTime); };
         window.applyRandomPhrase = (index) => { state.images[index].phrase = getRandomPhrase(); renderStoryboard(); if(!state.isPlaying) drawFrame(state.currentTime); };
         window.removeImage = (index) => { if (state.images[index].type === 'video') URL.revokeObjectURL(state.images[index].src); state.images.splice(index, 1); updateDurations(); renderStoryboard(); updateUI(); if(!state.isPlaying) drawFrame(0); };
-        
+        window.restoreProject = restoreProject;
+        window.deleteProject = deleteProject;
+
+        function init() {
+            // Restore Login State
+            if (currentUser) { elements.loginBtn.classList.add('hidden'); elements.userMenu.classList.remove('hidden'); elements.userMenu.classList.add('flex'); }
+
+            // Bind Workspace & Modals Event Listeners (Restored!)
+            elements.loginBtn.addEventListener('click', () => elements.loginModal.style.display = 'flex');
+            elements.closeLoginBtn.addEventListener('click', () => elements.loginModal.style.display = 'none');
+            elements.mockLoginBtn.addEventListener('click', () => {
+                currentUser = { id: 'user_123', name: '숲체원 매니저' };
+                localStorage.setItem('forestAppUser', JSON.stringify(currentUser));
+                elements.loginModal.style.display = 'none'; elements.loginBtn.classList.add('hidden');
+                elements.userMenu.classList.remove('hidden'); elements.userMenu.classList.add('flex');
+                showToast("안전하게 로그인되었습니다.");
+            });
+            elements.logoutBtn.addEventListener('click', () => {
+                showConfirm("로그아웃 하시겠습니까?", () => {
+                    localStorage.removeItem('forestAppUser'); currentUser = null;
+                    elements.userMenu.classList.add('hidden'); elements.userMenu.classList.remove('flex');
+                    elements.loginBtn.classList.remove('hidden'); showToast("로그아웃 되었습니다.");
+                });
+            });
+
+            elements.workspaceBtn.addEventListener('click', () => { elements.workspaceModal.style.display = 'flex'; renderWorkspaceTab('draft'); });
+            elements.closeWorkspaceBtn.addEventListener('click', () => elements.workspaceModal.style.display = 'none');
+            elements.tabDraft.addEventListener('click', () => renderWorkspaceTab('draft'));
+            elements.tabFinal.addEventListener('click', () => renderWorkspaceTab('final'));
+            
+            elements.exportProjectsBtn.addEventListener('click', exportProjectsToFile);
+            elements.importProjectsBtn.addEventListener('click', () => elements.importFileInput.click());
+            elements.importFileInput.addEventListener('change', importProjectsFromFile);
+
+            // Audio & Playback Events
+            elements.bgmSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'custom') elements.customBgmInput.click();
+                else if (e.target.value === 'procedural') { elements.bgmAudio.pause(); elements.customBgmInfo.classList.add('hidden'); if (state.isPlaying) startProceduralAmbient(); }
+                else if (e.target.value === '') { elements.bgmAudio.pause(); stopProceduralAmbient(); elements.customBgmInfo.classList.add('hidden'); }
+                else { stopProceduralAmbient(); elements.bgmAudio.src = e.target.value; elements.customBgmInfo.classList.add('hidden'); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); }
+            });
+            elements.customBgmInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) { elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]); elements.customBgmInfo.classList.remove('hidden'); elements.customBgmInfo.classList.add('flex'); elements.customBgmName.textContent = e.target.files[0].name; elements.bgmSelect.value = 'custom'; stopProceduralAmbient(); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); }
+            });
+            elements.transitionEffectSelect.addEventListener('change', (e) => { state.transitionEffect = e.target.value; if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime); });
+
+            // Core UI Listeners
+            elements.saveDraftBtn.addEventListener('click', () => saveProjectToDB('draft'));
+            elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
+            elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
+            document.querySelectorAll('.font-btn').forEach(btn => btn.addEventListener('click', () => setFont(btn.dataset.font)));
+            elements.imageUpload.addEventListener('change', handleImageUpload);
+            elements.playBtn.addEventListener('click', togglePlay); elements.stopBtn.addEventListener('click', stopPlayback);
+            elements.exportBtn.addEventListener('click', exportVideo); elements.progressContainer.addEventListener('click', seekTime);
+            
+            renderStoryboard(); updateDurations();
+            document.fonts.ready.then(() => { elements.ctx.font = '10px "Noto Serif KR"'; elements.ctx.fillText('.', 0, 0); elements.ctx.font = '10px "Gowun Dodum"'; elements.ctx.fillText('.', 0, 0); if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime); });
+            setAspectRatio('vertical');
+        }
+
         init();
     </script>
 </body>
