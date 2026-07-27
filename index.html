@@ -1337,16 +1337,24 @@
             else if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = 0; try { await elements.bgmAudio.play(); } catch(e) {} }
             
             recorder.start();
-            let renderTime = 0; const timeStep = 1 / fps;
-            function renderNextFrame() {
-                if (renderTime > state.totalDuration) { recorder.stop(); return; }
+            
+            const startRecordingTime = performance.now();
+            function renderNextFrame(timestamp) {
+                // setTimeout 대신 requestAnimationFrame의 timestamp를 사용하여 '실제 경과 시간'을 정확히 계산
+                const renderTime = (timestamp - startRecordingTime) / 1000;
+                
+                if (renderTime > state.totalDuration) { 
+                    recorder.stop(); 
+                    return; 
+                }
+                
                 drawFrame(renderTime);
                 elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`;
                 elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
-                renderTime += timeStep;
-                setTimeout(renderNextFrame, 1000 / fps);
+                
+                requestAnimationFrame(renderNextFrame);
             }
-            renderNextFrame();
+            requestAnimationFrame(renderNextFrame);
         }
 
         // 앱 시작
