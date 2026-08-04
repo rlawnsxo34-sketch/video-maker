@@ -482,11 +482,19 @@
                 elements.transitionEffectSelect.value = state.transitionEffect; setFont(state.fontFamily); setAspectRatio(state.aspectRatio);
 
                 const loadPromises = project.data.images.map(imgData => new Promise((resolve) => {
+                    // 무한 로딩 방지를 위한 10초 타임아웃
+                    const fallbackTimer = setTimeout(() => resolve(null), 10000); 
                     if (imgData.type === 'video') {
                         const video = document.createElement('video'); video.src = imgData.src; video.muted = true; video.playsInline = true; video.preload = "auto";
-                        video.onloadeddata = () => resolve({...imgData, mediaElement: video}); video.onerror = () => resolve(null); video.load();
+                        // 일부 브라우저에서 onloadeddata가 안불리는 현상을 막기 위해 metadata 로 변경
+                        video.onloadedmetadata = () => { clearTimeout(fallbackTimer); resolve({...imgData, mediaElement: video}); }; 
+                        video.onerror = () => { clearTimeout(fallbackTimer); resolve(null); }; 
+                        video.load();
                     } else {
-                        const img = new Image(); img.onload = () => resolve({...imgData, mediaElement: img}); img.onerror = () => resolve(null); img.src = imgData.src;
+                        const img = new Image(); 
+                        img.onload = () => { clearTimeout(fallbackTimer); resolve({...imgData, mediaElement: img}); }; 
+                        img.onerror = () => { clearTimeout(fallbackTimer); resolve(null); }; 
+                        img.src = imgData.src;
                     }
                 }));
 
@@ -530,13 +538,38 @@
 
         async function exportProjectsToFile() {
             if(!currentUser) return;
-            const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readonly'); const req = tx.objectStore(STORE_NAME).getAll();
-            req.onsuccess = () => {
-                const userProjects = req.result.filter(p => p.userId === currentUser.id);
-                if(userProjects.length === 0) { showToast("백업할 데이터가 없습니다.", "error"); return; }
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userProjects));
-                const dlAnchorElem = document.createElement('a'); dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", `숲체원_백업_${Date.now()}.json`); dlAnchorElem.click();
-            };
+            
+            showConfirm("모든 프로젝트 백업 파일을 기기에 저장하시겠습니까?\n(파일 크기에 따라 약간의 시간이 소요될 수 있습니다.)", async () => {
+                const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readonly'); const req = tx.objectStore(STORE_NAME).getAll();
+                req.onsuccess = () => {
+                    const userProjects = req.result.filter(p => p.userId === currentUser.id);
+                    if(userProjects.length === 0) { showToast("백업할 데이터가 없습니다.", "error"); return; }
+                    
+                    try {
+                        // 브라우저 멈춤 및 메모리 과부하 방지를 위해 Data URI 대신 Blob 사용
+                        const jsonString = JSON.stringify(userProjects);
+                        const blob = new Blob([jsonString], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        
+                        const dlAnchorElem = document.createElement('a'); 
+                        dlAnchorElem.style.display = 'none';
+                        dlAnchorElem.setAttribute("href", url); 
+                        dlAnchorElem.setAttribute("download", `숲체원_백업_${Date.now()}.json`); 
+                        
+                        document.body.appendChild(dlAnchorElem);
+                        dlAnchorElem.click();
+                        document.body.removeChild(dlAnchorElem);
+                        
+                        // 메모리 릭(누수) 방지를 위해 URL 해제
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        
+                        showToast("백업 파일이 안전하게 저장되었습니다.");
+                    } catch (error) {
+                        console.error("Backup export error:", error);
+                        showToast("데이터 용량이 너무 커서 백업에 실패했습니다.", "error");
+                    }
+                };
+            });
         }
 
         function importProjectsFromFile(e) {
@@ -881,33 +914,83 @@
         }
 
         async function handleImageUpload(e) {
-            const files = Array.from(e.target.files); if (!files.length) return;
-            let validFiles = []; let addedCount = 0; const maxDuration = 300; 
-            for (const file of files) {
-                if ((state.images.length + addedCount + 1) * 4 > maxDuration) { if (addedCount === 0) showToast(`최대 5분 분량까지만 제작할 수 있습니다.`, "error"); break; }
-                validFiles.push(file); addedCount++;
-            }
-            if (validFiles.length === 0) { e.target.value = ''; return; }
+            // 드래그 앤 드롭과 클릭 업로드를 모두 지원 (안전한 파일 배열 추출)
+            const files = Array.from(e.dataTransfer ? e.dataTransfer.files : (e.target.files || [])); 
+            if (!files.length) return;
+            
+            // 처리 중임을 알리는 로딩 오버레이 표시
+            elements.loadingOverlay.style.display = 'flex'; 
+            elements.loadingOverlay.querySelector('h3').textContent = "미디어 처리 중...";
+            elements.renderProgress.style.width = "100%"; 
+            elements.renderProgress.classList.add('animate-pulse');
 
-            const loadPromises = validFiles.map(file => new Promise((resolve) => {
-                const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i);
-                if (isVideo) {
-                    const dataUrl = URL.createObjectURL(file); const video = document.createElement('video');
-                    video.src = dataUrl; video.muted = true; video.playsInline = true; video.preload = "auto";
-                    video.onloadeddata = () => resolve({ id: Date.now() + Math.random(), type: 'video', mediaElement: video, src: dataUrl, effect: 'none', phrase: getRandomPhrase(), duration: Math.min(15, Math.max(3, Math.floor(video.duration))) });
-                    video.onerror = () => resolve(null); video.load();
-                } else {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => resolve({ id: Date.now() + Math.random(), type: 'image', mediaElement: img, src: event.target.result, effect: effectTypes[Math.floor(Math.random() * effectTypes.length)], phrase: getRandomPhrase(), duration: 4 });
-                        img.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
+            try {
+                let validFiles = []; let addedCount = 0; const maxDuration = 300; 
+                const currentDuration = state.totalDuration || 0;
+
+                for (const file of files) {
+                    if (currentDuration + (addedCount + 1) * 4 > maxDuration) { 
+                        if (addedCount === 0) showToast(`최대 5분 분량까지만 제작할 수 있습니다.`, "error"); 
+                        break; 
+                    }
+                    validFiles.push(file); addedCount++;
                 }
-            }));
-            state.images = [...state.images, ...(await Promise.all(loadPromises)).filter(item => item !== null)];
-            updateDurations(); renderStoryboard(); updateUI(); if(!state.isPlaying) drawFrame(state.currentTime); e.target.value = '';
+
+                if (validFiles.length === 0) return;
+
+                let failCount = 0;
+                // 예외 처리와 로딩 실패 처리가 추가된 미디어 로더
+                const loadPromises = validFiles.map(file => new Promise((resolve) => {
+                    const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i);
+                    // 무한 로딩 대기 방지 (15초 경과 시 강제로 실패 처리 후 넘어감)
+                    const fallbackTimer = setTimeout(() => { failCount++; resolve(null); }, 15000);
+
+                    if (isVideo) {
+                        const dataUrl = URL.createObjectURL(file); const video = document.createElement('video');
+                        video.src = dataUrl; video.muted = true; video.playsInline = true; video.preload = "auto";
+                        
+                        video.onloadedmetadata = () => { 
+                            clearTimeout(fallbackTimer);
+                            resolve({ id: Date.now() + Math.random(), type: 'video', mediaElement: video, src: dataUrl, effect: 'none', phrase: getRandomPhrase(), duration: Math.min(15, Math.max(3, Math.floor(video.duration || 4))) });
+                        };
+                        video.onerror = () => { clearTimeout(fallbackTimer); failCount++; resolve(null); }; 
+                        video.load();
+                    } else if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                clearTimeout(fallbackTimer);
+                                resolve({ id: Date.now() + Math.random(), type: 'image', mediaElement: img, src: event.target.result, effect: effectTypes[Math.floor(Math.random() * effectTypes.length)], phrase: getRandomPhrase(), duration: 4 });
+                            };
+                            img.onerror = () => { clearTimeout(fallbackTimer); failCount++; resolve(null); };
+                            img.src = event.target.result;
+                        };
+                        reader.onerror = () => { clearTimeout(fallbackTimer); failCount++; resolve(null); };
+                        reader.readAsDataURL(file);
+                    } else {
+                        clearTimeout(fallbackTimer); failCount++; resolve(null); 
+                    }
+                }));
+
+                const loadedItems = (await Promise.all(loadPromises)).filter(item => item !== null);
+                state.images = [...state.images, ...loadedItems];
+                
+                updateDurations(); renderStoryboard(); updateUI(); 
+                if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime); 
+                
+                if (failCount > 0) showToast(`지원하지 않는 포맷이나 오류로 ${failCount}개가 제외되었습니다.`, 'error');
+                else if (loadedItems.length > 0) showToast(`${loadedItems.length}개의 미디어가 추가되었습니다.`);
+
+            } catch (err) {
+                console.error("미디어 처리 오류:", err);
+                showToast("미디어 처리 중 오류가 발생했습니다.", "error");
+            } finally {
+                // 어떤 경우에도 인풋 엘리먼트 초기화 및 로딩 UI 복구
+                if (elements.imageUpload) elements.imageUpload.value = '';
+                elements.renderProgress.classList.remove('animate-pulse');
+                elements.loadingOverlay.style.display = 'none';
+            }
         }
 
         function renderStoryboard() {
@@ -1010,7 +1093,20 @@
             elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
             elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
             document.querySelectorAll('.font-btn').forEach(btn => btn.addEventListener('click', () => setFont(btn.dataset.font)));
+            
             elements.imageUpload.addEventListener('change', handleImageUpload);
+            
+            // 드래그 앤 드롭 파일 직접 추가 이벤트 바인딩 추가
+            const dropZone = elements.imageUpload.closest('label');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-stone-800', 'bg-stone-50'); });
+                dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('border-stone-800', 'bg-stone-50'); });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault(); dropZone.classList.remove('border-stone-800', 'bg-stone-50');
+                    handleImageUpload(e);
+                });
+            }
+
             elements.playBtn.addEventListener('click', togglePlay); elements.stopBtn.addEventListener('click', stopPlayback);
             elements.exportBtn.addEventListener('click', exportVideo); elements.progressContainer.addEventListener('click', seekTime);
             
