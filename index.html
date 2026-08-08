@@ -117,6 +117,9 @@
                                 <option value="crossfade" selected>🌬️ 시네마틱 페이드 (부드럽게 겹침)</option>
                                 <option value="fadeblack">🎬 필름 블랙 아웃 (영화처럼 어두워짐)</option>
                                 <option value="slide">📸 포토 슬라이드 (옆으로 밀려남)</option>
+                                <option value="flash">✨ 몽환적 플래시 (빛과 함께 전환)</option>
+                                <option value="iris">👁️ 아이리스 줌 (원형으로 열림)</option>
+                                <option value="wipe">🧻 스와이프 (자연스럽게 밀어내기)</option>
                             </select>
                         </div>
                     </section>
@@ -384,7 +387,8 @@
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
-            isPlaying: false, isRecording: false, currentTime: 0, totalDuration: 0, animationFrameId: null, lastTimestamp: 0, draggedItemIndex: null
+            isPlaying: false, isRecording: false, currentTime: 0, totalDuration: 0, animationFrameId: null, lastTimestamp: 0, draggedItemIndex: null,
+            customBgmFile: null
         };
 
         let currentUser = localStorage.getItem('forestAppUser') ? JSON.parse(localStorage.getItem('forestAppUser')) : null; 
@@ -439,7 +443,8 @@
             const projectData = {
                 id: state.projectId, userId: currentUser.id, type: type, title: state.intro.title || "숲체원 힐링 영상", updatedAt: Date.now(),
                 data: { aspectRatio: state.aspectRatio, fontFamily: state.fontFamily, transitionEffect: state.transitionEffect, intro: state.intro, outro: state.outro,
-                    images: state.images.map(img => ({ id: img.id, type: img.type, src: img.src, effect: img.effect, phrase: img.phrase, duration: img.duration }))
+                    bgmSelectValue: elements.bgmSelect.value, customBgmFile: state.customBgmFile,
+                    images: state.images.map(img => ({ id: img.id, type: img.type, src: img.type === 'video' ? null : img.src, rawFile: img.rawFile, effect: img.effect, phrase: img.phrase, duration: img.duration }))
                 }
             };
 
@@ -480,21 +485,35 @@
                 state.intro = project.data.intro; state.outro = project.data.outro;
 
                 elements.transitionEffectSelect.value = state.transitionEffect; setFont(state.fontFamily); setAspectRatio(state.aspectRatio);
+                
+                state.customBgmFile = project.data.customBgmFile || null;
+                const bgmValue = project.data.bgmSelectValue || 'procedural';
+                elements.bgmSelect.value = bgmValue;
+                if (bgmValue === 'custom' && state.customBgmFile) {
+                    elements.bgmAudio.src = URL.createObjectURL(state.customBgmFile);
+                    elements.customBgmInfo.classList.remove('hidden'); elements.customBgmInfo.classList.add('flex');
+                    elements.customBgmName.textContent = state.customBgmFile.name;
+                } else if (bgmValue === 'procedural' || bgmValue === '') {
+                    elements.bgmAudio.src = ''; elements.customBgmInfo.classList.add('hidden');
+                } else {
+                    elements.bgmAudio.src = bgmValue; elements.customBgmInfo.classList.add('hidden');
+                }
 
                 const loadPromises = project.data.images.map(imgData => new Promise((resolve) => {
-                    // 무한 로딩 방지를 위한 10초 타임아웃
                     const fallbackTimer = setTimeout(() => resolve(null), 10000); 
+                    let mediaSrc = imgData.src;
+                    if (imgData.rawFile) mediaSrc = URL.createObjectURL(imgData.rawFile); // 원본 파일 복구
+
                     if (imgData.type === 'video') {
-                        const video = document.createElement('video'); video.src = imgData.src; video.muted = true; video.playsInline = true; video.preload = "auto";
-                        // 일부 브라우저에서 onloadeddata가 안불리는 현상을 막기 위해 metadata 로 변경
-                        video.onloadedmetadata = () => { clearTimeout(fallbackTimer); resolve({...imgData, mediaElement: video}); }; 
+                        const video = document.createElement('video'); video.src = mediaSrc; video.muted = true; video.playsInline = true; video.preload = "auto";
+                        video.onloadedmetadata = () => { clearTimeout(fallbackTimer); resolve({...imgData, src: mediaSrc, mediaElement: video}); }; 
                         video.onerror = () => { clearTimeout(fallbackTimer); resolve(null); }; 
                         video.load();
                     } else {
                         const img = new Image(); 
-                        img.onload = () => { clearTimeout(fallbackTimer); resolve({...imgData, mediaElement: img}); }; 
+                        img.onload = () => { clearTimeout(fallbackTimer); resolve({...imgData, src: mediaSrc, mediaElement: img}); }; 
                         img.onerror = () => { clearTimeout(fallbackTimer); resolve(null); }; 
-                        img.src = imgData.src;
+                        img.src = mediaSrc;
                     }
                 }));
 
@@ -752,6 +771,28 @@
                     } else if (state.transitionEffect === 'fadeblack') {
                         if (progress < 0.5) renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1 - (progress * 2));
                         else renderSlideImage(ctx, imgObj, width, height, scene.elapsed, (progress - 0.5) * 2);
+                    } else if (state.transitionEffect === 'flash') {
+                        if (progress < 0.5) {
+                            renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1.0);
+                            ctx.fillStyle = `rgba(255,255,255,${progress * 2})`; ctx.fillRect(0, 0, width, height);
+                        } else {
+                            renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
+                            ctx.fillStyle = `rgba(255,255,255,${2 - progress * 2})`; ctx.fillRect(0, 0, width, height);
+                        }
+                    } else if (state.transitionEffect === 'iris') {
+                        renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1.0);
+                        ctx.save();
+                        const easeProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                        ctx.beginPath(); ctx.arc(width/2, height/2, (Math.sqrt(width*width + height*height) / 2) * easeProgress, 0, Math.PI * 2); ctx.clip();
+                        renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
+                        ctx.restore();
+                    } else if (state.transitionEffect === 'wipe') {
+                        renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1.0);
+                        ctx.save();
+                        const easeProgress = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                        ctx.beginPath(); ctx.rect(0, 0, width * easeProgress, height); ctx.clip();
+                        renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
+                        ctx.restore();
                     } else { 
                         ctx.save(); ctx.translate(-(progress * width), 0); renderSlideImage(ctx, state.images[scene.index - 1], width, height, state.images[scene.index - 1].duration + scene.elapsed, 1.0); ctx.restore();
                         ctx.save(); ctx.translate(width - (progress * width), 0); renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0); ctx.restore();
@@ -951,7 +992,7 @@
                         
                         video.onloadedmetadata = () => { 
                             clearTimeout(fallbackTimer);
-                            resolve({ id: Date.now() + Math.random(), type: 'video', mediaElement: video, src: dataUrl, effect: 'none', phrase: getRandomPhrase(), duration: Math.min(15, Math.max(3, Math.floor(video.duration || 4))) });
+                            resolve({ id: Date.now() + Math.random(), type: 'video', mediaElement: video, src: dataUrl, rawFile: file, effect: 'none', phrase: getRandomPhrase(), duration: Math.min(15, Math.max(3, Math.floor(video.duration || 4))) });
                         };
                         video.onerror = () => { clearTimeout(fallbackTimer); failCount++; resolve(null); }; 
                         video.load();
@@ -961,7 +1002,7 @@
                             const img = new Image();
                             img.onload = () => {
                                 clearTimeout(fallbackTimer);
-                                resolve({ id: Date.now() + Math.random(), type: 'image', mediaElement: img, src: event.target.result, effect: effectTypes[Math.floor(Math.random() * effectTypes.length)], phrase: getRandomPhrase(), duration: 4 });
+                                resolve({ id: Date.now() + Math.random(), type: 'image', mediaElement: img, src: event.target.result, rawFile: file, effect: effectTypes[Math.floor(Math.random() * effectTypes.length)], phrase: getRandomPhrase(), duration: 4 });
                             };
                             img.onerror = () => { clearTimeout(fallbackTimer); failCount++; resolve(null); };
                             img.src = event.target.result;
@@ -1084,7 +1125,13 @@
                 else { stopProceduralAmbient(); elements.bgmAudio.src = e.target.value; elements.customBgmInfo.classList.add('hidden'); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); }
             });
             elements.customBgmInput.addEventListener('change', (e) => {
-                if (e.target.files[0]) { elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]); elements.customBgmInfo.classList.remove('hidden'); elements.customBgmInfo.classList.add('flex'); elements.customBgmName.textContent = e.target.files[0].name; elements.bgmSelect.value = 'custom'; stopProceduralAmbient(); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); }
+                if (e.target.files[0]) { 
+                    state.customBgmFile = e.target.files[0];
+                    elements.bgmAudio.src = URL.createObjectURL(e.target.files[0]); 
+                    elements.customBgmInfo.classList.remove('hidden'); elements.customBgmInfo.classList.add('flex'); 
+                    elements.customBgmName.textContent = e.target.files[0].name; elements.bgmSelect.value = 'custom'; 
+                    stopProceduralAmbient(); if (state.isPlaying) elements.bgmAudio.play().catch(console.error); 
+                }
             });
             elements.transitionEffectSelect.addEventListener('change', (e) => { state.transitionEffect = e.target.value; if(!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime); });
 
