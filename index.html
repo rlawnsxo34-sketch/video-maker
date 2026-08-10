@@ -50,6 +50,19 @@
         </div>
     </div>
 
+    <!-- 모달: 프롬프트 (이름 변경 등) -->
+    <div id="prompt-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[160] hidden items-center justify-center">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-up">
+            <h3 class="text-lg font-serif-kr font-bold text-stone-800 mb-2">이름 변경</h3>
+            <p class="text-stone-600 font-gowun mb-4 text-sm" id="prompt-message">새로운 이름을 입력하세요.</p>
+            <input type="text" id="prompt-input" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 mb-6 text-stone-800 font-gowun focus:outline-none focus:border-stone-800 transition-colors" autocomplete="off">
+            <div class="flex gap-2 justify-end">
+                <button id="prompt-cancel-btn" class="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 font-gowun hover:bg-stone-50 transition">취소</button>
+                <button id="prompt-ok-btn" class="px-4 py-2 rounded-xl bg-stone-800 text-white font-gowun hover:bg-stone-900 transition shadow-md">변경</button>
+            </div>
+        </div>
+    </div>
+
     <div class="w-full max-w-[1600px] bg-white md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col min-h-screen md:min-h-[90vh] md:max-h-[95vh] border border-stone-200 animate-fade-up relative">
         
         <!-- 헤더 -->
@@ -321,6 +334,20 @@
             document.getElementById('confirm-cancel-btn').onclick = cleanup;
         }
 
+        function showPrompt(message, defaultValue, onConfirmCallback) {
+            const modal = document.getElementById('prompt-modal');
+            document.getElementById('prompt-message').innerText = message;
+            const input = document.getElementById('prompt-input');
+            input.value = defaultValue;
+            modal.style.display = 'flex';
+            input.focus();
+            
+            const cleanup = () => { modal.style.display = 'none'; };
+            document.getElementById('prompt-ok-btn').onclick = () => { cleanup(); onConfirmCallback(input.value); };
+            document.getElementById('prompt-cancel-btn').onclick = cleanup;
+            input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('prompt-ok-btn').click(); } };
+        }
+
         function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
             const paragraphs = text.split('\n');
             let lines = [];
@@ -383,7 +410,7 @@
         };
 
         const state = {
-            projectId: null, aspectRatio: 'vertical', fontFamily: 'Gowun Dodum', transitionEffect: 'crossfade', 
+            projectId: null, projectTitle: null, aspectRatio: 'vertical', fontFamily: 'Gowun Dodum', transitionEffect: 'crossfade', 
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
@@ -441,7 +468,7 @@
 
             if (!state.projectId) state.projectId = "proj_" + Date.now();
             const projectData = {
-                id: state.projectId, userId: currentUser.id, type: type, title: state.intro.title || "숲체원 힐링 영상", updatedAt: Date.now(),
+                id: state.projectId, userId: currentUser.id, type: type, title: state.projectTitle || state.intro.title || "숲체원 힐링 영상", updatedAt: Date.now(),
                 data: { aspectRatio: state.aspectRatio, fontFamily: state.fontFamily, transitionEffect: state.transitionEffect, intro: state.intro, outro: state.outro,
                     bgmSelectValue: elements.bgmSelect.value, customBgmFile: state.customBgmFile,
                     images: state.images.map(img => ({ id: img.id, type: img.type, src: img.type === 'video' ? null : img.src, rawFile: img.rawFile, effect: img.effect, phrase: img.phrase, duration: img.duration }))
@@ -481,7 +508,7 @@
                 
                 stopPlayback(); state.images.forEach(img => { if (img.type === 'video') URL.revokeObjectURL(img.src); });
 
-                state.projectId = project.id; state.aspectRatio = project.data.aspectRatio; state.fontFamily = project.data.fontFamily; state.transitionEffect = project.data.transitionEffect;
+                state.projectId = project.id; state.projectTitle = project.title; state.aspectRatio = project.data.aspectRatio; state.fontFamily = project.data.fontFamily; state.transitionEffect = project.data.transitionEffect;
                 state.intro = project.data.intro; state.outro = project.data.outro;
 
                 elements.transitionEffectSelect.value = state.transitionEffect; setFont(state.fontFamily); setAspectRatio(state.aspectRatio);
@@ -542,11 +569,20 @@
                     const dateStr = new Date(p.updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
                     const badgeHtml = type === 'draft' ? `<div class="absolute top-2 right-2 bg-white/90 text-stone-600 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">임시저장</div>` : `<div class="absolute top-2 right-2 bg-stone-800 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">최종완료</div>`;
                     const mediaHtml = thumbUrl.startsWith('blob:') ? `<video src="${thumbUrl}#t=1" class="w-full h-full object-cover"></video>` : `<img src="${thumbUrl}" class="w-full h-full object-cover">`;
+                    const safeTitleForJs = p.title.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    
                     return `<div class="bg-white rounded-xl p-3 border border-stone-200 shadow-sm flex flex-col gap-3 group hover:border-stone-400 transition-colors">
                         <div class="aspect-video bg-stone-100 rounded-lg overflow-hidden relative">${mediaHtml}${badgeHtml}</div>
-                        <div class="px-1"><h3 class="font-serif-kr font-bold text-stone-800 truncate" title="${p.title}">${p.title}</h3><p class="text-xs font-mono text-stone-400 mt-1">${dateStr}</p></div>
+                        <div class="px-1 relative">
+                            <h3 class="font-serif-kr font-bold text-stone-800 truncate cursor-pointer hover:text-stone-500 transition flex items-center justify-between group/title" title="클릭하여 이름 변경" onclick="startRename('${p.id}', '${safeTitleForJs}')">
+                                <span class="truncate">${p.title}</span>
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5 opacity-0 group-hover/title:opacity-100 text-stone-400 transition-opacity flex-shrink-0"></i>
+                            </h3>
+                            <p class="text-xs font-mono text-stone-400 mt-1">${dateStr}</p>
+                        </div>
                         <div class="flex gap-2 mt-auto pt-2 border-t border-stone-100">
-                            <button onclick="restoreProject('${p.id}')" class="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 py-2 rounded-lg text-sm font-gowun font-bold transition">불러오기</button>
+                            <button onclick="restoreProject('${p.id}')" class="flex-[2] bg-stone-100 hover:bg-stone-200 text-stone-700 py-2 rounded-lg text-sm font-gowun font-bold transition">불러오기</button>
+                            <button onclick="exportSingleProject('${p.id}', '${safeTitleForJs}')" class="px-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg transition" title="이 작업물만 백업"><i data-lucide="download"></i></button>
                             <button onclick="deleteProject('${p.id}')" class="px-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition" title="삭제"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>`;
@@ -1085,6 +1121,53 @@
         window.removeImage = (index) => { if (state.images[index].type === 'video') URL.revokeObjectURL(state.images[index].src); state.images.splice(index, 1); updateDurations(); renderStoryboard(); updateUI(); if(!state.isPlaying) drawFrame(0); };
         window.restoreProject = restoreProject;
         window.deleteProject = deleteProject;
+        
+        window.exportSingleProject = async (id, title) => {
+            try {
+                const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readonly');
+                const req = tx.objectStore(STORE_NAME).get(id);
+                req.onsuccess = () => {
+                    const project = req.result;
+                    if (!project) return showToast("프로젝트를 찾을 수 없습니다.", "error");
+                    
+                    const jsonString = JSON.stringify([project]);
+                    const blob = new Blob([jsonString], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const safeTitle = title.replace(/[^a-zA-Z0-9가-힣_-]/g, '_');
+                    const dlAnchorElem = document.createElement('a'); 
+                    dlAnchorElem.style.display = 'none'; dlAnchorElem.setAttribute("href", url); 
+                    dlAnchorElem.setAttribute("download", `숲체원_${safeTitle}_${Date.now()}.json`); 
+                    
+                    document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); document.body.removeChild(dlAnchorElem);
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    showToast(`'${title}' 프로젝트 백업 완료`);
+                };
+            } catch (error) {
+                console.error(error); showToast("백업 중 오류가 발생했습니다.", "error");
+            }
+        };
+
+        window.startRename = (id, oldTitle) => {
+            showPrompt("작업물의 새로운 이름을 입력해 주세요.", oldTitle, async (newTitle) => {
+                if (!newTitle || newTitle.trim() === '' || newTitle === oldTitle) return;
+                try {
+                    const db = await initDB(); const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME); const req = store.get(id);
+                    req.onsuccess = () => {
+                        const project = req.result;
+                        if (project) {
+                            project.title = newTitle.trim(); project.updatedAt = Date.now();
+                            store.put(project);
+                            tx.oncomplete = () => {
+                                if (state.projectId === id) state.projectTitle = project.title;
+                                renderWorkspaceTab(currentTab); showToast("이름이 변경되었습니다.");
+                            };
+                        }
+                    };
+                } catch(e) { console.error(e); showToast("이름 변경 오류", "error"); }
+            });
+        };
 
         function init() {
             // Restore Login State
