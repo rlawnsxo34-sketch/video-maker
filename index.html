@@ -712,7 +712,7 @@
         }
 
         function renderSlideImage(ctx, mediaObj, cw, ch, elapsed, alpha) {
-            ctx.globalAlpha = alpha; ctx.filter = 'blur(20px) brightness(0.3) sepia(0.2)'; // Optimized blur
+            ctx.globalAlpha = alpha; ctx.filter = 'blur(15px) brightness(0.3) sepia(0.2)'; // 렌더링 과부하 방지를 위해 블러 수치 약간 낮춤
             
             if (mediaObj.type === 'video') {
                 const vid = mediaObj.mediaElement;
@@ -720,7 +720,8 @@
                     vid.currentTime = elapsed % vid.duration; if (!vid.paused) vid.pause();
                 } else {
                     if (vid.paused) vid.play().catch(e=>{});
-                    const threshold = state.isRecording ? 1.5 : 0.4;
+                    // 녹화(추출) 중일 때는 과부하로 인한 영상 프레임 밀림 현상을 타이트하게 잡아줍니다.
+                    const threshold = state.isRecording ? 0.2 : 0.4;
                     if (Math.abs(vid.currentTime - (elapsed % vid.duration)) > threshold) vid.currentTime = elapsed % vid.duration;
                 }
             }
@@ -954,9 +955,11 @@
             if (audioDest && audioDest.stream.getAudioTracks().length > 0) tracks = [...tracks, ...audioDest.stream.getAudioTracks()];
 
             const combinedStream = new MediaStream(tracks);
-            let options = { mimeType: 'video/webm' }; let ext = 'webm';
-            if (MediaRecorder.isTypeSupported('video/mp4; codecs="avc1, mp4a.40.2"')) { options = { mimeType: 'video/mp4; codecs="avc1, mp4a.40.2"' }; ext = 'mp4'; }
-            else if (MediaRecorder.isTypeSupported('video/mp4')) { options = { mimeType: 'video/mp4' }; ext = 'mp4'; }
+            
+            // 영상 화질(비트레이트)을 8Mbps로 강제 상향하여 깍두기 및 잔상 방지
+            let options = { mimeType: 'video/webm', videoBitsPerSecond: 8000000 }; let ext = 'webm';
+            if (MediaRecorder.isTypeSupported('video/mp4; codecs="avc1, mp4a.40.2"')) { options = { mimeType: 'video/mp4; codecs="avc1, mp4a.40.2"', videoBitsPerSecond: 8000000 }; ext = 'mp4'; }
+            else if (MediaRecorder.isTypeSupported('video/mp4')) { options = { mimeType: 'video/mp4', videoBitsPerSecond: 8000000 }; ext = 'mp4'; }
             
             const recorder = new MediaRecorder(combinedStream, options);
             const chunks = []; recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
@@ -973,17 +976,27 @@
             else if(elements.bgmAudio.src) { elements.bgmAudio.currentTime = 0; try { await elements.bgmAudio.play(); } catch(e) {} }
             
             recorder.start();
-            const startRecordingTime = performance.now(); let lastUiUpdateTime = 0;
+            const startRecordingTime = performance.now(); 
+            let lastUiUpdateTime = 0;
+            
+            // 렌더링 과부하로 인한 프레임 드랍(밀림)을 막기 위해 30fps 로 강제 제한하여 안정성 확보
+            let lastDrawTime = 0;
+            const frameInterval = 1000 / 30;
 
             function renderNextFrame(timestamp) {
-                const renderTime = (timestamp - startRecordingTime) / 1000;
+                const renderTime = (performance.now() - startRecordingTime) / 1000;
                 if (renderTime > state.totalDuration) { recorder.stop(); return; }
                 
-                drawFrame(renderTime);
-                if (timestamp - lastUiUpdateTime > 200) {
-                    elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`;
-                    elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
-                    lastUiUpdateTime = timestamp;
+                // 30fps 주기에 맞추어 화면을 그림으로써 불필요한 연산 낭비를 방지
+                if (timestamp - lastDrawTime >= frameInterval) {
+                    drawFrame(renderTime);
+                    lastDrawTime = timestamp - ((timestamp - lastDrawTime) % frameInterval); // 남은 오차 보정
+                    
+                    if (timestamp - lastUiUpdateTime > 200) {
+                        elements.renderProgress.style.width = `${(renderTime / state.totalDuration) * 100}%`;
+                        elements.renderTimeText.textContent = `${formatTime(renderTime)} / ${formatTime(state.totalDuration)}`;
+                        lastUiUpdateTime = timestamp;
+                    }
                 }
                 requestAnimationFrame(renderNextFrame);
             }
