@@ -11,7 +11,7 @@
 
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@300;400;600&family=Song+Myung&family=Sunflower:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@300;400;600&family=Song+Myung&family=Sunflower:wght@300;500;700&display=swap');
 
         body { font-family: 'Pretendard', sans-serif; background-color: #e7e5e4; margin: 0; padding: 0; }
         .font-serif-kr { font-family: 'Noto Serif KR', serif; }
@@ -28,7 +28,7 @@
         ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
         
-        .video-container { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+        .video-container { box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.35); transition: all 0.3s ease; }
 
         .storyboard-item.dragging { opacity: 0.5; border: 2px dashed #a8a29e; }
         .storyboard-item { transition: transform 0.2s, box-shadow 0.2s; }
@@ -80,14 +80,14 @@
                     <span class="text-xs text-stone-400 font-gowun">카카오톡 · 드라이브 · 파일 전송</span>
                 </div>
                 <p class="text-xs lg:text-sm text-stone-600 font-gowun leading-relaxed">
-                    현재 편집 중인 사진·동영상·문구·배경음악을 <b>단일 패키지 파일(.json)</b>로 묶어 카카오톡 '나에게 보내기'나 드라이브로 전송한 뒤, PC에서 바로 열어 이어서 편집할 수 있습니다.
+                    현재 편집 중인 사진·동영상·문구·배경음악·시네마틱 설정을 <b>단일 패키지 파일(.json)</b>로 묶어 카카오톡 '나에게 보내기'나 드라이브로 전송한 뒤, PC에서 바로 열어 이어서 편집할 수 있습니다.
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                     <button id="quick-share-project-btn" class="py-3 px-4 rounded-xl bg-stone-800 text-white font-gowun font-bold text-sm hover:bg-stone-900 transition flex items-center justify-center gap-2 shadow-sm">
                         <i data-lucide="share-2" class="w-4 h-4"></i> 현재 작업물 내보내기/공유
                     </button>
                     <button id="quick-open-project-btn" class="py-3 px-4 rounded-xl bg-white border-2 border-stone-800 text-stone-800 font-gowun font-bold text-sm hover:bg-stone-100 transition flex items-center justify-center gap-2 shadow-sm">
-                        <i data-lucide="folder-Input" class="w-4 h-4"></i> 이어하기 파일 바로 열기
+                        <i data-lucide="folder-input" class="w-4 h-4"></i> 이어하기 파일 바로 열기
                     </button>
                     <input type="file" id="quick-open-file-input" accept=".json" class="hidden">
                 </div>
@@ -151,7 +151,7 @@
 
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50/50">
             <!-- 왼쪽: 설정 패널 -->
-            <aside class="w-full lg:w-[520px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
+            <aside class="w-full lg:w-[540px] bg-white border-r border-stone-100 flex flex-col overflow-hidden z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
                 <div class="flex-1 overflow-y-auto p-6 space-y-6">
                     
                     <!-- 화면 비율 설정 -->
@@ -169,6 +169,70 @@
                         </div>
                     </section>
 
+                    <!-- [신규] 시네마틱 디렉팅 (아트 프레임 4종 + 색감 그레이딩 4종 + 에디토리얼 캡션) -->
+                    <section class="flex flex-col gap-4 p-4 lg:p-5 bg-stone-50 rounded-2xl border border-stone-100">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-amber-600"></i> 시네마틱 무드 & 프레임 연출
+                            </h2>
+                            <span class="text-[11px] font-gowun text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 font-bold">프리미엄 연출</span>
+                        </div>
+
+                        <!-- 아트 프레임 테마 4종 -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-xs lg:text-sm font-gowun font-semibold text-stone-700 flex items-center gap-1.5">
+                                <i data-lucide="frame" class="w-4 h-4 text-stone-400"></i> 아트 프레임 레이아웃 (4종)
+                            </span>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="frame-selector">
+                                <button type="button" data-frame="gallery" class="frame-btn py-2.5 px-2 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun text-xs lg:text-sm transition-all flex flex-col items-center gap-0.5">
+                                    <span class="font-bold">🖼️ 갤러리 매트</span>
+                                    <span class="text-[10px] opacity-75">미술관 이중액자</span>
+                                </button>
+                                <button type="button" data-frame="cinema" class="frame-btn py-2.5 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs lg:text-sm hover:bg-stone-50 transition-all flex flex-col items-center gap-0.5">
+                                    <span class="font-bold">🎞️ 풀 시네마</span>
+                                    <span class="text-[10px] opacity-75">레터박스 와이드</span>
+                                </button>
+                                <button type="button" data-frame="glass" class="frame-btn py-2.5 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs lg:text-sm hover:bg-stone-50 transition-all flex flex-col items-center gap-0.5">
+                                    <span class="font-bold">✨ 소프트 글래스</span>
+                                    <span class="text-[10px] opacity-75">투명 라운드보더</span>
+                                </button>
+                                <button type="button" data-frame="polaroid" class="frame-btn py-2.5 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs lg:text-sm hover:bg-stone-50 transition-all flex flex-col items-center gap-0.5">
+                                    <span class="font-bold">📷 아날로그 필름</span>
+                                    <span class="text-[10px] opacity-75">인화지 캡션형</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 컬러 그레이딩 필터 4종 -->
+                        <div class="flex flex-col gap-1.5 pt-2 border-t border-stone-200/70">
+                            <span class="text-xs lg:text-sm font-gowun font-semibold text-stone-700 flex items-center gap-1.5">
+                                <i data-lucide="palette" class="w-4 h-4 text-stone-400"></i> 시네마틱 색감 필터 & 빛망울 (4종)
+                            </span>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="color-grade-selector">
+                                <button type="button" data-grade="warm" class="grade-btn py-2 px-2 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun text-xs transition-all">🌅 따스한 오후햇살</button>
+                                <button type="button" data-grade="forest" class="grade-btn py-2 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs hover:bg-stone-50 transition-all">🌲 깊은 안개숲</button>
+                                <button type="button" data-grade="nostalgia" class="grade-btn py-2 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs hover:bg-stone-50 transition-all">🎞️ 필름 노스탤지어</button>
+                                <button type="button" data-grade="original" class="grade-btn py-2 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs hover:bg-stone-50 transition-all">💎 내추럴 클리어</button>
+                            </div>
+                        </div>
+
+                        <!-- 날짜·장소 에디토리얼 캡션 및 워터마크 스타일 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-stone-200/70">
+                            <div>
+                                <label for="date-stamp-input" class="block text-xs font-gowun font-semibold text-stone-600 mb-1">에디토리얼 날짜·장소 스탬프</label>
+                                <input id="date-stamp-input" type="text" value="2026. 11 · JANGSEONG FOREST" placeholder="예: 2026. 11 · JANGSEONG FOREST" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-700 font-mono focus:outline-none focus:border-stone-400">
+                            </div>
+                            <div>
+                                <label for="logo-badge-select" class="block text-xs font-gowun font-semibold text-stone-600 mb-1">로고 워터마크 스타일</label>
+                                <select id="logo-badge-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-700 font-gowun focus:outline-none focus:border-stone-400 cursor-pointer">
+                                    <option value="glass" selected>✨ 글래스 캡슐 배지 (고급형)</option>
+                                    <option value="outline">🤍 화이트 실루엣 (기본형)</option>
+                                    <option value="minimal">🌿 미니멀 반투명 (은은함)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- 글씨체 (8종) 및 트랜지션 (10종 + 컷 편집) -->
                     <section class="flex flex-col gap-4 p-4 lg:p-5 bg-stone-50 rounded-2xl border border-stone-100">
                         <div class="flex flex-col gap-2">
@@ -176,7 +240,7 @@
                                 <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
                                     <i data-lucide="type" class="w-5 h-5 text-stone-400"></i> 글씨체 설정 (8종)
                                 </h2>
-                                <span class="text-xs font-gowun text-stone-400">메인·서브 자막 동시 적용</span>
+                                <span class="text-xs font-gowun text-stone-400">모션 타이포그래피 적용</span>
                             </div>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="font-selector">
                                 <button data-font="Gowun Dodum" class="font-btn py-2.5 px-2 border-2 border-stone-800 bg-stone-800 text-white rounded-xl flex justify-center items-center transition-all text-xs lg:text-sm" style="font-family: 'Gowun Dodum';">고운 돋움</button>
@@ -211,13 +275,13 @@
                         </div>
                     </section>
 
-                    <!-- BGM 설정 (내장 5종 + 외부 3종 + 커스텀) -->
+                    <!-- BGM 설정 (내장 5종 + 외부 3종 + 커스텀 + 자동 페이드 인/아웃) -->
                     <section class="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                         <div class="flex justify-between items-center mb-3">
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
                                 <i data-lucide="music" class="w-5 h-5 text-stone-400"></i> 배경음악 (BGM)
                             </h2>
-                            <span class="text-xs font-gowun text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">내장 음원 끊김 0%</span>
+                            <span class="text-xs font-gowun text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">페이드 인·아웃 자동 적용</span>
                         </div>
                         <select id="bgm-select" class="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-stone-700 font-gowun focus:outline-none focus:border-stone-400 text-sm lg:text-base cursor-pointer">
                             <optgroup label="🌿 내장 실시간 힐링 사운드스케이프 (권장 · 무결점 추출)">
@@ -267,7 +331,7 @@
                             <h2 class="text-base lg:text-xl font-serif-kr text-stone-800 flex items-center gap-2 font-bold">
                                 <i data-lucide="clapperboard" class="w-5 h-5 text-stone-400"></i> 스토리보드 편집
                             </h2>
-                            <span class="text-xs font-gowun text-stone-400">입력 즉시 미리보기에 반영됩니다</span>
+                            <span class="text-xs font-gowun text-stone-400">장면별 카메라 무빙 개별 설정 가능</span>
                         </div>
                         <div id="storyboard-container" class="space-y-4 pb-4">
                             <!-- JS 동적 렌더링 -->
@@ -335,7 +399,7 @@
         </div>
     </div>
 
-    <!-- 모달: 로그인 (간편 로컬 로그인 + 실제 Google Drive OAuth 연동 통합) -->
+    <!-- 모달: 로그인 -->
     <div id="login-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-up">
             <div class="flex justify-between items-center mb-4">
@@ -406,17 +470,10 @@
     <script>
         lucide.createIcons();
 
-        // ============================================================================
-        // [설정 안내] Google Cloud Console에서 발급받은 OAuth 클라이언트 ID가 있다면
-        // 아래 DEFAULT_GOOGLE_CLIENT_ID에 입력하거나, 웹앱 우측 상단 [기기 간 이어하기] 모달에 입력하세요.
-        // ============================================================================
-        const DEFAULT_GOOGLE_CLIENT_ID = "941231393820-qrr8srfdlafs81n1o39bi9ueppm07bu5.apps.googleusercontent.com";
+        const DEFAULT_GOOGLE_CLIENT_ID = "";
         const GDRIVE_FOLDER_NAME = "숲체원_영상제작소_보관함";
-
-        // 내장 로고 데이터 URI (헤더 이미지에서 공유하여 중복 용량 방지)
         const LOGO_DATA_URI = document.getElementById('header-logo-img').getAttribute('src');
 
-        // 안전한 localStorage 접근 헬퍼
         function safeGetStorage(key) {
             try {
                 const raw = localStorage.getItem(key);
@@ -439,9 +496,24 @@
             return `${m}:${s}`;
         }
 
-        // 시네마틱 가감속 이징 함수
         function easeInOutCubic(x) {
             return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+        }
+
+        function easeOutCubic(x) {
+            return 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+        }
+
+        // 호환성 높은 둥근 사각형 패스 헬퍼
+        function drawRoundedRectPath(ctx, x, y, w, h, r) {
+            const radius = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.arcTo(x + w, y, x + w, y + h, radius);
+            ctx.arcTo(x + w, y + h, x, y + h, radius);
+            ctx.arcTo(x, y + h, x, y, radius);
+            ctx.arcTo(x, y, x + w, y, radius);
+            ctx.closePath();
         }
 
         function showToast(message, type = 'success') {
@@ -495,7 +567,8 @@
             };
         }
 
-        function drawWrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        // 줄별 시차 모션(Staggered Slide-up Reveal) 및 자간을 지원하는 고급 텍스트 렌더러
+        function drawWrapText(ctx, text, x, y, maxWidth, lineHeight, revealProgress = 1.0, baseAlpha = 1.0) {
             const safeText = String(text || '');
             const paragraphs = safeText.split('\n');
             let lines = [];
@@ -514,7 +587,15 @@
                 lines.push(currentLine);
             });
             let startY = y - (lines.length * lineHeight / 2) + (lineHeight / 2);
-            lines.forEach((line, i) => ctx.fillText(line.trim(), x, startY + (i * lineHeight)));
+            const prevAlpha = ctx.globalAlpha;
+            lines.forEach((line, i) => {
+                const staggerDelay = i * 0.14;
+                const localP = easeOutCubic((revealProgress - staggerDelay) / Math.max(0.2, 1 - staggerDelay));
+                const yOffset = (1 - localP) * 24;
+                ctx.globalAlpha = baseAlpha * localP;
+                ctx.fillText(line.trim(), x, startY + (i * lineHeight) + yOffset);
+            });
+            ctx.globalAlpha = prevAlpha;
         }
 
         const premiumPhrases = [
@@ -533,16 +614,29 @@
 
         const ALL_FONTS = [
             'Gowun Dodum', 'Noto Serif KR', 'Gowun Batang', 'Pretendard',
-            'Nanum Myeongjo', 'Song Myung', 'Nanum Pen Script', 'Sunflower'
+            'Nanum Myeongjo', 'Song Myung', 'Nanum Pen Script', 'Sunflower', 'Cormorant Garamond'
         ];
 
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
-        const particles = Array.from({ length: 60 }, () => ({
+        const effectLabels = {
+            'zoom-in': '🔍 서서히 줌인',
+            'zoom-out': '🔭 서서히 줌아웃',
+            'pan-left': '⬅️ 왼쪽으로 패닝',
+            'pan-right': '➡️ 오른쪽으로 패닝',
+            'pan-up': '⬆️ 위로 패닝',
+            'pan-down': '⬇️ 아래로 패닝',
+            'none': '⏸️ 카메라 고정'
+        };
+
+        // 깊이감 있는 산림 보케(Bokeh) 빛망울 파티클 (크기·색상·투명도 다변화)
+        const particles = Array.from({ length: 42 }, (_, idx) => ({
             nx: Math.random(),
             ny: Math.random(),
-            radius: Math.random() * 3 + 1,
-            vx: (Math.random() - 0.5) * 0.0003,
-            vy: (Math.random() * 0.5 + 0.2) * 0.0003
+            radius: idx % 5 === 0 ? (Math.random() * 22 + 12) : (Math.random() * 5 + 1.8),
+            vx: (Math.random() - 0.5) * 0.00025,
+            vy: -(Math.random() * 0.00025 + 0.00008), // 숲의 기운처럼 아래에서 위로 은은히 피어오름
+            phase: Math.random() * Math.PI * 2,
+            tint: idx % 3 === 0 ? '255, 230, 165' : (idx % 3 === 1 ? '210, 245, 220' : '255, 255, 255')
         }));
 
         const videoBlurCanvas = document.createElement('canvas');
@@ -578,7 +672,7 @@
             });
             ctx2.globalAlpha = 1.0;
 
-            ctx2.fillStyle = 'rgba(24, 18, 12, 0.72)';
+            ctx2.fillStyle = 'rgba(20, 16, 12, 0.72)';
             ctx2.fillRect(0, 0, smallW, smallH);
             return step2;
         }
@@ -698,6 +792,10 @@
             aspectRatio: 'vertical',
             fontFamily: 'Gowun Dodum',
             transitionEffect: 'crossfade',
+            frameStyle: 'gallery',
+            colorGrade: 'warm',
+            dateStamp: '2026. 11 · JANGSEONG FOREST',
+            logoBadgeStyle: 'glass',
             intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "기억 보관소", duration: 3 },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 -", duration: 4 },
@@ -750,6 +848,8 @@
             customBgmName: document.getElementById('custom-bgm-name'),
             customBgmRemove: document.getElementById('custom-bgm-remove'),
             transitionEffectSelect: document.getElementById('transition-effect-select'),
+            dateStampInput: document.getElementById('date-stamp-input'),
+            logoBadgeSelect: document.getElementById('logo-badge-select'),
             loginBtn: document.getElementById('login-btn'),
             userMenu: document.getElementById('user-menu'),
             logoutBtn: document.getElementById('logout-btn'),
@@ -783,7 +883,7 @@
             gdriveStatusBadge: document.getElementById('gdrive-status-badge')
         };
 
-        let currentTab = 'draft', audioCtx, audioDest, windNode, windGain, chimeInterval, windModTimeout;
+        let currentTab = 'draft', audioCtx, audioDest, masterGainNode, windNode, windGain, chimeInterval, windModTimeout;
         let padOscNodes = [];
         const DB_NAME = 'ForestVideoDB', STORE_NAME = 'projects';
 
@@ -805,7 +905,6 @@
             });
         }
 
-        // 현재 메모리에 있는 프로젝트 객체 생성
         function buildCurrentProjectObject(type = 'draft') {
             if (!state.projectId) state.projectId = "proj_" + Date.now();
             return {
@@ -818,6 +917,10 @@
                     aspectRatio: state.aspectRatio,
                     fontFamily: state.fontFamily,
                     transitionEffect: state.transitionEffect,
+                    frameStyle: state.frameStyle,
+                    colorGrade: state.colorGrade,
+                    dateStamp: state.dateStamp,
+                    logoBadgeStyle: state.logoBadgeStyle,
                     intro: { ...state.intro },
                     outro: { ...state.outro },
                     bgmSelectValue: elements.bgmSelect.value,
@@ -857,7 +960,6 @@
                 const tx = db.transaction(STORE_NAME, 'readwrite');
                 tx.objectStore(STORE_NAME).put(projectData);
                 tx.oncomplete = async () => {
-                    // Google Drive 클라우드가 연결되어 있으면 클라우드에도 자동 백업
                     if (state.googleAccessToken) {
                         try {
                             await uploadProjectToGoogleDrive(projectData, true);
@@ -910,7 +1012,6 @@
             });
         }
 
-        // 프로젝트 객체로부터 캔버스/스토리보드 상태 복원 (IndexedDB, 파일 드롭, Google Drive 공용)
         async function applyProjectObjectToState(project) {
             if (!project || !project.data) return;
             elements.workspaceModal.style.display = 'none';
@@ -930,10 +1031,18 @@
             state.aspectRatio = project.data.aspectRatio || 'vertical';
             state.fontFamily = project.data.fontFamily || 'Gowun Dodum';
             state.transitionEffect = project.data.transitionEffect || 'crossfade';
+            state.frameStyle = project.data.frameStyle || 'gallery';
+            state.colorGrade = project.data.colorGrade || 'warm';
+            state.dateStamp = project.data.dateStamp !== undefined ? project.data.dateStamp : '2026. 11 · JANGSEONG FOREST';
+            state.logoBadgeStyle = project.data.logoBadgeStyle || 'glass';
             state.intro = { ...project.data.intro };
             state.outro = { ...project.data.outro };
 
             elements.transitionEffectSelect.value = state.transitionEffect;
+            if (elements.dateStampInput) elements.dateStampInput.value = state.dateStamp;
+            if (elements.logoBadgeSelect) elements.logoBadgeSelect.value = state.logoBadgeStyle;
+            setFrameStyle(state.frameStyle);
+            setColorGrade(state.colorGrade);
             setFont(state.fontFamily);
             setAspectRatio(state.aspectRatio);
             
@@ -1190,7 +1299,6 @@
             };
         }
 
-        // [방안 3 핵심] 모바일 Web Share API 공유 시트 또는 파일 다운로드로 프로젝트 즉시 전송
         async function shareOrDownloadProjectList(projectsArray, fileNamePrefix = "숲체원_이어하기", tryNativeShare = false) {
             elements.loadingOverlay.style.display = 'flex';
             elements.loadingTitle.textContent = "이어하기 패키지 생성 중...";
@@ -1209,7 +1317,6 @@
                 elements.renderProgress.classList.remove('animate-pulse');
                 elements.loadingOverlay.style.display = 'none';
 
-                // 모바일 등 Web Share API 파일 공유 지원 시 네이티브 공유 시트(카톡/드라이브 등) 호출
                 if (tryNativeShare && navigator.canShare && navigator.canShare({ files: [fileObj] })) {
                     try {
                         await navigator.share({
@@ -1224,7 +1331,6 @@
                     }
                 }
 
-                // 기본 다운로드 폴백
                 const url = URL.createObjectURL(blob);
                 const dlAnchorElem = document.createElement('a');
                 dlAnchorElem.style.display = 'none';
@@ -1259,7 +1365,6 @@
             };
         }
 
-        // JSON 파일에서 프로젝트 읽어서 DB 저장 및 캔버스 즉시 복원
         function loadProjectFileAndRestore(file, openImmediately = true) {
             if (!file) return;
             elements.loadingOverlay.style.display = 'flex';
@@ -1318,9 +1423,7 @@
             e.target.value = '';
         }
 
-        // ============================================================================
-        // [방안 1 핵심] Google Identity Services (OAuth 2.0) + Google Drive API v3 연동
-        // ============================================================================
+        // Google Drive 연동
         function updateGdriveUiStatus() {
             const connected = Boolean(state.googleAccessToken);
             if (elements.gdriveStatusBadge) {
@@ -1587,7 +1690,7 @@
         }
 
         // ============================================================================
-        // [내장 Web Audio API 힐링 사운드스케이프 5종 엔진]
+        // [내장 Web Audio API 힐링 사운드스케이프 5종 엔진 + 마스터 페이드 인/아웃]
         // ============================================================================
         function setupAudioRouting() {
             if (!audioCtx) {
@@ -1595,20 +1698,37 @@
                 if (!AudioContextClass) return;
                 audioCtx = new AudioContextClass();
                 audioDest = audioCtx.createMediaStreamDestination();
+                masterGainNode = audioCtx.createGain();
+                masterGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+                masterGainNode.connect(audioCtx.destination);
+                masterGainNode.connect(audioDest);
+
                 const source = audioCtx.createMediaElementSource(elements.bgmAudio);
-                source.connect(audioCtx.destination);
-                source.connect(audioDest);
+                source.connect(masterGainNode);
             }
+        }
+
+        // 영상 시작 첫 1.5초 페이드 인, 종료 전 2.5초 페이드 아웃으로 여운 있는 사운드 연출
+        function updateMasterAudioEnvelope(timeInSeconds) {
+            if (!audioCtx || !masterGainNode || state.totalDuration <= 0) return;
+            const fadeInDur = 1.5;
+            const fadeOutDur = 2.5;
+            let env = 1.0;
+            if (timeInSeconds < fadeInDur) {
+                env = Math.max(0.05, timeInSeconds / fadeInDur);
+            } else if (state.totalDuration - timeInSeconds < fadeOutDur) {
+                env = Math.max(0.001, (state.totalDuration - timeInSeconds) / fadeOutDur);
+            }
+            masterGainNode.gain.setTargetAtTime(env, audioCtx.currentTime, 0.08);
         }
 
         function startProceduralAmbient(presetInput) {
             const preset = presetInput || elements.bgmSelect.value || 'procedural';
             stopProceduralAmbient();
             setupAudioRouting();
-            if (!audioCtx) return;
+            if (!audioCtx || !masterGainNode) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            // 1. 공통 자연 노이즈 레이어 (바람 / 빗소리 / 시냇물)
             const bufferSize = 2 * audioCtx.sampleRate;
             const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const output = noiseBuffer.getChannelData(0);
@@ -1632,19 +1752,16 @@
             windGain = audioCtx.createGain();
 
             if (preset === 'procedural-rain') {
-                // 우중산책: 빗소리에 맞춘 밴드패스/하이패스 질감
                 filter.type = 'bandpass';
                 filter.frequency.setValueAtTime(950, audioCtx.currentTime);
                 filter.Q.setValueAtTime(0.7, audioCtx.currentTime);
                 windGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
             } else if (preset === 'procedural-bowl') {
-                // 시냇물 소리: 부드러운 물결 로우패스
                 filter.type = 'lowpass';
                 filter.frequency.setValueAtTime(480, audioCtx.currentTime);
                 filter.Q.setValueAtTime(1.8, audioCtx.currentTime);
                 windGain.gain.setValueAtTime(0.035, audioCtx.currentTime);
             } else {
-                // 기본 숲속 바람
                 filter.type = 'lowpass';
                 filter.frequency.setValueAtTime(250, audioCtx.currentTime);
                 filter.Q.setValueAtTime(3.0, audioCtx.currentTime);
@@ -1653,8 +1770,7 @@
 
             noiseNode.connect(filter);
             filter.connect(windGain);
-            windGain.connect(audioCtx.destination);
-            windGain.connect(audioDest);
+            windGain.connect(masterGainNode);
             noiseNode.start();
             windNode = noiseNode;
 
@@ -1675,16 +1791,13 @@
             }
             modulateWind();
 
-            // 2. 프리셋별 멜로디 / 악기 스케줄링
             if (preset === 'procedural') {
-                // 🌿 숲속 바람과 풍경 소리
                 const scale = [329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
                 chimeInterval = setInterval(() => {
                     if (!state.isPlaying && !state.isRecording) return;
                     if (Math.random() > 0.4) playBell(scale[Math.floor(Math.random() * scale.length)], 0.06, 3.5);
                 }, 1300);
             } else if (preset === 'procedural-musicbox') {
-                // 🎹 편백숲 오르골과 피아노 (서정적인 C장조/A단조 아르페지오 패턴)
                 const pattern = [523.25, 659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 587.33, 440.00, 523.25, 659.25, 783.99];
                 let noteIdx = 0;
                 playMusicBoxNote(pattern[0]);
@@ -1695,12 +1808,11 @@
                     if (noteIdx % 4 === 0) playBell(pattern[noteIdx] * 0.5, 0.035, 4.0);
                 }, 520);
             } else if (preset === 'procedural-rain') {
-                // 🌧️ 우중산책 빗소리와 로파이 패드
                 const chords = [
-                    [261.63, 329.63, 392.00, 493.88], // Cmaj7
-                    [220.00, 261.63, 329.63, 392.00], // Am7
-                    [174.61, 220.00, 261.63, 349.23], // Fmaj7
-                    [196.00, 246.94, 293.66, 392.00]  // G6
+                    [261.63, 329.63, 392.00, 493.88],
+                    [220.00, 261.63, 329.63, 392.00],
+                    [174.61, 220.00, 261.63, 349.23],
+                    [196.00, 246.94, 293.66, 392.00]
                 ];
                 let chordIdx = 0;
                 playWarmPadChord(chords[0]);
@@ -1710,7 +1822,6 @@
                     playWarmPadChord(chords[chordIdx]);
                 }, 3600);
             } else if (preset === 'procedural-morning') {
-                // 🐤 새벽 숲의 새소리와 하프
                 const harpNotes = [293.66, 329.63, 392.00, 440.00, 493.88, 587.33, 659.25, 783.99];
                 let harpIdx = 0;
                 playBirdChirp();
@@ -1721,7 +1832,6 @@
                     if (Math.random() > 0.5) setTimeout(() => { if (state.isPlaying || state.isRecording) playBirdChirp(); }, 350);
                 }, 750);
             } else if (preset === 'procedural-bowl') {
-                // 🥣 치유의 싱잉볼과 시냇물
                 const bowlPitches = [174.61, 220.00, 261.63, 293.66, 349.23];
                 playSingingBowl(220.00);
                 chimeInterval = setInterval(() => {
@@ -1733,7 +1843,7 @@
         }
 
         function playBell(pitch, peakGain = 0.06, duration = 3.5) {
-            if (!audioCtx) return;
+            if (!audioCtx || !masterGainNode) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
@@ -1742,14 +1852,13 @@
             gain.gain.linearRampToValueAtTime(peakGain, audioCtx.currentTime + 0.06);
             gain.gain.exponentialRampToValueAtTime(0.0008, audioCtx.currentTime + duration);
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.connect(audioDest);
+            gain.connect(masterGainNode);
             osc.start();
             osc.stop(audioCtx.currentTime + duration + 0.1);
         }
 
         function playMusicBoxNote(pitch) {
-            if (!audioCtx) return;
+            if (!audioCtx || !masterGainNode) return;
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const overtone = audioCtx.createOscillator();
@@ -1765,8 +1874,7 @@
 
             osc.connect(gain);
             overtone.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.connect(audioDest);
+            gain.connect(masterGainNode);
             osc.start(now);
             overtone.start(now);
             osc.stop(now + 1.9);
@@ -1774,7 +1882,7 @@
         }
 
         function playWarmPadChord(freqs) {
-            if (!audioCtx) return;
+            if (!audioCtx || !masterGainNode) return;
             const now = audioCtx.currentTime;
             freqs.forEach(f => {
                 const osc = audioCtx.createOscillator();
@@ -1785,8 +1893,7 @@
                 gain.gain.linearRampToValueAtTime(0.018, now + 1.2);
                 gain.gain.exponentialRampToValueAtTime(0.0005, now + 3.8);
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                gain.connect(audioDest);
+                gain.connect(masterGainNode);
                 osc.start(now);
                 osc.stop(now + 3.9);
                 padOscNodes.push(osc);
@@ -1794,7 +1901,7 @@
         }
 
         function playBirdChirp() {
-            if (!audioCtx) return;
+            if (!audioCtx || !masterGainNode) return;
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -1810,14 +1917,13 @@
             gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.32);
 
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.connect(audioDest);
+            gain.connect(masterGainNode);
             osc.start(now);
             osc.stop(now + 0.35);
         }
 
         function playSingingBowl(pitch) {
-            if (!audioCtx) return;
+            if (!audioCtx || !masterGainNode) return;
             const now = audioCtx.currentTime;
             [1, 2.756, 5.404].forEach((ratio, idx) => {
                 const osc = audioCtx.createOscillator();
@@ -1830,8 +1936,7 @@
                 gain.gain.linearRampToValueAtTime(peak, now + 0.25);
                 gain.gain.exponentialRampToValueAtTime(0.0004, now + dur);
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                gain.connect(audioDest);
+                gain.connect(masterGainNode);
                 osc.start(now);
                 osc.stop(now + dur + 0.1);
                 padOscNodes.push(osc);
@@ -1855,6 +1960,28 @@
                 clearTimeout(windModTimeout);
                 windModTimeout = null;
             }
+        }
+
+        function setFrameStyle(frameName) {
+            state.frameStyle = frameName;
+            document.querySelectorAll('.frame-btn').forEach(btn => {
+                const isSelected = btn.dataset.frame === frameName;
+                btn.className = isSelected
+                    ? "frame-btn py-2.5 px-2 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun text-xs lg:text-sm transition-all flex flex-col items-center gap-0.5 shadow-sm"
+                    : "frame-btn py-2.5 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs lg:text-sm hover:bg-stone-50 transition-all flex flex-col items-center gap-0.5";
+            });
+            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+        }
+
+        function setColorGrade(gradeName) {
+            state.colorGrade = gradeName;
+            document.querySelectorAll('.grade-btn').forEach(btn => {
+                const isSelected = btn.dataset.grade === gradeName;
+                btn.className = isSelected
+                    ? "grade-btn py-2 px-2 border-2 border-stone-800 bg-stone-800 text-white rounded-xl font-gowun text-xs transition-all font-bold shadow-sm"
+                    : "grade-btn py-2 px-2 border-2 border-stone-200 bg-white text-stone-600 rounded-xl font-gowun text-xs hover:bg-stone-50 transition-all";
+            });
+            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
         function setFont(fontName) {
@@ -1902,7 +2029,29 @@
             return { type: 'outro', elapsed: time - acc, duration: state.outro.duration };
         }
 
+        // 미디어의 저해상도 블러 배경 그리기 헬퍼 (인트로/아웃트로/슬라이드 공용)
+        function drawBlurredBackdrop(ctx, mediaObj, cw, ch, alpha = 1.0) {
+            if (!mediaObj) return;
+            const prevAlpha = ctx.globalAlpha;
+            ctx.globalAlpha = alpha;
+            if (mediaObj.type === 'video') {
+                drawCoverImage(videoBlurCtx, mediaObj.mediaElement, videoBlurCanvas.width, videoBlurCanvas.height);
+                videoBlurCtx.fillStyle = 'rgba(18, 15, 12, 0.72)';
+                videoBlurCtx.fillRect(0, 0, videoBlurCanvas.width, videoBlurCanvas.height);
+                ctx.imageSmoothingEnabled = true;
+                ctx.drawImage(videoBlurCanvas, 0, 0, cw, ch);
+            } else {
+                if (!mediaObj.blurredBgCanvas) {
+                    mediaObj.blurredBgCanvas = createPreBlurredCanvas(mediaObj.mediaElement);
+                }
+                ctx.imageSmoothingEnabled = true;
+                ctx.drawImage(mediaObj.blurredBgCanvas, 0, 0, cw, ch);
+            }
+            ctx.globalAlpha = prevAlpha;
+        }
+
         function renderSlideImage(ctx, mediaObj, cw, ch, elapsed, alpha, extraScale = 1.0) {
+            ctx.save();
             ctx.globalAlpha = alpha;
             
             if (mediaObj.type === 'video') {
@@ -1918,29 +2067,25 @@
                         vid.currentTime = elapsed % vidDur;
                     }
                 }
-                drawCoverImage(videoBlurCtx, vid, videoBlurCanvas.width, videoBlurCanvas.height);
-                videoBlurCtx.fillStyle = 'rgba(24, 18, 12, 0.72)';
-                videoBlurCtx.fillRect(0, 0, videoBlurCanvas.width, videoBlurCanvas.height);
-                ctx.imageSmoothingEnabled = true;
-                ctx.drawImage(videoBlurCanvas, 0, 0, cw, ch);
-            } else {
-                if (!mediaObj.blurredBgCanvas) {
-                    mediaObj.blurredBgCanvas = createPreBlurredCanvas(mediaObj.mediaElement);
-                }
-                ctx.imageSmoothingEnabled = true;
-                ctx.drawImage(mediaObj.blurredBgCanvas, 0, 0, cw, ch);
+            }
+
+            // 1. 풀스크린 시네마가 아닌 경우 배경 블러 레이어 먼저 렌더링
+            if (state.frameStyle !== 'cinema') {
+                drawBlurredBackdrop(ctx, mediaObj, cw, ch, alpha);
             }
             
-            const p = Math.max(0, elapsed / (mediaObj.duration + 1.5));
+            // 2. 카메라 무빙(Ken Burns) 계산
+            const p = Math.max(0, elapsed / (mediaObj.duration + 1.2));
             let scale = 1.0, transX = 0, transY = 0;
-            const drift = 40;
+            const drift = state.frameStyle === 'cinema' ? 65 : 42;
             switch (mediaObj.effect) {
-                case 'zoom-in':   scale = 1.0 + (p * 0.08); break;
-                case 'zoom-out':  scale = 1.08 - (p * 0.08); break;
-                case 'pan-left':  scale = 1.05; transX = (drift / 2) - (p * drift); break;
-                case 'pan-right': scale = 1.05; transX = -(drift / 2) + (p * drift); break;
-                case 'pan-up':    scale = 1.05; transY = (drift / 2) - (p * drift); break;
-                case 'pan-down':  scale = 1.05; transY = -(drift / 2) + (p * drift); break;
+                case 'zoom-in':   scale = 1.0 + (p * 0.09); break;
+                case 'zoom-out':  scale = 1.09 - (p * 0.09); break;
+                case 'pan-left':  scale = 1.06; transX = (drift / 2) - (p * drift); break;
+                case 'pan-right': scale = 1.06; transX = -(drift / 2) + (p * drift); break;
+                case 'pan-up':    scale = 1.06; transY = (drift / 2) - (p * drift); break;
+                case 'pan-down':  scale = 1.06; transY = -(drift / 2) + (p * drift); break;
+                case 'none':      scale = 1.0; break;
             }
             scale *= extraScale;
             
@@ -1948,34 +2093,43 @@
             ctx.translate(cw / 2 + transX, ch / 2 + transY);
             ctx.scale(scale, scale);
             ctx.translate(-cw / 2, -ch / 2);
-            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-            ctx.shadowBlur = 40;
-            ctx.shadowOffsetY = 20;
-            drawDynamicFineArtFrame(ctx, mediaObj.mediaElement, cw, ch);
+            drawStyledArtFrame(ctx, mediaObj, cw, ch);
+            ctx.restore();
+
             ctx.restore();
         }
 
-        function drawCoverImage(ctx, media, cw, ch) {
+        function drawCoverImage(ctx, media, cw, ch, targetX = 0, targetY = 0) {
             const mediaW = media.videoWidth || media.width || cw;
             const mediaH = media.videoHeight || media.height || ch;
             const mediaRatio = mediaW / mediaH;
             const canvasRatio = cw / ch;
-            let drawW = cw, drawH = ch, offsetX = 0, offsetY = 0;
+            let drawW = cw, drawH = ch, offsetX = targetX, offsetY = targetY;
             if (mediaRatio > canvasRatio) {
                 drawW = ch * mediaRatio;
-                offsetX = (cw - drawW) / 2;
+                offsetX = targetX + (cw - drawW) / 2;
             } else {
                 drawH = cw / mediaRatio;
-                offsetY = (ch - drawH) / 2;
+                offsetY = targetY + (ch - drawH) / 2;
             }
             ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
         }
 
-        function drawDynamicFineArtFrame(ctx, media, cw, ch) {
+        // 4가지 고급 아트 프레임 테마 렌더러 (gallery, cinema, glass, polaroid)
+        function drawStyledArtFrame(ctx, mediaObj, cw, ch) {
+            const media = mediaObj.mediaElement;
             const isVertical = ch > cw;
-            const paddingX = isVertical ? 120 : 250;
-            const paddingTop = isVertical ? 300 : 150;
-            const paddingBottom = isVertical ? 450 : 250;
+            const style = state.frameStyle || 'gallery';
+
+            if (style === 'cinema') {
+                // 풀스크린 시네마: 화면 전체 커버리지
+                drawCoverImage(ctx, media, cw, ch, 0, 0);
+                return;
+            }
+
+            const paddingX = isVertical ? 110 : 230;
+            const paddingTop = isVertical ? 260 : 130;
+            const paddingBottom = style === 'polaroid' ? (isVertical ? 520 : 280) : (isVertical ? 430 : 240);
             const availW = cw - (paddingX * 2);
             const availH = ch - paddingTop - paddingBottom;
             const mediaW = media.videoWidth || media.width || cw;
@@ -1989,13 +2143,174 @@
             const offsetX = (cw - drawW) / 2;
             const offsetY = paddingTop + (availH - drawH) / 2;
 
-            ctx.fillStyle = '#fefefe';
-            const borderSize = isVertical ? 20 : 16;
-            ctx.fillRect(offsetX - borderSize, offsetY - borderSize, drawW + (borderSize * 2), drawH + (borderSize * 2));
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(offsetX, offsetY, drawW, drawH);
-            ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
+            if (style === 'gallery') {
+                // 🖼️ 미술관 갤러리 매트 액자 (넓은 아이보리 매트 + 안쪽 골드·다크 베벨 라인)
+                const matSide = isVertical ? 28 : 22;
+                const matBottom = isVertical ? 38 : 28;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.75)';
+                ctx.shadowBlur = 50;
+                ctx.shadowOffsetY = 24;
+                ctx.fillStyle = '#faf8f5';
+                ctx.fillRect(offsetX - matSide, offsetY - matSide, drawW + matSide * 2, drawH + matSide + matBottom);
+                ctx.restore();
+
+                // 바깥 미세 골드 프레임 보더
+                ctx.strokeStyle = 'rgba(180, 155, 115, 0.45)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(offsetX - matSide + 6, offsetY - matSide + 6, drawW + (matSide - 6) * 2, drawH + matSide + matBottom - 12);
+
+                ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
+
+                // 사진 안쪽 음각 라인
+                ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(offsetX, offsetY, drawW, drawH);
+            } else if (style === 'glass') {
+                // ✨ 소프트 글래스 (라운드 코너 + 반투명 유리 보더)
+                const radius = isVertical ? 36 : 28;
+                const borderPad = isVertical ? 18 : 14;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.65)';
+                ctx.shadowBlur = 45;
+                ctx.shadowOffsetY = 20;
+                drawRoundedRectPath(ctx, offsetX - borderPad, offsetY - borderPad, drawW + borderPad * 2, drawH + borderPad * 2, radius + 8);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+                ctx.fill();
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.save();
+                drawRoundedRectPath(ctx, offsetX, offsetY, drawW, drawH, radius);
+                ctx.clip();
+                ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
+                ctx.restore();
+            } else if (style === 'polaroid') {
+                // 📷 아날로그 필름 인화지 (하단 여백에 날짜 스탬프 각인)
+                const sidePad = isVertical ? 26 : 20;
+                const topPad = isVertical ? 26 : 20;
+                const bottomPad = isVertical ? 130 : 95;
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 48;
+                ctx.shadowOffsetY = 22;
+                ctx.fillStyle = '#fbf9f5';
+                ctx.fillRect(offsetX - sidePad, offsetY - topPad, drawW + sidePad * 2, drawH + topPad + bottomPad);
+                ctx.restore();
+
+                ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
+                ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(offsetX, offsetY, drawW, drawH);
+
+                // 인화지 하단 스탬프
+                if (state.dateStamp) {
+                    ctx.save();
+                    ctx.fillStyle = '#78716c';
+                    ctx.font = `500 ${isVertical ? 24 : 20}px "Cormorant Garamond", "Pretendard", serif`;
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(state.dateStamp, offsetX + drawW - 6, offsetY + drawH + (bottomPad * 0.55));
+                    ctx.restore();
+                }
+            }
+        }
+
+        // 시네마틱 색감 보정(Color Grading) & 대각선 햇살(Sun-ray) 오버레이
+        function applyColorGradeAndSunRays(ctx, width, height) {
+            const grade = state.colorGrade || 'warm';
+            ctx.save();
+
+            if (grade === 'warm') {
+                // 따스한 오후 햇살: 좌상단에서 스며드는 황금빛 햇살 그라데이션
+                const sunGrad = ctx.createLinearGradient(0, 0, width * 0.85, height * 0.75);
+                sunGrad.addColorStop(0, 'rgba(255, 205, 125, 0.22)');
+                sunGrad.addColorStop(0.45, 'rgba(255, 185, 105, 0.08)');
+                sunGrad.addColorStop(1, 'rgba(20, 15, 10, 0.12)');
+                ctx.fillStyle = sunGrad;
+                ctx.fillRect(0, 0, width, height);
+            } else if (grade === 'forest') {
+                // 깊은 안개숲: 차분한 에메랄드·틸 섀도우 틴트
+                const forestGrad = ctx.createLinearGradient(0, 0, 0, height);
+                forestGrad.addColorStop(0, 'rgba(16, 55, 48, 0.18)');
+                forestGrad.addColorStop(0.5, 'rgba(12, 38, 34, 0.08)');
+                forestGrad.addColorStop(1, 'rgba(8, 24, 20, 0.28)');
+                ctx.fillStyle = forestGrad;
+                ctx.fillRect(0, 0, width, height);
+            } else if (grade === 'nostalgia') {
+                // 필름 노스탤지어: 바랜 듯한 세피아 크림 매트 톤
+                ctx.fillStyle = 'rgba(215, 185, 140, 0.14)';
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = 'rgba(35, 28, 22, 0.12)';
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            ctx.restore();
+        }
+
+        // 산림 보케(Bokeh) 빛망울 렌더링
+        function drawBokehParticles(ctx, width, height, timeInSeconds) {
+            ctx.save();
+            particles.forEach((p, idx) => {
+                if (state.isPlaying || state.isRecording) {
+                    p.nx += p.vx;
+                    p.ny += p.vy;
+                    if (p.nx < -0.05) p.nx = 1.05;
+                    if (p.nx > 1.05) p.nx = -0.05;
+                    if (p.ny < -0.05) p.ny = 1.05;
+                    if (p.ny > 1.05) p.ny = -0.05;
+                }
+                const x = p.nx * width;
+                const y = p.ny * height;
+                const pulse = 0.55 + 0.45 * Math.sin(timeInSeconds * 1.6 + p.phase);
+
+                if (p.radius > 10) {
+                    // 부드러운 방사형 빛망울 보케
+                    const grad = ctx.createRadialGradient(x, y, 0, x, y, p.radius);
+                    grad.addColorStop(0, `rgba(${p.tint}, ${(0.22 * pulse).toFixed(3)})`);
+                    grad.addColorStop(0.6, `rgba(${p.tint}, ${(0.09 * pulse).toFixed(3)})`);
+                    grad.addColorStop(1, `rgba(${p.tint}, 0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(x, y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // 반짝이는 미세 숲 먼지 입자
+                    ctx.fillStyle = `rgba(${p.tint}, ${(0.42 * pulse).toFixed(3)})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            ctx.restore();
+        }
+
+        // 에디토리얼 장식 디바이더 라인 그리기
+        function drawEditorialDivider(ctx, cx, cy, halfWidth, alpha = 1.0) {
+            ctx.save();
+            ctx.globalAlpha = alpha * 0.75;
+            ctx.strokeStyle = '#d6d3d1';
+            ctx.lineWidth = 1.5;
+
+            ctx.beginPath();
+            ctx.moveTo(cx - halfWidth, cy);
+            ctx.lineTo(cx - 18, cy);
+            ctx.moveTo(cx + 18, cy);
+            ctx.lineTo(cx + halfWidth, cy);
+            ctx.stroke();
+
+            // 중앙 작은 다이아몬드 포인트
+            ctx.fillStyle = '#e7e5e4';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 5);
+            ctx.lineTo(cx + 5, cy);
+            ctx.lineTo(cx, cy + 5);
+            ctx.lineTo(cx - 5, cy);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
         }
 
         function drawFrame(timeInSeconds) {
@@ -2003,39 +2318,94 @@
             const width = elements.canvas.width;
             const height = elements.canvas.height;
             const isVertical = height > width;
-            ctx.fillStyle = '#111827';
+            ctx.fillStyle = '#0f1419';
             ctx.fillRect(0, 0, width, height);
 
             if (state.images.length === 0) return;
+
+            if (state.isPlaying || state.isRecording) {
+                updateMasterAudioEnvelope(timeInSeconds);
+            }
+
             const scene = getSceneContext(timeInSeconds);
             const activeVideoIndices = new Set();
 
             const isPenFont = state.fontFamily === 'Nanum Pen Script';
-            let fontSizeIntroTitle = (isVertical ? 80 : 110) * (isPenFont ? 1.18 : 1);
-            let fontSizeIntroSubtitle = (isVertical ? 48 : 64) * (isPenFont ? 1.18 : 1);
-            let fontSizeSlide = (isVertical ? 56 : 72) * (isPenFont ? 1.2 : 1);
-            let lineHeightSlide = isVertical ? 76 : 98;
+            let fontSizeIntroTitle = (isVertical ? 76 : 102) * (isPenFont ? 1.18 : 1);
+            let fontSizeIntroSubtitle = (isVertical ? 42 : 54) * (isPenFont ? 1.18 : 1);
+            let fontSizeSlide = (isVertical ? 54 : 68) * (isPenFont ? 1.2 : 1);
+            let lineHeightSlide = isVertical ? 76 : 96;
 
             if (scene.type === 'intro' || scene.type === 'outro') {
                 const data = scene.type === 'intro' ? state.intro : state.outro;
-                let alpha = Math.min(scene.elapsed / 1.5, 1);
-                if (scene.type === 'intro' && scene.duration - scene.elapsed < 1) {
-                    alpha = Math.max(0, scene.duration - scene.elapsed);
+                // 인트로에는 첫 번째 슬라이드, 아웃트로에는 마지막 슬라이드의 블러 실루엣을 은은하게 배경으로 배치
+                const refMedia = scene.type === 'intro' ? state.images[0] : state.images[state.images.length - 1];
+                drawBlurredBackdrop(ctx, refMedia, width, height, 0.55);
+
+                // 깊이감 있는 다크 비네팅 오버레이
+                const bgGrad = ctx.createRadialGradient(width / 2, height / 2, width * 0.1, width / 2, height / 2, width * 0.95);
+                bgGrad.addColorStop(0, 'rgba(12, 16, 20, 0.55)');
+                bgGrad.addColorStop(1, 'rgba(8, 10, 14, 0.88)');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                applyColorGradeAndSunRays(ctx, width, height);
+                drawBokehParticles(ctx, width, height, timeInSeconds);
+
+                let alpha = Math.min(scene.elapsed / 1.4, 1);
+                if (scene.type === 'intro' && scene.duration - scene.elapsed < 0.9) {
+                    alpha = Math.max(0, (scene.duration - scene.elapsed) / 0.9);
                 }
-                ctx.globalAlpha = alpha;
+                const revealP = Math.min(1, scene.elapsed / 1.3);
+
+                ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                
-                ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                ctx.shadowBlur = 10;
-                ctx.fillStyle = '#f5f5f4';
-                ctx.font = `${scene.type === 'intro' ? '400' : '300'} ${scene.type === 'intro' ? fontSizeIntroTitle : Math.round(fontSizeIntroTitle * 0.72)}px "${state.fontFamily}", sans-serif`;
-                drawWrapText(ctx, data.title, width / 2, height / 2 - (isVertical ? 60 : 40), width * 0.85, Math.round(fontSizeIntroTitle * (scene.type === 'intro' ? 1.25 : 0.92)));
 
-                // 서브 문구에도 사용자가 선택한 글씨체가 일관되게 반영되도록 개선
-                ctx.fillStyle = '#a8a29e';
+                // 상단 에디토리얼 영문/날짜 캡션
+                if (state.dateStamp) {
+                    ctx.globalAlpha = alpha * easeOutCubic(revealP) * 0.8;
+                    ctx.fillStyle = '#d6d3d1';
+                    ctx.font = `500 ${isVertical ? 26 : 28}px "Cormorant Garamond", "Pretendard", serif`;
+                    if ('letterSpacing' in ctx) ctx.letterSpacing = '6px';
+                    ctx.fillText(state.dateStamp.toUpperCase(), width / 2, height / 2 - (isVertical ? 210 : 185));
+                    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+                }
+
+                // 메인 타이틀 (줄별 시차 리빌 모션)
+                ctx.shadowColor = 'rgba(0,0,0,0.65)';
+                ctx.shadowBlur = 16;
+                ctx.fillStyle = '#fafaf9';
+                const titleFontSize = scene.type === 'intro' ? fontSizeIntroTitle : Math.round(fontSizeIntroTitle * 0.74);
+                ctx.font = `${scene.type === 'intro' ? '400' : '300'} ${titleFontSize}px "${state.fontFamily}", sans-serif`;
+                drawWrapText(
+                    ctx,
+                    data.title,
+                    width / 2,
+                    height / 2 - (isVertical ? 45 : 30),
+                    width * 0.82,
+                    Math.round(titleFontSize * 1.32),
+                    revealP,
+                    alpha
+                );
+
+                // 중앙 에디토리얼 디바이더
+                drawEditorialDivider(ctx, width / 2, height / 2 + (isVertical ? 65 : 62), isVertical ? 140 : 180, alpha * easeOutCubic(revealP));
+
+                // 하단 서브타이틀
+                ctx.fillStyle = '#d6d3d1';
                 ctx.font = `300 ${fontSizeIntroSubtitle}px "${state.fontFamily}", sans-serif`;
-                drawWrapText(ctx, data.subtitle, width / 2, height / 2 + (isVertical ? 85 : 95), width * 0.85, Math.round(fontSizeIntroSubtitle * 1.25));
+                drawWrapText(
+                    ctx,
+                    data.subtitle,
+                    width / 2,
+                    height / 2 + (isVertical ? 135 : 130),
+                    width * 0.82,
+                    Math.round(fontSizeIntroSubtitle * 1.28),
+                    Math.max(0, (scene.elapsed - 0.25) / 1.2),
+                    alpha * 0.9
+                );
+                ctx.restore();
             } else if (scene.type === 'slide') {
                 const imgObj = state.images[scene.index];
                 activeVideoIndices.add(scene.index);
@@ -2043,7 +2413,6 @@
                 const isTransitioning = (scene.elapsed < fadeDuration && state.transitionEffect !== 'none');
                 
                 if (isTransitioning && scene.index === 0) {
-                    // 첫 번째 슬라이드 진입 시에도 선택한 전환 효과 느낌을 부드럽게 적용
                     const progress = easeInOutCubic(Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0)));
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, progress);
                 } else if (isTransitioning && scene.index > 0) {
@@ -2143,56 +2512,57 @@
                     renderSlideImage(ctx, imgObj, width, height, scene.elapsed, 1.0);
                 }
 
+                // 시네마틱 색감 필터 및 보케 빛망울 적용
+                applyColorGradeAndSunRays(ctx, width, height);
+
                 ctx.globalAlpha = 1.0;
-                const vignette = ctx.createRadialGradient(width / 2, height / 2, width / 2.5, width / 2, height / 2, width * 1.2);
+                const vignette = ctx.createRadialGradient(width / 2, height / 2, width / 2.2, width / 2, height / 2, width * 1.15);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)');
-                vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
+                vignette.addColorStop(1, 'rgba(0,0,0,0.72)');
                 ctx.fillStyle = vignette;
                 ctx.fillRect(0, 0, width, height);
 
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                particles.forEach(p => {
-                    if (state.isPlaying || state.isRecording) {
-                        p.nx += p.vx;
-                        p.ny += p.vy;
-                        if (p.nx < 0) p.nx = 1;
-                        if (p.nx > 1) p.nx = 0;
-                        if (p.ny < 0) p.ny = 1;
-                        if (p.ny > 1) p.ny = 0;
-                    }
-                    ctx.beginPath();
-                    ctx.arc(p.nx * width, p.ny * height, p.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                });
+                drawBokehParticles(ctx, width, height, timeInSeconds);
 
-                const gradHeight = isVertical ? 600 : 400;
+                // 풀스크린 시네마 모드일 때 상하단 영화관 레터박스 바 연출
+                if (state.frameStyle === 'cinema') {
+                    const barH = isVertical ? 150 : 95;
+                    ctx.fillStyle = 'rgba(8, 10, 12, 0.92)';
+                    ctx.fillRect(0, 0, width, barH);
+                    ctx.fillRect(0, height - barH, width, barH);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(0, barH); ctx.lineTo(width, barH);
+                    ctx.moveTo(0, height - barH); ctx.lineTo(width, height - barH);
+                    ctx.stroke();
+                }
+
+                // 하단 자막 가독성 그라데이션
+                const gradHeight = isVertical ? 560 : 380;
                 const gradient = ctx.createLinearGradient(0, height - gradHeight, 0, height);
-                gradient.addColorStop(0, 'rgba(15, 15, 15, 0)');
-                gradient.addColorStop(0.7, 'rgba(15, 15, 15, 0.9)');
-                gradient.addColorStop(1, 'rgba(15, 15, 15, 1)');
+                gradient.addColorStop(0, 'rgba(12, 12, 12, 0)');
+                gradient.addColorStop(0.68, 'rgba(12, 12, 12, 0.78)');
+                gradient.addColorStop(1, 'rgba(12, 12, 12, 0.95)');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, height - gradHeight, width, gradHeight);
 
+                // 에디토리얼 자막 및 상단 장식선
+                ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 const currentPhrase = imgObj.phrase || "";
-                const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "") : "";
-                const textY = height - (isVertical ? 220 : 160);
-                ctx.fillStyle = '#e7e5e4';
-                ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`;
-                ctx.shadowColor = 'rgba(0,0,0,0.9)';
-                ctx.shadowBlur = 10;
+                const textY = height - (state.frameStyle === 'cinema' ? (isVertical ? 250 : 185) : (isVertical ? 215 : 155));
 
-                if (isTransitioning && scene.index > 0 && prevPhrase !== currentPhrase) {
-                    const pAlpha = easeInOutCubic(Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0)));
-                    ctx.globalAlpha = 1 - pAlpha;
-                    drawWrapText(ctx, prevPhrase, width / 2, textY, width * 0.85, lineHeightSlide);
-                    ctx.globalAlpha = pAlpha;
-                    drawWrapText(ctx, currentPhrase, width / 2, textY, width * 0.85, lineHeightSlide);
-                } else {
-                    ctx.globalAlpha = 1.0;
-                    drawWrapText(ctx, currentPhrase, width / 2, textY, width * 0.85, lineHeightSlide);
-                }
+                const textRevealP = Math.min(1.0, scene.elapsed / 1.1);
+                drawEditorialDivider(ctx, width / 2, textY - (isVertical ? 82 : 68), isVertical ? 90 : 120, easeOutCubic(textRevealP));
+
+                ctx.fillStyle = '#f5f5f4';
+                ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`;
+                ctx.shadowColor = 'rgba(0,0,0,0.75)';
+                ctx.shadowBlur = 14;
+                drawWrapText(ctx, currentPhrase, width / 2, textY, width * 0.84, lineHeightSlide, textRevealP, 1.0);
+                ctx.restore();
             }
 
             state.images.forEach((item, idx) => {
@@ -2201,32 +2571,73 @@
                 }
             });
             
+            // 5. 우측 상단 프리미엄 워터마크 배지 렌더링
+            drawWatermarkBadge(ctx, width, height, isVertical);
+        }
+
+        function drawWatermarkBadge(ctx, width, height, isVertical) {
+            if (!watermarkLogo.complete || watermarkLogo.naturalWidth === 0) return;
+            ctx.save();
             ctx.globalAlpha = 1.0;
-            if (processedLogoCanvas) {
-                const originalLogoW = isVertical ? 350 : 280;
+
+            const badgeStyle = state.logoBadgeStyle || 'glass';
+            const targetLogoW = isVertical ? 300 : 250;
+            const targetLogoH = watermarkLogo.naturalHeight * (targetLogoW / watermarkLogo.naturalWidth);
+            const marginX = isVertical ? 56 : 48;
+            const marginY = state.frameStyle === 'cinema'
+                ? (isVertical ? 175 : 118)
+                : (isVertical ? 88 : 42);
+
+            if (badgeStyle === 'glass') {
+                // ✨ 글래스모피즘 캡슐 배지 (프로스티드 화이트 필 배지)
+                const padX = isVertical ? 28 : 22;
+                const padY = isVertical ? 16 : 13;
+                const boxW = targetLogoW + padX * 2;
+                const boxH = targetLogoH + padY * 2;
+                const boxX = width - boxW - marginX;
+                const boxY = marginY;
+
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+                ctx.shadowBlur = 20;
+                ctx.shadowOffsetY = 6;
+                drawRoundedRectPath(ctx, boxX, boxY, boxW, boxH, boxH / 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.90)';
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.98)';
+                ctx.stroke();
+
+                ctx.shadowBlur = 0;
+                ctx.shadowColor = 'transparent';
+                ctx.drawImage(watermarkLogo, boxX + padX, boxY + padY, targetLogoW, targetLogoH);
+            } else if (badgeStyle === 'minimal') {
+                // 🌿 미니멀 반투명 소프트 배지
+                const padX = 22, padY = 12;
+                const boxW = targetLogoW + padX * 2;
+                const boxH = targetLogoH + padY * 2;
+                const boxX = width - boxW - marginX;
+                const boxY = marginY;
+
+                drawRoundedRectPath(ctx, boxX, boxY, boxW, boxH, 18);
+                ctx.fillStyle = 'rgba(250, 250, 249, 0.78)';
+                ctx.fill();
+                ctx.drawImage(watermarkLogo, boxX + padX, boxY + padY, targetLogoW, targetLogoH);
+            } else if (processedLogoCanvas) {
+                // 🤍 화이트 실루엣 (기본형)
+                const originalLogoW = isVertical ? 330 : 270;
                 const scale = originalLogoW / watermarkLogo.naturalWidth;
                 const outline = 6;
                 const logoW = processedLogoCanvas.width * scale;
                 const logoH = processedLogoCanvas.height * scale;
-                const logoX = width - originalLogoW - (isVertical ? 60 : 50) - (outline * scale);
-                const logoY = (isVertical ? 100 : 40) - (outline * scale);
-                
-                ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                const logoX = width - originalLogoW - marginX - (outline * scale);
+                const logoY = marginY - (outline * scale);
+                ctx.shadowColor = 'rgba(0,0,0,0.28)';
                 ctx.shadowBlur = 8;
                 ctx.shadowOffsetY = 2;
                 ctx.drawImage(processedLogoCanvas, logoX, logoY, logoW, logoH);
-            } else if (watermarkLogo.complete && watermarkLogo.naturalWidth > 0) {
-                const logoW = isVertical ? 350 : 280;
-                const logoH = watermarkLogo.naturalHeight * (logoW / watermarkLogo.naturalWidth);
-                const logoX = width - logoW - (isVertical ? 60 : 50);
-                const logoY = isVertical ? 100 : 40;
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = 6;
-                ctx.drawImage(watermarkLogo, logoX, logoY, logoW, logoH);
             }
-            ctx.shadowBlur = 0;
-            ctx.shadowColor = 'transparent';
-            ctx.shadowOffsetY = 0;
+
+            ctx.restore();
         }
 
         function togglePlay() {
@@ -2246,6 +2657,9 @@
                 state.isPlaying = true;
                 state.lastTimestamp = performance.now();
                 if (state.currentTime >= state.totalDuration) state.currentTime = 0;
+                if (masterGainNode && audioCtx) {
+                    masterGainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                }
                 if (isProceduralBgm(elements.bgmSelect.value)) {
                     startProceduralAmbient(elements.bgmSelect.value);
                 } else if (elements.bgmAudio.src && elements.bgmSelect.value !== '') {
@@ -2313,10 +2727,13 @@
             state.isRecording = true;
             elements.loadingOverlay.style.display = 'flex';
             elements.exportBtn.disabled = true;
-            elements.loadingTitle.textContent = "고화질 영상 렌더링 중...";
+            elements.loadingTitle.textContent = "고화질 시네마틱 영상 렌더링 중...";
             elements.loadingSubtitle.textContent = "영상이 완성될 때까지 현재 브라우저 탭을 유지해 주세요.";
             setupAudioRouting();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            if (masterGainNode && audioCtx) {
+                masterGainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            }
 
             let canvasStream;
             try {
@@ -2374,7 +2791,7 @@
                 elements.exportBtn.disabled = false;
                 drawFrame(0);
                 if (currentUser) saveProjectToDB('final');
-                else showToast("영상이 기기에 다운로드되었습니다.");
+                else showToast("고화질 영상이 기기에 다운로드되었습니다.");
             };
             
             if (isProceduralBgm(elements.bgmSelect.value)) {
@@ -2417,7 +2834,6 @@
             const files = Array.from(e.dataTransfer ? e.dataTransfer.files : (e.target.files || []));
             if (!files.length) return;
 
-            // 이어하기 프로젝트 파일(.json)이 드롭되거나 선택된 경우 즉시 복원 실행
             const jsonFile = files.find(f => f.name.toLowerCase().endsWith('.json') || f.type === 'application/json');
             if (jsonFile) {
                 if (elements.imageUpload) elements.imageUpload.value = '';
@@ -2469,7 +2885,7 @@
                                 mediaElement: video,
                                 src: dataUrl,
                                 rawFile: file,
-                                effect: 'none',
+                                effect: 'zoom-in',
                                 phrase: getRandomPhrase(),
                                 duration: Math.min(15, Math.max(3, Math.floor(video.duration || 4)))
                             });
@@ -2628,7 +3044,7 @@
                 phraseBox.className = 'flex gap-1 w-full relative';
 
                 const phraseArea = document.createElement('textarea');
-                phraseArea.className = 'w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 pr-8 text-xs lg:text-sm font-gowun text-stone-700 resize-none h-[60px] focus:outline-none focus:border-stone-400';
+                phraseArea.className = 'w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 pr-8 text-xs lg:text-sm font-gowun text-stone-700 resize-none h-[56px] focus:outline-none focus:border-stone-400';
                 phraseArea.placeholder = '감성 문구';
                 phraseArea.value = data.phrase || '';
                 phraseArea.addEventListener('input', (e) => updateState('slide', index, 'phrase', e.target.value));
@@ -2646,7 +3062,10 @@
             }
 
             const controlsRow = document.createElement('div');
-            controlsRow.className = 'flex justify-between items-center mt-2';
+            controlsRow.className = 'flex flex-wrap justify-between items-center gap-2 mt-2';
+
+            const leftControlGroup = document.createElement('div');
+            leftControlGroup.className = 'flex items-center gap-2 flex-wrap';
 
             const durationBox = document.createElement('div');
             durationBox.className = 'flex items-center gap-1 text-[11px] lg:text-xs text-stone-500 font-gowun';
@@ -2657,7 +3076,7 @@
             durationInput.min = '0.5';
             durationInput.max = '100';
             durationInput.step = '0.5';
-            durationInput.className = 'w-12 bg-transparent border-b border-stone-300 text-center font-bold text-stone-700 focus:outline-none';
+            durationInput.className = 'w-11 bg-transparent border-b border-stone-300 text-center font-bold text-stone-700 focus:outline-none';
             durationInput.value = data.duration;
             durationInput.addEventListener('input', (e) => {
                 const parsed = parseFloat(e.target.value);
@@ -2674,14 +3093,34 @@
             });
 
             const unitSpan = document.createElement('span');
-            unitSpan.textContent = '초 재생';
+            unitSpan.textContent = '초';
             durationBox.appendChild(durationInput);
             durationBox.appendChild(unitSpan);
-            controlsRow.appendChild(durationBox);
+            leftControlGroup.appendChild(durationBox);
+
+            // 슬라이드별 카메라 무빙(Ken Burns) 개별 선택 셀렉트 박스
+            if (type === 'slide') {
+                const effectSelect = document.createElement('select');
+                effectSelect.className = 'bg-white border border-stone-200 rounded-lg px-2 py-1 text-[11px] font-gowun text-stone-600 focus:outline-none focus:border-stone-400 cursor-pointer';
+                effectSelect.title = '이 장면의 카메라 움직임 설정';
+                Object.entries(effectLabels).forEach(([val, label]) => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = label;
+                    if ((data.effect || 'zoom-in') === val) opt.selected = true;
+                    effectSelect.appendChild(opt);
+                });
+                effectSelect.addEventListener('change', (e) => {
+                    updateState('slide', index, 'effect', e.target.value);
+                });
+                leftControlGroup.appendChild(effectSelect);
+            }
+
+            controlsRow.appendChild(leftControlGroup);
 
             if (type === 'slide') {
                 const actionGroup = document.createElement('div');
-                actionGroup.className = 'flex items-center gap-1';
+                actionGroup.className = 'flex items-center gap-0.5';
 
                 const upBtn = document.createElement('button');
                 upBtn.type = 'button';
@@ -2701,7 +3140,7 @@
 
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
-                delBtn.className = 'text-stone-400 hover:text-red-500 transition-colors p-1 ml-1';
+                delBtn.className = 'text-stone-400 hover:text-red-500 transition-colors p-1 ml-0.5';
                 delBtn.title = '제거';
                 delBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
                 delBtn.addEventListener('click', () => removeImage(index));
@@ -2809,7 +3248,6 @@
         }
 
         function init() {
-            // 로그인 상태 복원
             if (currentUser) {
                 elements.loginBtn.classList.add('hidden');
                 elements.userMenu.classList.remove('hidden');
@@ -2822,7 +3260,6 @@
             }
             updateGdriveUiStatus();
 
-            // 모달 및 워크스페이스 이벤트 바인딩
             elements.loginBtn.addEventListener('click', () => { elements.loginModal.style.display = 'flex'; });
             elements.closeLoginBtn.addEventListener('click', () => { elements.loginModal.style.display = 'none'; });
             elements.loginOpenTransferBtn.addEventListener('click', () => {
@@ -2831,7 +3268,6 @@
             });
 
             elements.mockLoginBtn.addEventListener('click', () => {
-                // Google Client ID가 등록되어 있으면 실제 Google OAuth 로그인을 실행하고, 없으면 간편 로컬 로그인으로 즉시 시작
                 if (state.googleClientId && state.googleClientId.trim() !== '') {
                     connectGoogleDriveAccount();
                     return;
@@ -2858,7 +3294,6 @@
                 });
             });
 
-            // 모바일 ↔ PC 이어하기 허브 모달 이벤트
             elements.openTransferBtn.addEventListener('click', () => {
                 if (elements.googleClientIdInput) elements.googleClientIdInput.value = state.googleClientId || '';
                 updateGdriveUiStatus();
@@ -2884,7 +3319,6 @@
                 e.target.value = '';
             });
 
-            // Google Drive Client ID 저장 및 연결 이벤트
             elements.saveClientIdBtn.addEventListener('click', () => {
                 const val = (elements.googleClientIdInput.value || '').trim();
                 state.googleClientId = val;
@@ -2925,7 +3359,6 @@
             elements.importProjectsBtn.addEventListener('click', () => elements.importFileInput.click());
             elements.importFileInput.addEventListener('change', importProjectsFromFile);
 
-            // 오디오 및 BGM 이벤트 (내장 5종 사운드스케이프 + 외부 음원 + 커스텀 음원)
             elements.bgmSelect.addEventListener('change', (e) => {
                 const val = e.target.value;
                 if (val === 'custom') {
@@ -3014,6 +3447,22 @@
                 if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
 
+            // 신규 프리미엄 연출 컨트롤 이벤트 바인딩
+            document.querySelectorAll('.frame-btn').forEach(btn => {
+                btn.addEventListener('click', () => setFrameStyle(btn.dataset.frame));
+            });
+            document.querySelectorAll('.grade-btn').forEach(btn => {
+                btn.addEventListener('click', () => setColorGrade(btn.dataset.grade));
+            });
+            elements.dateStampInput.addEventListener('input', (e) => {
+                state.dateStamp = e.target.value;
+                if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            });
+            elements.logoBadgeSelect.addEventListener('change', (e) => {
+                state.logoBadgeStyle = e.target.value;
+                if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            });
+
             elements.saveDraftBtn.addEventListener('click', () => saveProjectToDB('draft'));
             elements.ratioVertical.addEventListener('click', () => setAspectRatio('vertical'));
             elements.ratioHorizontal.addEventListener('click', () => setAspectRatio('horizontal'));
@@ -3049,7 +3498,6 @@
             updateDurations();
             updateUI();
 
-            // 8종 웹폰트 전체 사전 로딩 (첫 선택 시 깜빡임 방지)
             if (document.fonts && document.fonts.ready) {
                 Promise.all(ALL_FONTS.map(f => document.fonts.load(`16px "${f}"`))).then(() => {
                     ALL_FONTS.forEach(f => {
@@ -3065,4 +3513,4 @@
         init();
     </script>
 </body>
-    </html>
+</html>
