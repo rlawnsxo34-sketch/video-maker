@@ -22,7 +22,62 @@
 
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@300;400;600&family=Song+Myung&family=Sunflower:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Do+Hyeon&family=Gaegu:wght@400;700&family=Gothic+A1:wght@400;600;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Hi+Melody&family=Jua&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Noto+Serif+KR:wght@300;400;600&family=Song+Myung&family=Sunflower:wght@300;500;700&family=Yeon+Sung&display=swap');
+
+        @font-face {
+            font-family: 'MaruBuri';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/MaruBuri-Regular.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'RIDIBatang';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Chosunilbo_myungjo';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'S-CoreDream';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'GmarketSansMedium';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'SUIT-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_suit@1.0/SUIT-Medium.woff2') format('woff2');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'KyoboHand';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/KyoboHand.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Cafe24Oneprettynight';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.1/Cafe24Oneprettynight.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'GangwonEdu_OTFBoldA';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEdu_OTFBoldA.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
 
         /* 한글 서브픽셀 렌더링(ClearType) 선명도 유지 및 어색한 단어 쪼개짐 방지 */
         * {
@@ -475,26 +530,82 @@
 
                     <!-- 글씨체 (8종), 자막 스타일 및 트랜지션 (10종 + 컷 편집) -->
                     <section data-panel-section="sticker" class="hidden flex-col gap-5 p-4 sm:p-5 lg:p-6 bg-stone-50 rounded-2xl border-2 border-stone-300">
-                        <div class="flex flex-col gap-2.5">
+                        <div class="flex flex-col gap-3">
                             <div class="flex flex-wrap justify-between items-center gap-2">
                                 <h2 class="text-base sm:text-lg lg:text-[19px] font-extrabold text-zinc-950 flex items-center gap-2 whitespace-nowrap">
-                                    <i data-lucide="type" class="w-5 h-5 text-zinc-800 shrink-0"></i> 글씨체 설정 (8종)
+                                    <i data-lucide="type" class="w-5 h-5 text-zinc-800 shrink-0"></i> 글씨체 스튜디오 (24종 + 내 폰트)
                                 </h2>
-                                <span class="text-xs sm:text-sm font-bold text-zinc-800 bg-white px-2.5 py-1 rounded-lg border border-stone-300 whitespace-nowrap">모션 타이포그래피 적용</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button id="upload-custom-font-btn" type="button" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-900 border-2 border-emerald-400 rounded-lg text-xs font-extrabold transition flex items-center gap-1 shadow-sm whitespace-nowrap" title="내 PC나 휴대폰에 있는 .ttf, .otf, .woff 폰트 파일을 직접 불러옵니다">
+                                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> 내 폰트(.ttf/.otf) 추가
+                                    </button>
+                                    <input id="custom-font-input" type="file" accept=".ttf,.otf,.woff,.woff2" class="hidden">
+                                </div>
                             </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="font-selector">
-                                <button data-font="Gowun Dodum" class="font-btn py-3 px-2.5 border-2 border-zinc-900 bg-zinc-900 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base font-bold shadow-sm whitespace-nowrap" style="font-family: 'Gowun Dodum';">고운 돋움</button>
-                                <button data-font="Noto Serif KR" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Noto Serif KR';">클래식 명조</button>
-                                <button data-font="Gowun Batang" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Gowun Batang';">고운 바탕</button>
-                                <button data-font="Pretendard" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Pretendard';">프리텐다드</button>
-                                <button data-font="Nanum Myeongjo" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Nanum Myeongjo';">나눔명조</button>
-                                <button data-font="Song Myung" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-normal whitespace-nowrap" style="font-family: 'Song Myung';">송명 타이틀</button>
-                                <button data-font="Nanum Pen Script" class="font-btn py-2.5 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-lg lg:text-xl font-normal whitespace-nowrap" style="font-family: 'Nanum Pen Script';">나눔 손글씨</button>
-                                <button data-font="Sunflower" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Sunflower';">해바라기체</button>
+
+                            <!-- 분위기별 글씨체 카테고리 필터 탭 -->
+                            <div class="flex flex-wrap gap-1.5" id="font-category-tabs">
+                                <button type="button" data-font-filter="all" class="font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-zinc-900 text-white border border-zinc-900 transition whitespace-nowrap">전체 (24종)</button>
+                                <button type="button" data-font-filter="serif" class="font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-white text-zinc-800 border border-stone-300 hover:bg-stone-100 transition whitespace-nowrap">🌿 감성 명조·바탕 (6)</button>
+                                <button type="button" data-font-filter="sans" class="font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-white text-zinc-800 border border-stone-300 hover:bg-stone-100 transition whitespace-nowrap">🎬 시네마 고딕 (6)</button>
+                                <button type="button" data-font-filter="hand" class="font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-white text-zinc-800 border border-stone-300 hover:bg-stone-100 transition whitespace-nowrap">✍️ 다정한 손글씨 (6)</button>
+                                <button type="button" data-font-filter="display" class="font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-white text-zinc-800 border border-stone-300 hover:bg-stone-100 transition whitespace-nowrap">🏛️ 타이틀·붓글씨 (6)</button>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-[250px] overflow-y-auto pr-1" id="font-selector">
+                                <!-- 기존 8종 (레이블 완벽 보존) -->
+                                <button type="button" data-font="Gowun Dodum" data-font-cat="sans" class="font-btn py-3 px-2.5 border-2 border-zinc-900 bg-zinc-900 text-white rounded-xl flex justify-center items-center transition-all text-sm lg:text-base font-bold shadow-sm whitespace-nowrap" style="font-family: 'Gowun Dodum';">고운 돋움</button>
+                                <button type="button" data-font="Noto Serif KR" data-font-cat="serif" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Noto Serif KR';">클래식 명조</button>
+                                <button type="button" data-font="Gowun Batang" data-font-cat="serif" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Gowun Batang';">고운 바탕</button>
+                                <button type="button" data-font="Pretendard" data-font-cat="sans" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Pretendard';">프리텐다드</button>
+                                <button type="button" data-font="Nanum Myeongjo" data-font-cat="serif" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Nanum Myeongjo';">나눔명조</button>
+                                <button type="button" data-font="Song Myung" data-font-cat="display" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-normal whitespace-nowrap" style="font-family: 'Song Myung';">송명 타이틀</button>
+                                <button type="button" data-font="Nanum Pen Script" data-font-cat="hand" class="font-btn py-2.5 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-lg lg:text-xl font-normal whitespace-nowrap" style="font-family: 'Nanum Pen Script';">나눔 손글씨</button>
+                                <button type="button" data-font="Sunflower" data-font-cat="display" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Sunflower';">해바라기체</button>
+
+                                <!-- 신규 추가 16종 (감성 명조 / 시네마 고딕 / 다정한 손글씨 / 타이틀·붓글씨) -->
+                                <button type="button" data-font="MaruBuri" data-font-cat="serif" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'MaruBuri';">마루부리</button>
+                                <button type="button" data-font="RIDIBatang" data-font-cat="serif" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'RIDIBatang';">리디바탕</button>
+                                <button type="button" data-font="Chosunilbo_myungjo" data-font-cat="serif" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Chosunilbo_myungjo';">조선명조</button>
+
+                                <button type="button" data-font="S-CoreDream" data-font-cat="sans" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'S-CoreDream';">에스코어드림</button>
+                                <button type="button" data-font="GmarketSansMedium" data-font-cat="sans" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'GmarketSansMedium';">G마켓 산스</button>
+                                <button type="button" data-font="SUIT-Regular" data-font-cat="sans" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'SUIT-Regular';">SUIT 수트</button>
+                                <button type="button" data-font="Gothic A1" data-font-cat="sans" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Gothic A1';">고딕 A1</button>
+
+                                <button type="button" data-font="KyoboHand" data-font-cat="hand" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'KyoboHand';">교보 손글씨</button>
+                                <button type="button" data-font="Cafe24Oneprettynight" data-font-cat="hand" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'Cafe24Oneprettynight';">카페24 고운밤</button>
+                                <button type="button" data-font="GangwonEdu_OTFBoldA" data-font-cat="hand" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-bold whitespace-nowrap" style="font-family: 'GangwonEdu_OTFBoldA';">강원교육모두</button>
+                                <button type="button" data-font="Hi Melody" data-font-cat="hand" class="font-btn py-2.5 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-base lg:text-lg font-normal whitespace-nowrap" style="font-family: 'Hi Melody';">하이멜로디</button>
+                                <button type="button" data-font="Gaegu" data-font-cat="hand" class="font-btn py-2.5 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-base lg:text-lg font-bold whitespace-nowrap" style="font-family: 'Gaegu';">개구쟁이체</button>
+
+                                <button type="button" data-font="Do Hyeon" data-font-cat="display" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-normal whitespace-nowrap" style="font-family: 'Do Hyeon';">도현체</button>
+                                <button type="button" data-font="Jua" data-font-cat="display" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-normal whitespace-nowrap" style="font-family: 'Jua';">주아체</button>
+                                <button type="button" data-font="Black Han Sans" data-font-cat="display" class="font-btn py-3 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-sm lg:text-base font-normal whitespace-nowrap" style="font-family: 'Black Han Sans';">블랙한산스</button>
+                                <button type="button" data-font="Yeon Sung" data-font-cat="display" class="font-btn py-2.5 px-2.5 border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 text-base lg:text-lg font-normal whitespace-nowrap" style="font-family: 'Yeon Sung';">연성 붓글씨</button>
                             </div>
                         </div>
 
-                        <!-- 자막 크기 및 자막 가독성 배경 스타일 -->
+                        <!-- 인트로·아웃트로(썸네일 표지) 전용 글씨체 별도 지정 -->
+                        <div class="pt-3 border-t border-stone-300">
+                            <label for="intro-font-select" class="block text-xs sm:text-sm font-extrabold text-zinc-900 mb-1.5 whitespace-nowrap">🎬 썸네일(인트로·아웃트로) 표지 글씨체 별도 지정</label>
+                            <select id="intro-font-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                <option value="same" selected>🔄 위에서 선택한 기본 글씨체와 동일하게 사용</option>
+                                <option value="Song Myung">🏛️ 송명 타이틀 (고품격 세리프 표지)</option>
+                                <option value="MaruBuri">🌿 마루부리 (감성 다큐·에세이 표지)</option>
+                                <option value="RIDIBatang">📖 리디바탕 (단정한 북커버 표지)</option>
+                                <option value="Chosunilbo_myungjo">📜 조선명조 (깊이 있는 클래식 표지)</option>
+                                <option value="GmarketSansMedium">✨ G마켓 산스 (모던 홍보영상 표지)</option>
+                                <option value="S-CoreDream">🎬 에스코어드림 (깔끔한 시네마 표지)</option>
+                                <option value="Do Hyeon">🔥 도현체 (강렬한 타이틀 표지)</option>
+                                <option value="Black Han Sans">💎 블랙한산스 (임팩트 큰 썸네일 표지)</option>
+                                <option value="Yeon Sung">🖌️ 연성 붓글씨 (전통·자연 운치 표지)</option>
+                                <option value="KyoboHand">✍️ 교보 손글씨 (다정한 편지 표지)</option>
+                                <option value="Cafe24Oneprettynight">🌙 카페24 고운밤 (서정적인 밤숲 표지)</option>
+                            </select>
+                        </div>
+
+                        <!-- 자막 크기, 배경, 글자 색상/테두리, 자간 설정 -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-4 border-t border-stone-300">
                             <div>
                                 <label for="subtitle-size-select" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">자막 글자 크기</label>
@@ -509,6 +620,25 @@
                                 <select id="subtitle-bg-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
                                     <option value="shadow" selected>🌑 시네마 소프트 그림자</option>
                                     <option value="pill">⬛ 반투명 다크 캡슐 박스</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="subtitle-color-select" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">글자 색상 · 외곽선 효과</label>
+                                <select id="subtitle-color-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                    <option value="white" selected>🤍 순백색 화이트 (표준)</option>
+                                    <option value="ivory">🕯️ 웜 아이보리 (따스한 감성)</option>
+                                    <option value="gold">✨ 샴페인 골드 (고급 포인트)</option>
+                                    <option value="mint">🌿 포이 에메랄드 민트</option>
+                                    <option value="outline">🎬 방송용 블랙 외곽선 테두리</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="subtitle-spacing-select" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">글자 간격 (자간)</label>
+                                <select id="subtitle-spacing-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                    <option value="0" selected>보통 (표준 간격)</option>
+                                    <option value="2.5">넓게 (여유로운 시네마 감성)</option>
+                                    <option value="5">아주 넓게 (에디토리얼 영화 자막)</option>
+                                    <option value="-1">좁게 (단정한 밀도감)</option>
                                 </select>
                             </div>
                         </div>
@@ -682,6 +812,30 @@
                                         <option value="gold-tag">화이트·골드 배지</option>
                                         <option value="emerald-tag">숲체원 그린 배지</option>
                                         <option value="shadow">글자 그림자만</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-extrabold text-zinc-800 shrink-0">이 자막 전용 글씨체</span>
+                                    <select id="overlay-font-select" class="flex-1 bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 cursor-pointer">
+                                        <option value="default">🔄 전체 기본 글씨체 따라가기</option>
+                                        <option value="Gowun Dodum">고운 돋움</option>
+                                        <option value="MaruBuri">마루부리</option>
+                                        <option value="RIDIBatang">리디바탕</option>
+                                        <option value="S-CoreDream">에스코어드림</option>
+                                        <option value="GmarketSansMedium">G마켓 산스</option>
+                                        <option value="SUIT-Regular">SUIT 수트</option>
+                                        <option value="Pretendard">프리텐다드</option>
+                                        <option value="KyoboHand">교보 손글씨</option>
+                                        <option value="Cafe24Oneprettynight">카페24 고운밤</option>
+                                        <option value="GangwonEdu_OTFBoldA">강원교육모두</option>
+                                        <option value="Nanum Pen Script">나눔 손글씨</option>
+                                        <option value="Hi Melody">하이멜로디</option>
+                                        <option value="Gaegu">개구쟁이체</option>
+                                        <option value="Song Myung">송명 타이틀</option>
+                                        <option value="Do Hyeon">도현체</option>
+                                        <option value="Jua">주아체</option>
+                                        <option value="Black Han Sans">블랙한산스</option>
+                                        <option value="Yeon Sung">연성 붓글씨</option>
                                     </select>
                                 </div>
                             </div>
@@ -1188,8 +1342,19 @@
                 const staggerDelay = isFloat ? (i * 0.1) : 0;
                 const localP = isInstant ? 1.0 : easeOutCubic((effProgress - staggerDelay) / Math.max(0.2, 1 - staggerDelay));
                 const yOffset = isFloat ? (1 - localP) * 10 : 0;
+                const drawY = startY + (i * lineHeight) + yOffset;
+                const trimmed = line.trim();
                 ctx.globalAlpha = baseAlpha * localP;
-                ctx.fillText(line.trim(), x, startY + (i * lineHeight) + yOffset);
+                if (ctx._useBlackOutline) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(10, 10, 12, 0.92)';
+                    ctx.lineWidth = ctx._outlineWidth || 7;
+                    ctx.lineJoin = 'round';
+                    ctx.miterLimit = 2;
+                    ctx.strokeText(trimmed, x, drawY);
+                    ctx.restore();
+                }
+                ctx.fillText(trimmed, x, drawY);
             });
             ctx.globalAlpha = prevAlpha;
         }
@@ -1246,8 +1411,12 @@
 
         const ALL_FONTS = [
             'Gowun Dodum', 'Noto Serif KR', 'Gowun Batang', 'Pretendard',
-            'Nanum Myeongjo', 'Song Myung', 'Nanum Pen Script', 'Sunflower', 'Cormorant Garamond'
+            'Nanum Myeongjo', 'Song Myung', 'Nanum Pen Script', 'Sunflower', 'Cormorant Garamond',
+            'MaruBuri', 'RIDIBatang', 'Chosunilbo_myungjo', 'S-CoreDream', 'GmarketSansMedium',
+            'SUIT-Regular', 'Gothic A1', 'KyoboHand', 'Cafe24Oneprettynight', 'GangwonEdu_OTFBoldA',
+            'Hi Melody', 'Gaegu', 'Do Hyeon', 'Jua', 'Black Han Sans', 'Yeon Sung'
         ];
+        const HANDWRITING_LARGE_FONTS = new Set(['Nanum Pen Script', 'Hi Melody', 'Gaegu', 'Yeon Sung', 'KyoboHand']);
 
         const effectTypes = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down'];
         const effectLabels = {
@@ -1530,6 +1699,11 @@
             projectTitle: null,
             aspectRatio: 'vertical',
             fontFamily: 'Gowun Dodum',
+            introFontFamily: 'same',
+            subtitleColorStyle: 'white',
+            subtitleLetterSpacing: 0,
+            activeFontCategory: 'all',
+            customFonts: [],
             transitionEffect: 'crossfade',
             frameStyle: 'gallery',
             colorGrade: 'warm',
@@ -1623,6 +1797,12 @@
             logoSizeSelect: document.getElementById('logo-size-select'),
             subtitleSizeSelect: document.getElementById('subtitle-size-select'),
             subtitleBgSelect: document.getElementById('subtitle-bg-select'),
+            subtitleColorSelect: document.getElementById('subtitle-color-select'),
+            subtitleSpacingSelect: document.getElementById('subtitle-spacing-select'),
+            introFontSelect: document.getElementById('intro-font-select'),
+            uploadCustomFontBtn: document.getElementById('upload-custom-font-btn'),
+            customFontInput: document.getElementById('custom-font-input'),
+            overlayFontSelect: document.getElementById('overlay-font-select'),
             subtitleAnimSelect: document.getElementById('subtitle-anim-select'),
             bgModeSelect: document.getElementById('bg-mode-select'),
             bgScopeSelect: document.getElementById('bg-scope-select'),
@@ -1732,6 +1912,9 @@
                 data: {
                     aspectRatio: state.aspectRatio,
                     fontFamily: state.fontFamily,
+                    introFontFamily: state.introFontFamily,
+                    subtitleColorStyle: state.subtitleColorStyle,
+                    subtitleLetterSpacing: state.subtitleLetterSpacing,
                     transitionEffect: state.transitionEffect,
                     frameStyle: state.frameStyle,
                     colorGrade: state.colorGrade,
@@ -1763,7 +1946,8 @@
                         rotation: ov.rotation,
                         scope: ov.scope,
                         targetSceneKey: ov.targetSceneKey,
-                        bgStyle: ov.bgStyle || 'pill'
+                        bgStyle: ov.bgStyle || 'pill',
+                        fontFamily: ov.fontFamily || 'default'
                     })),
                     intro: { ...state.intro },
                     outro: { ...state.outro },
@@ -1877,7 +2061,13 @@
             state.projectTitle = project.title || "포이무비 힐링 영상";
             state.aspectRatio = project.data.aspectRatio || 'vertical';
             state.fontFamily = project.data.fontFamily || 'Gowun Dodum';
+            state.introFontFamily = project.data.introFontFamily || 'same';
+            state.subtitleColorStyle = project.data.subtitleColorStyle || 'white';
+            state.subtitleLetterSpacing = project.data.subtitleLetterSpacing !== undefined ? project.data.subtitleLetterSpacing : 0;
             state.transitionEffect = project.data.transitionEffect || 'crossfade';
+            if (elements.introFontSelect) elements.introFontSelect.value = state.introFontFamily;
+            if (elements.subtitleColorSelect) elements.subtitleColorSelect.value = state.subtitleColorStyle;
+            if (elements.subtitleSpacingSelect) elements.subtitleSpacingSelect.value = String(state.subtitleLetterSpacing);
             state.frameStyle = project.data.frameStyle || 'gallery';
             state.colorGrade = project.data.colorGrade || 'warm';
             state.dateStamp = project.data.dateStamp !== undefined ? project.data.dateStamp : '2026. 11 · JANGSEONG FOREST';
@@ -3046,15 +3236,32 @@
             if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
         }
 
+        function filterFontCategory(cat) {
+            state.activeFontCategory = cat || 'all';
+            document.querySelectorAll('.font-cat-btn').forEach(btn => {
+                const isSel = btn.dataset.fontFilter === state.activeFontCategory;
+                btn.className = isSel
+                    ? "font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-zinc-900 text-white border border-zinc-900 transition whitespace-nowrap shadow-sm"
+                    : "font-cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-white text-zinc-800 border border-stone-300 hover:bg-stone-100 transition whitespace-nowrap";
+            });
+            document.querySelectorAll('#font-selector .font-btn').forEach(btn => {
+                const btnCat = btn.dataset.fontCat || 'all';
+                const show = state.activeFontCategory === 'all' || btnCat === state.activeFontCategory || btnCat === 'custom';
+                btn.style.display = show ? 'flex' : 'none';
+            });
+        }
+
         function setFont(fontName) {
             state.fontFamily = fontName;
             document.querySelectorAll('.font-btn').forEach(btn => {
                 const isSelected = btn.dataset.font === fontName;
-                const isPen = btn.dataset.font === 'Nanum Pen Script';
-                const sizeClass = isPen ? 'text-lg lg:text-xl font-normal py-2.5 px-2.5' : 'text-sm lg:text-base font-bold py-3 px-2.5';
+                const isHandLarge = HANDWRITING_LARGE_FONTS.has(btn.dataset.font);
+                const sizeClass = isHandLarge ? 'text-base lg:text-lg font-normal py-2.5 px-2.5' : 'text-sm lg:text-base font-bold py-3 px-2.5';
+                const currentDisplay = btn.style.display;
                 btn.className = isSelected
                     ? `font-btn border-2 border-zinc-900 bg-zinc-900 text-white rounded-xl flex justify-center items-center transition-all shadow-sm whitespace-nowrap ${sizeClass}`
                     : `font-btn border-2 border-stone-300 bg-white text-zinc-950 rounded-xl flex justify-center items-center transition-all hover:bg-stone-100 whitespace-nowrap ${sizeClass}`;
+                if (currentDisplay === 'none') btn.style.display = 'none';
             });
             if (document.fonts && document.fonts.load) {
                 document.fonts.load(`16px "${fontName}"`).then(() => {
@@ -3062,6 +3269,46 @@
                 }).catch(() => {});
             }
             if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+        }
+
+        async function handleCustomFontUpload(file) {
+            if (!file) return;
+            try {
+                const rawName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9가-힣_-]/g, ' ').trim() || '내 커스텀 폰트';
+                const fontFamilyId = `CustomFont_${Date.now()}`;
+                const buffer = await file.arrayBuffer();
+                const fontFace = new FontFace(fontFamilyId, buffer);
+                await fontFace.load();
+                document.fonts.add(fontFace);
+                ALL_FONTS.push(fontFamilyId);
+
+                const selector = document.getElementById('font-selector');
+                if (selector) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.dataset.font = fontFamilyId;
+                    btn.dataset.fontCat = 'custom';
+                    btn.style.fontFamily = `"${fontFamilyId}", sans-serif`;
+                    btn.textContent = `📁 ${rawName}`;
+                    btn.addEventListener('click', () => setFont(fontFamilyId));
+                    selector.prepend(btn);
+                }
+
+                [elements.introFontSelect, elements.overlayFontSelect].forEach(sel => {
+                    if (sel) {
+                        const opt = document.createElement('option');
+                        opt.value = fontFamilyId;
+                        opt.textContent = `📁 ${rawName} (내 폰트)`;
+                        sel.appendChild(opt);
+                    }
+                });
+
+                setFont(fontFamilyId);
+                showToast(`'${rawName}' 폰트가 성공적으로 등록되어 영상에 적용되었습니다!`);
+            } catch (err) {
+                console.error('Custom font load error:', err);
+                showToast("유효한 폰트 파일(.ttf, .otf, .woff)이 아니거나 불러오기에 실패했습니다.", "error");
+            }
         }
 
         function setAspectRatio(ratio) {
@@ -3615,6 +3862,7 @@
                 elements.overlayTextEditRow.classList.add('flex');
                 elements.overlayEditTextInput.value = sel.content || '';
                 elements.overlayTextStyleSelect.value = sel.bgStyle || 'pill';
+                if (elements.overlayFontSelect) elements.overlayFontSelect.value = sel.fontFamily || 'default';
             } else {
                 elements.overlayInspectorTitle.innerHTML = '<i data-lucide="smile" class="w-4 h-4 text-emerald-700"></i> 선택된 스티커 설정';
                 elements.overlayTextEditRow.classList.add('hidden');
@@ -3738,8 +3986,9 @@
                     }
                 } else if (ov.type === 'text') {
                     const txt = String(ov.content || '');
-                    const fSize = isVertical ? 44 : 48;
-                    ctx.font = `700 ${fSize}px "${state.fontFamily}", sans-serif`;
+                    const ovFont = (ov.fontFamily && ov.fontFamily !== 'default') ? ov.fontFamily : state.fontFamily;
+                    const fSize = Math.round((isVertical ? 44 : 48) * (HANDWRITING_LARGE_FONTS.has(ovFont) ? 1.15 : 1.0));
+                    ctx.font = `700 ${fSize}px "${ovFont}", sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     const tw = ctx.measureText(txt).width;
@@ -3825,11 +4074,13 @@
             const scene = getSceneContext(timeInSeconds);
             const activeVideoIndices = new Set();
 
-            const isPenFont = state.fontFamily === 'Nanum Pen Script';
+            const activeIntroFont = (state.introFontFamily && state.introFontFamily !== 'same') ? state.introFontFamily : state.fontFamily;
+            const isPenIntro = HANDWRITING_LARGE_FONTS.has(activeIntroFont);
+            const isPenSlide = HANDWRITING_LARGE_FONTS.has(state.fontFamily);
             const subScale = state.subtitleScale || 1.0;
-            let fontSizeIntroTitle = Math.round((isVertical ? 76 : 102) * (isPenFont ? 1.18 : 1));
-            let fontSizeIntroSubtitle = Math.round((isVertical ? 42 : 54) * (isPenFont ? 1.18 : 1));
-            let fontSizeSlide = Math.round((isVertical ? 54 : 68) * (isPenFont ? 1.2 : 1) * subScale);
+            let fontSizeIntroTitle = Math.round((isVertical ? 76 : 102) * (isPenIntro ? 1.16 : 1));
+            let fontSizeIntroSubtitle = Math.round((isVertical ? 42 : 54) * (isPenIntro ? 1.16 : 1));
+            let fontSizeSlide = Math.round((isVertical ? 54 : 68) * (isPenSlide ? 1.18 : 1) * subScale);
             let lineHeightSlide = Math.round((isVertical ? 76 : 96) * subScale);
 
             if (scene.type === 'intro' || scene.type === 'outro') {
@@ -3872,7 +4123,7 @@
                 ctx.shadowBlur = 18;
                 ctx.fillStyle = '#fafaf9';
                 const titleFontSize = scene.type === 'intro' ? fontSizeIntroTitle : Math.round(fontSizeIntroTitle * 0.74);
-                ctx.font = `${scene.type === 'intro' ? '400' : '300'} ${titleFontSize}px "${state.fontFamily}", sans-serif`;
+                ctx.font = `${scene.type === 'intro' ? '400' : '300'} ${titleFontSize}px "${activeIntroFont}", sans-serif`;
                 drawWrapText(
                     ctx,
                     data.title,
@@ -3889,7 +4140,7 @@
                 drawEditorialDivider(ctx, width / 2, height / 2 + (isVertical ? 65 : 62), isVertical ? 140 : 180, alpha * easeOutCubic(revealP));
 
                 ctx.fillStyle = '#e7e5e4';
-                ctx.font = `300 ${fontSizeIntroSubtitle}px "${state.fontFamily}", sans-serif`;
+                ctx.font = `300 ${fontSizeIntroSubtitle}px "${activeIntroFont}", sans-serif`;
                 drawWrapText(
                     ctx,
                     data.subtitle,
@@ -4063,10 +4314,22 @@
                 const dividerHalfW = isVertical ? 90 : 120;
                 const motionStyle = state.subtitleAnimStyle || 'dissolve';
 
-                ctx.fillStyle = '#fafaf9';
+                const colorMap = {
+                    white: '#fafaf9',
+                    ivory: '#fef3c7',
+                    gold: '#fde68a',
+                    mint: '#a7f3d0',
+                    outline: '#ffffff'
+                };
+                ctx.fillStyle = colorMap[state.subtitleColorStyle] || '#fafaf9';
+                ctx._useBlackOutline = state.subtitleColorStyle === 'outline';
+                ctx._outlineWidth = isVertical ? 8 : 9;
                 ctx.font = `400 ${fontSizeSlide}px "${state.fontFamily}", sans-serif`;
+                if ('letterSpacing' in ctx) {
+                    ctx.letterSpacing = `${state.subtitleLetterSpacing || 0}px`;
+                }
                 ctx.shadowColor = 'rgba(0,0,0,0.78)';
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = state.subtitleColorStyle === 'outline' ? 6 : 15;
 
                 if (isSameAsPrev) {
                     // 연속된 두 슬라이드의 자막이 동일할 때: 전환 애니메이션 없이 완벽하게 고정 유지!
@@ -4139,6 +4402,8 @@
                         );
                     }
                 }
+                ctx._useBlackOutline = false;
+                if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
                 ctx.restore();
                 if (!state.isRecording && !state.isPlaying && state.selectedOverlayId === '__main_subtitle__' && currentPhrase.length > 0) {
                     ctx.save();
@@ -5332,6 +5597,50 @@
                 state.subtitleBgStyle = e.target.value;
                 if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             });
+            if (elements.subtitleColorSelect) {
+                elements.subtitleColorSelect.addEventListener('change', (e) => {
+                    state.subtitleColorStyle = e.target.value;
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                });
+            }
+            if (elements.subtitleSpacingSelect) {
+                elements.subtitleSpacingSelect.addEventListener('change', (e) => {
+                    state.subtitleLetterSpacing = parseFloat(e.target.value) || 0;
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                });
+            }
+            if (elements.introFontSelect) {
+                elements.introFontSelect.addEventListener('change', (e) => {
+                    state.introFontFamily = e.target.value;
+                    const targetF = state.introFontFamily === 'same' ? state.fontFamily : state.introFontFamily;
+                    if (document.fonts && document.fonts.load) {
+                        document.fonts.load(`16px "${targetF}"`).then(() => {
+                            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                        }).catch(() => {});
+                    }
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                });
+            }
+            document.querySelectorAll('.font-cat-btn').forEach(btn => {
+                btn.addEventListener('click', () => filterFontCategory(btn.dataset.fontFilter));
+            });
+            if (elements.uploadCustomFontBtn && elements.customFontInput) {
+                elements.uploadCustomFontBtn.addEventListener('click', () => elements.customFontInput.click());
+                elements.customFontInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) handleCustomFontUpload(file);
+                    e.target.value = '';
+                });
+            }
+            if (elements.overlayFontSelect) {
+                elements.overlayFontSelect.addEventListener('change', (e) => {
+                    const sel = state.overlays.find(o => o.id === state.selectedOverlayId);
+                    if (sel && sel.type === 'text') {
+                        sel.fontFamily = e.target.value;
+                        if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                    }
+                });
+            }
             if (elements.subtitleAnimSelect) {
                 elements.subtitleAnimSelect.addEventListener('change', (e) => {
                     state.subtitleAnimStyle = e.target.value;
