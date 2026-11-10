@@ -18,6 +18,9 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -249,21 +252,19 @@
                 </div>
             </div>
 
-            <!-- 방안 1: Google Drive 클라우드 자동 동기화 -->
+            <!-- 방안 1: Google Drive 클라우드 자동 동기화 (일반 사용자 친화적 화면, Client ID 직접 입력 제거) -->
             <div class="p-5 rounded-2xl bg-stone-50 border-2 border-stone-300 space-y-3.5">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs lg:text-sm font-extrabold px-3 py-1 rounded-full bg-blue-100 text-blue-950 border border-blue-300 whitespace-nowrap">Google Drive 클라우드 연동</span>
+                    <span class="text-xs lg:text-sm font-extrabold px-3 py-1 rounded-full bg-blue-100 text-blue-950 border border-blue-300 whitespace-nowrap">Google Drive 연결</span>
                     <span id="gdrive-status-badge" class="text-xs lg:text-sm font-bold text-zinc-700 whitespace-nowrap">미연결</span>
                 </div>
                 <p class="text-sm lg:text-base text-zinc-800 font-semibold leading-relaxed">
-                    Google Cloud OAuth 클라이언트 ID를 등록하면 내 <b>Google Drive(숲체원_영상제작소_보관함)</b>에 작업물이 직접 저장되어 모바일과 PC에서 로그인만으로 자동 동기화됩니다.
+                    Google 계정으로 로그인한 뒤 <b>Google Drive 연결</b>을 진행하면 내 개인 Google Drive에 프로젝트 파일이 안전하게 보관됩니다. (앱 로그인 계정과 동일한 Google 계정을 사용해 주세요.)
                 </p>
-                <div class="space-y-2">
-                    <label class="block text-xs lg:text-sm font-extrabold text-zinc-900">Google OAuth Client ID (선택 설정)</label>
-                    <div class="flex gap-2">
-                        <input id="google-client-id-input" type="text" placeholder="예: 123456789-xxx.apps.googleusercontent.com" class="flex-1 bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-xs lg:text-sm text-zinc-950 font-mono font-bold focus:outline-none focus:border-zinc-900">
-                        <button id="save-client-id-btn" class="px-4 py-2.5 bg-stone-200 hover:bg-stone-300 text-zinc-950 rounded-xl text-xs lg:text-sm font-extrabold transition shrink-0 whitespace-nowrap">저장</button>
-                    </div>
+                <!-- 운영자 설정값으로 이관됨 (하위 호환용 숨김 처리) -->
+                <div class="hidden" aria-hidden="true">
+                    <input id="google-client-id-input" type="text">
+                    <button id="save-client-id-btn" type="button">저장</button>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
                     <button id="gdrive-connect-btn" class="flex-1 py-3 px-4 rounded-xl border-2 border-stone-300 bg-white hover:bg-stone-100 text-zinc-900 font-extrabold text-sm lg:text-base transition flex items-center justify-center gap-2 whitespace-nowrap">
@@ -307,15 +308,25 @@
                     </button>
                 </div>
 
-                <div class="flex items-center gap-1.5 sm:gap-2">
-                    <button id="login-btn" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-900 text-white rounded-xl text-xs sm:text-sm font-extrabold hover:bg-black transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
+                    <span id="header-auth-mode-badge" class="px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-300 text-[11px] sm:text-xs font-extrabold text-zinc-800 whitespace-nowrap flex items-center gap-1" title="현재 작업 저장 모드">
+                        <i data-lucide="smartphone" class="w-3.5 h-3.5 text-zinc-700 shrink-0"></i>
+                        <span id="header-auth-mode-text">이 기기에서 사용</span>
+                    </span>
+                    <button id="workspace-btn" type="button" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-stone-100 text-zinc-950 border border-stone-300 rounded-xl text-xs sm:text-sm hover:bg-stone-200 transition shadow-sm font-extrabold whitespace-nowrap" title="저장된 내 프로젝트를 확인하고 불러옵니다">
+                        <i data-lucide="folder-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-800 shrink-0"></i> 내 작업물
+                    </button>
+                    <button id="login-btn" type="button" class="px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-900 text-white rounded-xl text-xs sm:text-sm font-extrabold hover:bg-black transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
                         <i data-lucide="log-in" class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"></i> 로그인
                     </button>
                     <div id="user-menu" class="hidden items-center gap-1.5 sm:gap-2">
-                        <button id="workspace-btn" class="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-stone-100 text-zinc-950 border border-stone-300 rounded-xl text-xs sm:text-sm hover:bg-stone-200 transition shadow-sm font-extrabold whitespace-nowrap">
-                            <i data-lucide="folder-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-800 shrink-0"></i> 내 작업물
+                        <button id="switch-account-btn" type="button" class="px-2.5 py-1.5 sm:py-2 bg-white text-zinc-900 border border-stone-300 rounded-xl text-xs font-extrabold hover:bg-stone-100 transition whitespace-nowrap" title="다른 Google 계정으로 전환">
+                            계정 전환
                         </button>
-                        <button id="logout-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center font-extrabold text-xs sm:text-sm shadow-sm hover:bg-black transition cursor-pointer shrink-0" title="로그아웃">
+                        <button id="explicit-logout-btn" type="button" class="px-2.5 py-1.5 sm:py-2 bg-stone-100 text-zinc-900 border border-stone-300 rounded-xl text-xs font-extrabold hover:bg-stone-200 transition whitespace-nowrap" title="현재 계정에서 로그아웃">
+                            로그아웃
+                        </button>
+                        <button id="logout-btn" type="button" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-900 text-white flex items-center justify-center font-extrabold text-xs sm:text-sm shadow-sm hover:bg-black transition cursor-pointer shrink-0" title="로그아웃">
                             숲
                         </button>
                     </div>
@@ -355,7 +366,7 @@
                 <div id="left-panel-scroll" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-7 space-y-6">
                     
                     <!-- 1초 완성 테마 프리셋 -->
-                    <section data-panel-section="media theme" class="p-4 sm:p-5 bg-stone-100 rounded-2xl border-2 border-stone-300 space-y-3">
+                    <section data-panel-section="theme" class="hidden p-4 sm:p-5 bg-stone-100 rounded-2xl border-2 border-stone-300 space-y-3">
                         <div class="flex flex-wrap justify-between items-center gap-2">
                             <h2 class="text-base sm:text-lg lg:text-[19px] font-extrabold text-zinc-950 flex items-center gap-2 whitespace-nowrap">
                                 <i data-lucide="wand-2" class="w-5 h-5 text-emerald-700 shrink-0"></i> 원클릭 무드 프리셋
@@ -444,34 +455,40 @@
                             </div>
                         </div>
 
-                        <!-- 로고 워터마크 스타일 및 로고 크기 조절 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-4 border-t border-stone-300">
-                            <div>
-                                <label for="logo-badge-select" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">영상 속 로고 스타일</label>
-                                <select id="logo-badge-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
-                                    <option value="fowi-glass" selected>📸 포이무비 + 숲체원 배지</option>
-                                    <option value="fowi-only">🌱 포이무비 캐릭터 배지</option>
-                                    <option value="glass">✨ 숲체원 글래스 배지</option>
-                                    <option value="outline">🤍 숲체원 화이트 실루엣</option>
-                                    <option value="minimal">🌿 숲체원 미니멀 반투명</option>
-                                    <option value="none">🚫 로고 표시 안 함</option>
-                                </select>
+                        <!-- 로고 및 스탬프 세부 설정 (접이식 정돈) -->
+                        <details class="group pt-3 border-t border-stone-300">
+                            <summary class="flex items-center justify-between cursor-pointer select-none py-1.5 text-sm font-extrabold text-zinc-800 hover:text-zinc-950">
+                                <span class="flex items-center gap-1.5"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-zinc-700"></i> 로고 배지 · 날짜 스탬프 세부 설정</span>
+                                <span class="text-xs font-bold text-zinc-600 group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <div class="space-y-3.5 pt-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                    <div>
+                                        <label for="logo-badge-select" class="block text-xs sm:text-sm font-extrabold text-zinc-900 mb-1.5 whitespace-nowrap">영상 속 로고 스타일</label>
+                                        <select id="logo-badge-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                            <option value="fowi-glass" selected>📸 포이무비 + 숲체원 배지</option>
+                                            <option value="fowi-only">🌱 포이무비 캐릭터 배지</option>
+                                            <option value="glass">✨ 숲체원 글래스 배지</option>
+                                            <option value="outline">🤍 숲체원 화이트 실루엣</option>
+                                            <option value="minimal">🌿 숲체원 미니멀 반투명</option>
+                                            <option value="none">🚫 로고 표시 안 함</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="logo-size-select" class="block text-xs sm:text-sm font-extrabold text-zinc-900 mb-1.5 whitespace-nowrap">영상 속 로고 크기</label>
+                                        <select id="logo-size-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                            <option value="0.75">작게 (아담한 미니 사이즈)</option>
+                                            <option value="1" selected>보통 (세련된 기본 사이즈)</option>
+                                            <option value="1.25">크게 (강조 사이즈)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="date-stamp-input" class="block text-xs sm:text-sm font-extrabold text-zinc-900 mb-1.5 whitespace-nowrap">에디토리얼 날짜·장소 스탬프</label>
+                                    <input id="date-stamp-input" type="text" value="2026. 11 · JANGSEONG FOREST" placeholder="예: 2026. 11 · JANGSEONG FOREST" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-950 font-bold focus:outline-none focus:border-zinc-900">
+                                </div>
                             </div>
-                            <div>
-                                <label for="logo-size-select" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">영상 속 로고 크기</label>
-                                <select id="logo-size-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
-                                    <option value="0.75">작게 (아담한 미니 사이즈)</option>
-                                    <option value="1" selected>보통 (세련된 기본 사이즈)</option>
-                                    <option value="1.25">크게 (강조 사이즈)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- 날짜·장소 에디토리얼 캡션 -->
-                        <div class="pt-3 border-t border-stone-300">
-                            <label for="date-stamp-input" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">에디토리얼 날짜·장소 스탬프</label>
-                            <input id="date-stamp-input" type="text" value="2026. 11 · JANGSEONG FOREST" placeholder="예: 2026. 11 · JANGSEONG FOREST" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900">
-                        </div>
+                        </details>
 
                         <!-- 썸네일(인트로·아웃트로) 및 슬라이드 배경 별도 지정 -->
                         <div class="pt-4 border-t border-stone-300 space-y-3">
@@ -618,8 +635,8 @@
                             <div>
                                 <label for="subtitle-bg-select" class="block text-sm lg:text-[15px] font-extrabold text-zinc-900 mb-2 whitespace-nowrap">자막 가독성 배경</label>
                                 <select id="subtitle-bg-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2.5 text-sm lg:text-[15px] text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
-                                    <option value="shadow" selected>🌑 시네마 소프트 그림자</option>
-                                    <option value="pill">⬛ 반투명 다크 캡슐 박스</option>
+                                    <option value="pill" selected>⬛ 자막 뒤에만 반투명 캡슐 배경 (권장)</option>
+                                    <option value="shadow">🌑 배경 없이 글자 그림자만</option>
                                 </select>
                             </div>
                             <div>
@@ -1002,17 +1019,39 @@
                     </section>
                 </div>
 
-                <!-- 하단 액션 푸터 -->
-                <div class="p-4 sm:p-6 border-t-2 border-stone-200 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.04)] z-20">
-                    <div class="flex justify-between items-center mb-3.5">
-                        <span class="text-sm sm:text-base lg:text-lg font-extrabold text-zinc-800">총 재생 시간</span>
+                <!-- 하단 액션 푸터 (저장 상태 실시간 표시 + 지금 저장 + 영상 추출) -->
+                <div class="p-4 sm:p-5 border-t-2 border-stone-200 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.04)] z-20 space-y-3">
+                    <!-- 저장 상태 및 편집정보/미디어 동기화 구분 표시줄 -->
+                    <div id="sync-status-bar" class="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-stone-100 border border-stone-300">
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span id="sync-status-dot" class="w-2.5 h-2.5 rounded-full bg-stone-400 shrink-0"></span>
+                                <span id="sync-status-text" class="text-xs sm:text-sm font-extrabold text-zinc-900 truncate">새 프로젝트 대기 중</span>
+                            </div>
+                            <span id="sync-media-subtext" class="text-[11px] font-bold text-zinc-600 truncate pl-4">편집 정보와 미디어 저장 상태가 이곳에 구분 표시됩니다</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button id="reconnect-drive-sync-btn" type="button" class="hidden px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition items-center gap-1 whitespace-nowrap shadow-sm" title="Google Drive 권한을 연결하고 사진·음원 업로드를 이어서 진행합니다">
+                                <i data-lucide="cloud" class="w-3.5 h-3.5"></i> Drive 연결
+                            </button>
+                            <button id="sync-now-btn" type="button" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-black text-white text-xs font-extrabold transition flex items-center gap-1 whitespace-nowrap shadow-sm">
+                                <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i> 지금 저장
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm sm:text-base font-extrabold text-zinc-800">총 재생 시간</span>
+                            <span id="project-version-badge" class="hidden px-2 py-0.5 rounded bg-emerald-100 text-emerald-950 border border-emerald-300 text-xs font-extrabold font-mono">v1</span>
+                        </div>
                         <span id="estimated-time" class="text-xl lg:text-2xl font-extrabold text-zinc-950 font-mono">00:00</span>
                     </div>
                     <div class="flex gap-3">
-                        <button id="save-draft-btn" class="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-extrabold text-sm sm:text-base lg:text-lg text-zinc-950 bg-stone-100 border-2 border-stone-300 hover:bg-stone-200 transition-all active:scale-95 shadow-sm disabled:opacity-50 whitespace-nowrap">
+                        <button id="save-draft-btn" class="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-extrabold text-sm sm:text-base lg:text-lg text-zinc-950 bg-stone-100 border-2 border-stone-300 hover:bg-stone-200 transition-all active:scale-95 shadow-sm disabled:opacity-50 whitespace-nowrap">
                             <i data-lucide="save" class="w-5 h-5 text-zinc-800 shrink-0"></i> 임시저장
                         </button>
-                        <button id="export-btn" class="flex-[2] flex items-center justify-center gap-2 py-4 rounded-xl font-extrabold text-base sm:text-lg lg:text-xl text-white bg-zinc-900 hover:bg-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                        <button id="export-btn" class="flex-[2] flex items-center justify-center gap-2 py-3.5 rounded-xl font-extrabold text-base sm:text-lg lg:text-xl text-white bg-zinc-900 hover:bg-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
                             <i data-lucide="download" class="w-5 h-5 shrink-0"></i> 고화질 영상 추출
                         </button>
                     </div>
@@ -1069,16 +1108,29 @@
         </div>
     </div>
 
-    <!-- 모달: 로그인 -->
+    <!-- 모달: 로그인 및 시작 방식 선택 -->
     <div id="login-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-md p-6 lg:p-7 shadow-2xl animate-fade-up border border-stone-300">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl lg:text-2xl font-extrabold text-zinc-950">서비스 로그인</h2>
-                <button id="close-login-btn" class="text-zinc-600 hover:text-zinc-950"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl lg:text-2xl font-extrabold text-zinc-950">시작 방식 선택</h2>
+                <button id="close-login-btn" type="button" class="text-zinc-600 hover:text-zinc-950"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <p class="text-zinc-800 text-sm lg:text-base font-semibold mb-6 leading-relaxed">작업물을 안전하게 보관하고 모바일과 PC에서 이어서 편집하려면 시작 방식을 선택해 주세요.</p>
+            <p class="text-zinc-800 text-sm lg:text-base font-semibold mb-4 leading-relaxed">
+                Google 계정으로 로그인하면 내 프로젝트를 계정별로 안전하게 관리하고 다른 기기에서 이어서 작업할 수 있습니다.
+            </p>
+
+            <!-- 외부 서비스(Firebase) 미설정 시 정직하게 상태를 알려주는 안내 박스 -->
+            <div id="firebase-config-notice" class="hidden p-3.5 rounded-xl bg-amber-50 border-2 border-amber-300 mb-4 text-xs sm:text-sm text-amber-950 font-semibold leading-relaxed">
+                <p class="font-extrabold flex items-center gap-1.5 mb-1">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-700 shrink-0"></i> 외부 서비스 설정 필요 (Firebase 미연결)
+                </p>
+                <p class="text-xs text-amber-900">
+                    현재 앱 파일 상단의 <code class="bg-amber-100 px-1 rounded font-mono">FOWI_APP_CONFIG</code>에 Firebase 설정값이 아직 입력되지 않았습니다. 설정 전까지는 아래 <b>[이 기기에서 사용]</b>으로 모든 편집·영상 추출 기능을 이용하실 수 있습니다.
+                </p>
+            </div>
+
             <div class="space-y-3">
-                <button id="mock-login-btn" class="w-full py-3.5 px-4 rounded-xl border-2 border-stone-300 flex items-center justify-center gap-3 hover:bg-stone-50 transition active:scale-95">
+                <button id="mock-login-btn" type="button" class="w-full py-3.5 px-4 rounded-xl border-2 border-zinc-900 bg-white flex items-center justify-center gap-3 hover:bg-stone-50 transition active:scale-95 shadow-sm">
                     <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                         <path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-.9 2.2-1.9 2.9l3.1 2.4c1.8-1.7 2.8-4.1 2.8-7 0-.7-.1-1.3-.2-1.9H12z"/>
                         <path fill="#34A853" d="M6.6 14.3l-.7.5-2.5 1.9C5.1 20 8.3 22 12 22c2.7 0 5-.9 6.6-2.4l-3.1-2.4c-.9.6-2 .9-3.5.9-2.7 0-5-1.8-5.8-4.3z"/>
@@ -1087,9 +1139,13 @@
                     </svg>
                     <span class="font-extrabold text-zinc-950 text-sm lg:text-base whitespace-nowrap">Google 계정으로 시작하기</span>
                 </button>
-                <button id="login-open-transfer-btn" class="w-full py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-zinc-900 font-bold text-xs lg:text-sm flex items-center justify-center gap-1.5 transition whitespace-nowrap">
-                    <i data-lucide="settings" class="w-4 h-4 shrink-0"></i> Google Drive 클라우드 Client ID 설정하기
+
+                <button id="start-local-mode-btn" type="button" class="w-full py-3.5 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 border-2 border-stone-300 text-zinc-950 font-extrabold text-sm lg:text-base flex items-center justify-center gap-2 transition active:scale-95 whitespace-nowrap">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-zinc-800 shrink-0"></i> 이 기기에서 사용 (로그인 없이 시작)
                 </button>
+
+                <!-- 하위 호환용 숨김 버튼 -->
+                <button id="login-open-transfer-btn" type="button" class="hidden">Google Drive 클라우드 Client ID 설정하기</button>
             </div>
         </div>
     </div>
@@ -1125,7 +1181,28 @@
                 </button>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-6 bg-stone-100">
+            <div class="flex-1 overflow-y-auto p-6 bg-stone-100 space-y-4">
+                <!-- 현재 보관소 소유자 안내 및 기존 기기 로컬 프로젝트 가져오기 배너 -->
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-3 rounded-xl border border-stone-300 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+                        <span id="workspace-owner-label" class="text-xs sm:text-sm font-extrabold text-zinc-900">현재 보관소: 이 기기에서 사용 (로컬 전용)</span>
+                    </div>
+                    <button id="new-blank-project-btn" type="button" class="px-3 py-1.5 bg-zinc-900 hover:bg-black text-white rounded-lg text-xs font-extrabold transition flex items-center gap-1 whitespace-nowrap">
+                        <i data-lucide="file-plus" class="w-3.5 h-3.5"></i> 새 프로젝트 시작
+                    </button>
+                </div>
+
+                <div id="local-migration-banner" class="hidden flex-wrap items-center justify-between gap-3 bg-emerald-50 border-2 border-emerald-300 px-4 py-3 rounded-xl">
+                    <div class="text-xs sm:text-sm text-emerald-950 font-bold">
+                        <span class="font-extrabold">📥 로그인 전에 이 기기에 저장된 로컬 작업물이 <span id="local-migration-count">0</span>개 있습니다.</span>
+                        <p class="text-xs text-emerald-800 mt-0.5">기존 로컬 작업물은 자동으로 다른 계정에 귀속되지 않습니다. 원하시면 현재 로그인한 내 계정으로 복사해 가져올 수 있습니다.</p>
+                    </div>
+                    <button id="migrate-local-projects-btn" type="button" class="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-extrabold transition shadow-sm shrink-0 whitespace-nowrap">
+                        내 계정으로 사본 가져오기
+                    </button>
+                </div>
+
                 <div id="project-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                     <!-- JS: 렌더링 -->
                 </div>
@@ -1137,11 +1214,98 @@
         </div>
     </div>
 
+    <!-- 모달: 두 기기 동시 수정 버전 충돌 안내 -->
+    <div id="conflict-modal" class="fixed inset-0 bg-stone-900/65 backdrop-blur-sm z-[170] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 lg:p-7 shadow-2xl animate-fade-up border-2 border-amber-400 space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800 shrink-0">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg lg:text-xl font-extrabold text-zinc-950">다른 기기에서 수정된 최신 버전이 있습니다</h3>
+                        <p id="conflict-version-info" class="text-xs sm:text-sm font-bold text-amber-900">서버 최신 버전 확인 필요</p>
+                    </div>
+                </div>
+                <button id="close-conflict-modal-btn" type="button" class="text-zinc-500 hover:text-zinc-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs sm:text-sm text-zinc-800 font-semibold leading-relaxed bg-stone-50 p-3.5 rounded-xl border border-stone-300">
+                PC와 모바일에서 같은 프로젝트를 동시에 열어 수정한 경우, 기존 작업을 실수로 덮어쓰지 않도록 보호하고 있습니다. 아래에서 원하시는 처리 방법을 선택해 주세요.
+            </p>
+            <div class="space-y-2.5 pt-1">
+                <button id="conflict-save-copy-btn" type="button" class="w-full py-3 px-4 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-sm">
+                    <i data-lucide="copy-plus" class="w-4 h-4"></i> 내 작업을 안전한 새 사본으로 저장 (권장 · 양쪽 모두 보존)
+                </button>
+                <button id="conflict-load-server-btn" type="button" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-stone-100 text-zinc-950 border-2 border-stone-300 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                    <i data-lucide="cloud-download" class="w-4 h-4 text-blue-700"></i> 다른 기기에서 저장한 최신 버전 불러오기
+                </button>
+                <button id="conflict-overwrite-btn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-red-50 text-zinc-800 hover:text-red-700 border border-stone-300 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> 현재 기기의 편집 내용으로 온라인 버전 덮어쓰기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달: 기존 로컬 프로젝트를 사용자가 선택하여 계정으로 이전 -->
+    <div id="local-migration-modal" class="fixed inset-0 bg-stone-900/65 backdrop-blur-sm z-[165] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 lg:p-7 shadow-2xl animate-fade-up border border-stone-300 flex flex-col max-h-[82vh]">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg lg:text-xl font-extrabold text-zinc-950 flex items-center gap-2">
+                    <i data-lucide="folder-Input" class="w-5 h-5 text-emerald-700"></i> 이 기기의 로컬 작업물 선택 가져오기
+                </h3>
+                <button id="close-migration-modal-btn" type="button" class="text-zinc-500 hover:text-zinc-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs sm:text-sm text-zinc-700 font-semibold mb-4 leading-relaxed">
+                로그인 전에 이 기기에서 작업했던 프로젝트 목록입니다. 현재 로그인한 내 계정으로 가져올 프로젝트를 선택한 뒤 <b>[선택한 프로젝트 가져오기]</b>를 눌러주세요.
+            </p>
+            <div id="migration-items-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1 mb-5">
+                <!-- JS 렌더링 -->
+            </div>
+            <div class="flex gap-2.5 justify-end pt-3 border-t border-stone-200">
+                <button id="cancel-migration-btn" type="button" class="px-4 py-2.5 rounded-xl border-2 border-stone-300 text-zinc-900 font-extrabold text-xs sm:text-sm hover:bg-stone-100 transition">취소</button>
+                <button id="confirm-migration-btn" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold text-xs sm:text-sm transition shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="check" class="w-4 h-4"></i> 선택한 프로젝트 가져오기
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
-        const DEFAULT_GOOGLE_CLIENT_ID = "";
+        // ============================================================================
+        // [운영자 전용 설정 영역: FOWI_APP_CONFIG]
+        // Firebase 콘솔(프로젝트 설정)과 Google Cloud 콘솔에서 발급받은 공개 설정값을 입력하세요.
+        // 주의: OAuth Client Secret(비밀 키)이나 서비스 계정 비공개 키는 절대 이곳에 넣지 마세요!
+        // ============================================================================
+        const FOWI_APP_CONFIG = {
+            firebaseConfig: {
+                apiKey: "AIzaSyBqatf97xWF726rX-NY-8iH_RmB_KZaMcs",
+                authDomain: "video-maker-27b93.firebaseapp.com",
+                projectId: "video-maker-27b93",
+                appId: "1:941231393820:web:b659fb43703858ec72a3d9"
+            },
+            googleDriveClientId: "941231393820-mrj7udu7vufppvb6gktomu02fn526i7e.apps.googleusercontent.com"
+        };
+
+        const DEFAULT_GOOGLE_CLIENT_ID = FOWI_APP_CONFIG.googleDriveClientId || "";
         const GDRIVE_FOLDER_NAME = "숲체원_영상제작소_보관함";
+        const LOCAL_DEVICE_OWNER_KEY = "__local_device__";
+
+        function isFirebaseConfigured() {
+            const cfg = FOWI_APP_CONFIG && FOWI_APP_CONFIG.firebaseConfig;
+            return Boolean(
+                cfg &&
+                typeof cfg.apiKey === 'string' && cfg.apiKey.trim().length > 10 &&
+                typeof cfg.authDomain === 'string' && cfg.authDomain.trim().length > 5 &&
+                typeof cfg.projectId === 'string' && cfg.projectId.trim().length > 2
+            );
+        }
+
+        function isGoogleDriveConfigured() {
+            const cid = (FOWI_APP_CONFIG && FOWI_APP_CONFIG.googleDriveClientId) || "";
+            return Boolean(cid && cid.trim().length > 10);
+        }
         const LOGO_DATA_URI = document.getElementById('header-logo-img').getAttribute('src');
         const FOWI_LOGO_DATA_URI = document.getElementById('fowi-logo-img').getAttribute('src');
         const FOWI_APP_ICON_URI = document.getElementById('fowi-app-icon-source').getAttribute('src');
@@ -1320,20 +1484,20 @@
 
             if (drawPillBg && lines.length > 0 && safeText.trim().length > 0) {
                 const maxLineW = Math.max(...lines.map(l => ctx.measureText(l.trim()).width));
-                const boxW = Math.min(maxWidth + 84, maxLineW + 80);
-                const boxH = lines.length * lineHeight + 38;
+                const boxW = Math.min(maxWidth + 68, maxLineW + 64);
+                const boxH = lines.length * lineHeight + 28;
                 const boxX = x - boxW / 2;
                 const boxY = y - boxH / 2;
                 const boxP = easeOutCubic(effProgress);
                 const pillYOffset = isFloat ? (1 - boxP) * 10 : 0;
                 ctx.save();
-                ctx.globalAlpha = baseAlpha * boxP * 0.74;
+                ctx.globalAlpha = baseAlpha * boxP * 0.62;
                 ctx.shadowBlur = 0;
-                ctx.fillStyle = '#0c0a09';
-                drawRoundedRectPath(ctx, boxX, boxY + pillYOffset, boxW, boxH, 28);
+                ctx.fillStyle = '#141416';
+                drawRoundedRectPath(ctx, boxX, boxY + pillYOffset, boxW, boxH, 24);
                 ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 250, 240, 0.22)';
-                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+                ctx.lineWidth = 1.2;
                 ctx.stroke();
                 ctx.restore();
             }
@@ -1444,7 +1608,7 @@
         videoBlurCanvas.height = 72;
         const videoBlurCtx = videoBlurCanvas.getContext('2d');
 
-        function createPreBlurredCanvas(mediaElement, darkAlpha = 0.70, resolution = 72) {
+        function createPreBlurredCanvas(mediaElement, darkAlpha = 0.36, resolution = 72) {
             const smallW = resolution;
             const smallH = resolution;
             const step1 = document.createElement('canvas');
@@ -1711,7 +1875,7 @@
             logoBadgeStyle: 'fowi-glass',
             logoScale: 1.0,
             subtitleScale: 1.0,
-            subtitleBgStyle: 'shadow',
+            subtitleBgStyle: 'pill',
             subtitleAnimStyle: 'dissolve',
             bgMode: 'auto',
             bgScope: 'intro-outro',
@@ -1737,7 +1901,7 @@
             videoAudioMode: 'ducking',
             videoVolume: 1.0,
             duckingBgmRatio: 0.18,
-            intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "포이무비 기억 보관소", duration: 3 },
+            intro: { title: "장성숲체원에 오신 것을 환영합니다", subtitle: "포이무비 기억 보관소", duration: 3.5, style: "fowi-shutter", shutterPlayed: false },
             images: [],
             outro: { title: "숲에서 얻은 맑은 숨결로\n일상을 다시 시작해 보세요.", subtitle: "- 국립장성숲체원 · 포이무비 -", duration: 4 },
             isPlaying: false,
@@ -1750,12 +1914,33 @@
             customBgmFile: null,
             customBgmObjectUrl: null,
             lastValidBgmValue: 'procedural',
-            googleClientId: safeGetStorage('forestGoogleClientId') || DEFAULT_GOOGLE_CLIENT_ID,
+            googleClientId: DEFAULT_GOOGLE_CLIENT_ID,
             googleAccessToken: null,
-            gdriveFolderId: null
+            googleTokenExpiresAt: 0,
+            gdriveEmail: null,
+            gdriveFolderId: null,
+            driveManifestFileId: null,
+            customBgmDriveFileId: null,
+            customBgmFileName: null,
+            customBgDriveFileId: null,
+            customBgFileName: null,
+            pendingResumeActionAfterDriveAuth: null,
+            hasUnsavedChanges: false
         };
 
-        let currentUser = safeGetStorage('forestAppUser');
+        // 가상 로그인('user_123') 데이터가 남아 있다면 즉시 정리하여 가짜 로그인 표시를 원천 차단
+        try {
+            const legacyUser = safeGetStorage('forestAppUser');
+            if (legacyUser && (legacyUser.id === 'user_123' || !legacyUser.isFirebaseAuth)) {
+                localStorage.removeItem('forestAppUser');
+            }
+        } catch (e) {}
+
+        let currentUser = null; // 오직 실제 Firebase Google 인증이 완료된 경우에만 객체가 할당됨 (비로그인 시 null = '이 기기에서 사용')
+        let firebaseAuthInstance = null;
+        let firestoreDb = null;
+        let autoSyncTimer = null;
+        let lastConflictServerDoc = null;
         let workspaceThumbUrls = [];
         let googleTokenClient = null;
         
@@ -1846,13 +2031,42 @@
             installAppModal: document.getElementById('install-app-modal'),
             closeInstallModalBtn: document.getElementById('close-install-modal-btn'),
             triggerPwaInstallBtn: document.getElementById('trigger-pwa-install-btn'),
+            headerAuthModeBadge: document.getElementById('header-auth-mode-badge'),
+            headerAuthModeText: document.getElementById('header-auth-mode-text'),
             loginBtn: document.getElementById('login-btn'),
             userMenu: document.getElementById('user-menu'),
+            switchAccountBtn: document.getElementById('switch-account-btn'),
             logoutBtn: document.getElementById('logout-btn'),
+            userAvatarInitial: document.getElementById('logout-btn'),
             loginModal: document.getElementById('login-modal'),
             closeLoginBtn: document.getElementById('close-login-btn'),
+            firebaseConfigNotice: document.getElementById('firebase-config-notice'),
             mockLoginBtn: document.getElementById('mock-login-btn'),
+            startLocalModeBtn: document.getElementById('start-local-mode-btn'),
             loginOpenTransferBtn: document.getElementById('login-open-transfer-btn'),
+            workspaceOwnerLabel: document.getElementById('workspace-owner-label'),
+            newBlankProjectBtn: document.getElementById('new-blank-project-btn'),
+            localMigrationBanner: document.getElementById('local-migration-banner'),
+            localMigrationCount: document.getElementById('local-migration-count'),
+            migrateLocalProjectsBtn: document.getElementById('migrate-local-projects-btn'),
+            syncStatusBar: document.getElementById('sync-status-bar'),
+            syncStatusDot: document.getElementById('sync-status-dot'),
+            syncStatusText: document.getElementById('sync-status-text'),
+            syncMediaSubtext: document.getElementById('sync-media-subtext'),
+            reconnectDriveSyncBtn: document.getElementById('reconnect-drive-sync-btn'),
+            syncNowBtn: document.getElementById('sync-now-btn'),
+            projectVersionBadge: document.getElementById('project-version-badge'),
+            conflictModal: document.getElementById('conflict-modal'),
+            conflictVersionInfo: document.getElementById('conflict-version-info'),
+            closeConflictModalBtn: document.getElementById('close-conflict-modal-btn'),
+            conflictSaveCopyBtn: document.getElementById('conflict-save-copy-btn'),
+            conflictLoadServerBtn: document.getElementById('conflict-load-server-btn'),
+            conflictOverwriteBtn: document.getElementById('conflict-overwrite-btn'),
+            localMigrationModal: document.getElementById('local-migration-modal'),
+            closeMigrationModalBtn: document.getElementById('close-migration-modal-btn'),
+            migrationItemsList: document.getElementById('migration-items-list'),
+            cancelMigrationBtn: document.getElementById('cancel-migration-btn'),
+            confirmMigrationBtn: document.getElementById('confirm-migration-btn'),
             workspaceBtn: document.getElementById('workspace-btn'),
             workspaceModal: document.getElementById('workspace-modal'),
             closeWorkspaceBtn: document.getElementById('close-workspace-btn'),
@@ -1901,14 +2115,154 @@
             });
         }
 
-        function buildCurrentProjectObject(type = 'draft') {
-            if (!state.projectId) state.projectId = "proj_" + Date.now();
+        function getActiveOwnerKey() {
+            return (currentUser && currentUser.uid) ? currentUser.uid : LOCAL_DEVICE_OWNER_KEY;
+        }
+
+        const LEGACY_LOCAL_MARKERS = [{ id: 'user_123' }, { id: 'guest_user' }];
+        function getProjectOwnerKey(proj) {
+            if (!proj) return LOCAL_DEVICE_OWNER_KEY;
+            if (proj.ownerUid) return proj.ownerUid;
+            // 기존 버전에서 생성된 로컬 작업물(user_123, guest_user 등)은 임의의 Google 계정에 자동 귀속시키지 않고 '이 기기 로컬 영역'으로 보존
+            if (!proj.userId || LEGACY_LOCAL_MARKERS.some(m => m.id === proj.userId)) {
+                return LOCAL_DEVICE_OWNER_KEY;
+            }
+            return proj.userId;
+        }
+
+        function getDeviceLabel() {
+            return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') ? '모바일' : 'PC';
+        }
+
+        function getProjectMediaSyncSummary() {
+            const slideTotal = state.images.length;
+            const slideSynced = state.images.filter(img => Boolean(img.driveFileId)).length;
+            const needsBgm = elements.bgmSelect.value === 'custom' && Boolean(state.customBgmFile || state.customBgmDriveFileId);
+            const bgmSynced = !needsBgm || Boolean(state.customBgmDriveFileId);
+            const needsBg = state.bgMode === 'custom' && Boolean(state.customBgFile || state.customBgDriveFileId);
+            const bgSynced = !needsBg || Boolean(state.customBgDriveFileId);
+            const customStickerOverlays = state.overlays.filter(ov => ov.content === 'custom-img');
+            const stickersSynced = customStickerOverlays.every(ov => Boolean(ov.driveFileId));
+            const fontsSynced = state.customFonts.every(f => Boolean(f.driveFileId));
+
+            const totalAssets = slideTotal + (needsBgm ? 1 : 0) + (needsBg ? 1 : 0) + customStickerOverlays.length + state.customFonts.length;
+            const syncedAssets = slideSynced + (needsBgm && bgmSynced ? 1 : 0) + (needsBg && bgSynced ? 1 : 0)
+                + customStickerOverlays.filter(ov => Boolean(ov.driveFileId)).length
+                + state.customFonts.filter(f => Boolean(f.driveFileId)).length;
+
+            return {
+                totalAssets,
+                syncedAssets,
+                allSynced: totalAssets > 0 && syncedAssets === totalAssets && bgmSynced && bgSynced && stickersSynced && fontsSynced
+            };
+        }
+
+        function isDriveTokenValid() {
+            if (!state.googleAccessToken) return false;
+            if (state.googleTokenExpiresAt && Date.now() > state.googleTokenExpiresAt) return false;
+            return true;
+        }
+
+        // 저장 상태 및 미디어 동기화 상태를 명확히 구분하여 표시 (미디어 미업로드 시 절대 '전체 동기화 완료'로 표시하지 않음)
+        function updateSyncStatusDisplay(statusKey, customDetail = null) {
+            if (!elements.syncStatusDot || !elements.syncStatusText || !elements.syncMediaSubtext) return;
+            const summary = getProjectMediaSyncSummary();
+            const ver = state.projectVersion || 0;
+
+            if (elements.projectVersionBadge) {
+                if (ver > 0) {
+                    elements.projectVersionBadge.textContent = `v${ver}`;
+                    elements.projectVersionBadge.classList.remove('hidden');
+                } else {
+                    elements.projectVersionBadge.classList.add('hidden');
+                }
+            }
+
+            const showDriveBtn = Boolean(
+                currentUser &&
+                (!isDriveTokenValid() || statusKey === 'drive_reconnect_needed' || (statusKey === 'metadata_synced' && !summary.allSynced))
+            );
+            if (elements.reconnectDriveSyncBtn) {
+                if (showDriveBtn) {
+                    elements.reconnectDriveSyncBtn.classList.remove('hidden');
+                    elements.reconnectDriveSyncBtn.classList.add('flex');
+                } else {
+                    elements.reconnectDriveSyncBtn.classList.add('hidden');
+                    elements.reconnectDriveSyncBtn.classList.remove('flex');
+                }
+            }
+
+            if (statusKey === 'unsaved') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0";
+                elements.syncStatusText.textContent = "변경사항 있음 (저장 대기)";
+                elements.syncMediaSubtext.textContent = currentUser
+                    ? (isDriveTokenValid()
+                        ? "[지금 저장]을 누르면 편집 정보와 미업로드 파일이 온라인 동기화됩니다"
+                        : "[Drive 연결] 또는 [지금 저장]을 눌러 온라인에 저장하세요")
+                    : "[지금 저장]을 누르면 이 기기에 저장됩니다";
+            } else if (statusKey === 'uploading_media') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping shrink-0";
+                elements.syncStatusText.textContent = customDetail || `미디어 업로드 중 (${summary.syncedAssets}/${summary.totalAssets})`;
+                elements.syncMediaSubtext.textContent = "기존에 업로드된 파일은 건너뛰고 새 파일만 Google Drive에 전송합니다";
+            } else if (statusKey === 'downloading_media') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping shrink-0";
+                elements.syncStatusText.textContent = customDetail || "Google Drive에서 원본 미디어 다운로드 중...";
+                elements.syncMediaSubtext.textContent = "사진·음원·글씨체를 이 기기로 복원하고 있습니다";
+            } else if (statusKey === 'saving') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping shrink-0";
+                elements.syncStatusText.textContent = "온라인 저장 중...";
+                elements.syncMediaSubtext.textContent = customDetail || "편집 정보와 버전을 서버에 기록하고 있습니다";
+            } else if (statusKey === 'local_saved') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-stone-600 shrink-0";
+                elements.syncStatusText.textContent = "이 기기에 저장됨";
+                elements.syncMediaSubtext.textContent = customDetail || (currentUser
+                    ? "오프라인 상태이거나 아직 온라인 동기화 전입니다"
+                    : `비로그인 모드 · 미디어 ${summary.totalAssets}개가 이 기기에만 보관됨`);
+            } else if (statusKey === 'drive_reconnect_needed') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0";
+                elements.syncStatusText.textContent = "Drive 재연결 필요 · 편집 정보는 저장됨";
+                elements.syncMediaSubtext.textContent = customDetail || `미업로드 파일(${summary.totalAssets - summary.syncedAssets}개) 전송을 위해 우측 [Drive 연결]을 눌러주세요`;
+            } else if (statusKey === 'metadata_synced') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                elements.syncStatusText.textContent = `편집 정보 온라인 저장됨 (v${ver}) · 미디어 대기`;
+                elements.syncMediaSubtext.textContent = customDetail || `우측 [Drive 연결]을 누르면 사진·음원(${summary.totalAssets - summary.syncedAssets}개)까지 온라인 동기화됩니다`;
+            } else if (statusKey === 'all_synced') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0";
+                elements.syncStatusText.textContent = `모든 변경사항 저장됨 (v${ver})`;
+                elements.syncMediaSubtext.textContent = customDetail || `편집 정보 + 미디어(${summary.totalAssets}개) 모두 온라인 동기화 완료 (다른 기기에서 즉시 복원 가능)`;
+            } else if (statusKey === 'conflict') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-600 animate-bounce shrink-0";
+                elements.syncStatusText.textContent = "다른 기기 수정 감지됨 · 버전 확인 필요";
+                elements.syncMediaSubtext.textContent = customDetail || "덮어쓰기 방지를 위해 버전 확인 창에서 선택해 주세요";
+            } else if (statusKey === 'error') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-red-600 shrink-0";
+                elements.syncStatusText.textContent = "저장 실패 · 다시 시도";
+                elements.syncMediaSubtext.textContent = customDetail || "[지금 저장]을 눌러 실패한 항목만 이어서 다시 업로드할 수 있습니다";
+            }
+        }
+
+        function buildCurrentProjectObject(type = 'draft', nextVersionOverride = null) {
+            if (!state.projectId) state.projectId = "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+            const ownerKey = getActiveOwnerKey();
+            const currentVer = state.projectVersion || 0;
+            const nextVer = nextVersionOverride !== null ? nextVersionOverride : (currentVer > 0 ? currentVer : 1);
+            const summary = getProjectMediaSyncSummary();
+
             return {
                 id: state.projectId,
-                userId: currentUser ? currentUser.id : 'guest_user',
+                ownerUid: ownerKey,
+                ownerMode: currentUser ? 'google' : 'local',
+                ownerEmail: currentUser ? (currentUser.email || '') : '',
+                userId: ownerKey,
+                version: nextVer,
                 type: type,
                 title: state.projectTitle || state.intro.title || "포이무비 힐링 영상",
                 updatedAt: Date.now(),
+                lastModifiedByDevice: getDeviceLabel(),
+                driveManifestFileId: state.driveManifestFileId || null,
+                mediaCount: summary.totalAssets,
+                syncedMediaCount: summary.syncedAssets,
+                mediaSyncStatus: summary.allSynced ? 'synced' : (summary.syncedAssets > 0 ? 'partial' : 'local_only'),
                 data: {
                     aspectRatio: state.aspectRatio,
                     fontFamily: state.fontFamily,
@@ -1929,17 +2283,28 @@
                     bgBlurStyle: state.bgBlurStyle,
                     customBgFile: state.customBgFile,
                     customBgSrc: state.customBgSrc,
+                    customBgDriveFileId: state.customBgDriveFileId || null,
+                    customBgFileName: state.customBgFileName || null,
                     bgmVolume: state.bgmVolume,
                     videoAudioMode: state.videoAudioMode,
                     videoVolume: state.videoVolume,
                     duckingBgmRatio: state.duckingBgmRatio,
                     syncSubtitlePosAcrossSlides: state.syncSubtitlePosAcrossSlides,
                     globalSubtitlePos: state.globalSubtitlePos ? { ...state.globalSubtitlePos } : null,
+                    customFontsMeta: state.customFonts.map(cf => ({
+                        fontFamilyId: cf.fontFamilyId,
+                        labelName: cf.labelName,
+                        fileName: cf.fileName,
+                        driveFileId: cf.driveFileId || null
+                    })),
                     overlays: state.overlays.map(ov => ({
                         id: ov.id,
                         type: ov.type,
                         content: ov.content,
+                        label: ov.label || ov.content,
                         customImgSrc: ov.customImgSrc || null,
+                        rawFile: ov.rawFile || null,
+                        driveFileId: ov.driveFileId || null,
                         x: ov.x,
                         y: ov.y,
                         scale: ov.scale,
@@ -1949,16 +2314,29 @@
                         bgStyle: ov.bgStyle || 'pill',
                         fontFamily: ov.fontFamily || 'default'
                     })),
-                    intro: { ...state.intro },
-                    outro: { ...state.outro },
+                    intro: {
+                        title: state.intro.title || '',
+                        subtitle: state.intro.subtitle || '',
+                        duration: state.intro.duration || 3.5,
+                        style: state.intro.style || 'fowi-shutter'
+                    },
+                    outro: {
+                        title: state.outro.title || '',
+                        subtitle: state.outro.subtitle || '',
+                        duration: state.outro.duration || 4
+                    },
                     bgmSelectValue: elements.bgmSelect.value,
                     customBgmFile: state.customBgmFile,
-                    images: state.images.map(img => ({
+                    customBgmDriveFileId: state.customBgmDriveFileId || null,
+                    customBgmFileName: state.customBgmFileName || (state.customBgmFile && state.customBgmFile.name) || null,
+                    images: state.images.map((img, idx) => ({
                         id: img.id,
+                        index: idx,
                         type: img.type,
-                        fileName: img.fileName || (img.rawFile && img.rawFile.name) || '',
-                        src: img.type === 'video' ? null : img.src,
-                        rawFile: img.rawFile,
+                        fileName: img.fileName || (img.rawFile && img.rawFile.name) || `장면_${idx + 1}`,
+                        src: img.type === 'video' ? null : (img.isPlaceholder ? null : img.src),
+                        rawFile: img.isPlaceholder ? null : img.rawFile,
+                        driveFileId: img.driveFileId || null,
                         effect: img.effect,
                         phrase: img.phrase,
                         duration: img.duration,
@@ -1969,76 +2347,825 @@
             };
         }
 
-        async function saveProjectToDB(type) {
-            if (!currentUser) {
-                elements.loginModal.style.display = 'flex';
-                return;
+        // Firestore 문서용 경량 메타데이터 생성 (Base64 사진/음원이나 OAuth 토큰은 절대 포함하지 않음)
+        function buildFirestoreMetadataDoc(projectObj, targetVersion) {
+            const d = projectObj.data || {};
+            const slidesMeta = (d.images || []).map((img, idx) => ({
+                id: String(img.id || `slide_${idx}`),
+                index: idx,
+                type: img.type || 'image',
+                fileName: img.fileName || `장면_${idx + 1}`,
+                driveFileId: img.driveFileId || null,
+                effect: img.effect || 'zoom-in',
+                phrase: img.phrase || '',
+                duration: Number(img.duration) || 4,
+                videoMuted: Boolean(img.videoMuted),
+                subtitlePos: img.subtitlePos ? { x: Number(img.subtitlePos.x), y: Number(img.subtitlePos.y) } : null
+            }));
+
+            const summary = getProjectMediaSyncSummary();
+
+            return {
+                id: projectObj.id,
+                ownerUid: currentUser.uid,
+                userId: currentUser.uid,
+                ownerEmail: currentUser.email || '',
+                title: String(projectObj.title || '포이무비 힐링 영상').slice(0, 110),
+                type: projectObj.type === 'final' ? 'final' : 'draft',
+                version: targetVersion,
+                updatedAt: Date.now(),
+                serverUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastModifiedByDevice: getDeviceLabel(),
+                driveManifestFileId: projectObj.driveManifestFileId || state.driveManifestFileId || null,
+                mediaCount: summary.totalAssets,
+                syncedMediaCount: summary.syncedAssets,
+                mediaSyncStatus: summary.allSynced ? 'synced' : (summary.syncedAssets > 0 ? 'partial' : 'local_only'),
+                settings: {
+                    aspectRatio: d.aspectRatio || 'vertical',
+                    fontFamily: d.fontFamily || 'Gowun Dodum',
+                    introFontFamily: d.introFontFamily || 'same',
+                    subtitleColorStyle: d.subtitleColorStyle || 'white',
+                    subtitleLetterSpacing: Number(d.subtitleLetterSpacing) || 0,
+                    transitionEffect: d.transitionEffect || 'crossfade',
+                    frameStyle: d.frameStyle || 'gallery',
+                    colorGrade: d.colorGrade || 'warm',
+                    dateStamp: d.dateStamp !== undefined ? d.dateStamp : '',
+                    logoBadgeStyle: d.logoBadgeStyle || 'fowi-glass',
+                    logoScale: Number(d.logoScale) || 1.0,
+                    subtitleScale: Number(d.subtitleScale) || 1.0,
+                    subtitleBgStyle: d.subtitleBgStyle || 'pill',
+                    subtitleAnimStyle: d.subtitleAnimStyle || 'dissolve',
+                    bgMode: d.bgMode || 'auto',
+                    bgScope: d.bgScope || 'intro-outro',
+                    bgBlurStyle: d.bgBlurStyle || 'soft',
+                    customBgDriveFileId: d.customBgDriveFileId || state.customBgDriveFileId || null,
+                    customBgFileName: d.customBgFileName || state.customBgFileName || null,
+                    bgmVolume: d.bgmVolume !== undefined ? Number(d.bgmVolume) : 0.85,
+                    bgmSelectValue: d.bgmSelectValue !== undefined ? d.bgmSelectValue : 'procedural',
+                    customBgmDriveFileId: d.customBgmDriveFileId || state.customBgmDriveFileId || null,
+                    customBgmFileName: d.customBgmFileName || state.customBgmFileName || null,
+                    videoAudioMode: d.videoAudioMode || 'ducking',
+                    videoVolume: d.videoVolume !== undefined ? Number(d.videoVolume) : 1.0,
+                    duckingBgmRatio: d.duckingBgmRatio !== undefined ? Number(d.duckingBgmRatio) : 0.18,
+                    syncSubtitlePosAcrossSlides: Boolean(d.syncSubtitlePosAcrossSlides),
+                    globalSubtitlePos: d.globalSubtitlePos ? { x: Number(d.globalSubtitlePos.x), y: Number(d.globalSubtitlePos.y) } : null,
+                    customFontsMeta: (d.customFontsMeta || state.customFonts || []).map(cf => ({
+                        fontFamilyId: cf.fontFamilyId,
+                        labelName: cf.labelName,
+                        fileName: cf.fileName,
+                        driveFileId: cf.driveFileId || null
+                    })),
+                    intro: {
+                        title: d.intro?.title || '',
+                        subtitle: d.intro?.subtitle || '',
+                        duration: Number(d.intro?.duration) || 3.5,
+                        style: d.intro?.style || 'fowi-shutter'
+                    },
+                    outro: {
+                        title: d.outro?.title || '',
+                        subtitle: d.outro?.subtitle || '',
+                        duration: Number(d.outro?.duration) || 4
+                    },
+                    overlays: (d.overlays || []).map(ov => ({
+                        id: ov.id,
+                        type: ov.type,
+                        content: ov.content,
+                        label: ov.label || ov.content,
+                        driveFileId: ov.driveFileId || null,
+                        x: Number(ov.x),
+                        y: Number(ov.y),
+                        scale: Number(ov.scale) || 1.0,
+                        rotation: Number(ov.rotation) || 0,
+                        scope: ov.scope || 'current',
+                        targetSceneKey: ov.targetSceneKey || 'slide_0',
+                        bgStyle: ov.bgStyle || 'pill',
+                        fontFamily: ov.fontFamily || 'default'
+                    }))
+                },
+                slidesMeta: slidesMeta
+            };
+        }
+
+        // Firestore 트랜잭션 기반 원자적 버전 검사 및 저장
+        async function syncProjectMetadataToFirestore(projectObj, forceOverwrite = false) {
+            if (!currentUser || !currentUser.uid || !firestoreDb) {
+                return { synced: false, reason: 'not_signed_in' };
             }
-            if (state.images.length === 0) {
-                showToast('저장할 미디어가 없습니다.', 'error');
-                return;
-            }
+            const docRef = firestoreDb.collection('users').doc(currentUser.uid).collection('projects').doc(projectObj.id);
+            const baseVersion = state.projectVersion || 0;
 
-            elements.loadingOverlay.style.display = 'flex';
-            elements.loadingTitle.textContent = type === 'draft' ? "임시저장 중..." : "결과물 저장 중...";
-            elements.renderProgress.style.width = "100%";
-            elements.renderProgress.classList.add('animate-pulse');
-
-            const projectData = buildCurrentProjectObject(type);
-
-            try {
-                const db = await initDB();
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                tx.objectStore(STORE_NAME).put(projectData);
-                tx.oncomplete = async () => {
-                    if (state.googleAccessToken) {
-                        try {
-                            await uploadProjectToGoogleDrive(projectData, true);
-                        } catch (cloudErr) {
-                            console.warn('Cloud auto-sync error:', cloudErr);
-                        }
+            let committedVersion = 1;
+            await firestoreDb.runTransaction(async (transaction) => {
+                const snap = await transaction.get(docRef);
+                if (!snap.exists) {
+                    committedVersion = 1;
+                    const payload = buildFirestoreMetadataDoc(projectObj, 1);
+                    transaction.set(docRef, payload);
+                } else {
+                    const serverDoc = snap.data();
+                    const serverVer = Number(serverDoc.version) || 1;
+                    if (!forceOverwrite && baseVersion > 0 && serverVer > baseVersion) {
+                        const conflictErr = new Error('VERSION_CONFLICT');
+                        conflictErr.code = 'VERSION_CONFLICT';
+                        conflictErr.serverDoc = serverDoc;
+                        throw conflictErr;
                     }
-                    setTimeout(() => {
-                        elements.renderProgress.classList.remove('animate-pulse');
-                        elements.loadingOverlay.style.display = 'none';
-                        if (type === 'draft') {
-                            showToast(state.googleAccessToken
-                                ? '기기와 Google Drive에 안전하게 임시저장되었습니다.'
-                                : '안전하게 임시저장되었습니다.');
-                        }
-                    }, 350);
+                    committedVersion = serverVer + 1;
+                    const payload = buildFirestoreMetadataDoc(projectObj, committedVersion);
+                    transaction.update(docRef, payload);
+                }
+            });
+
+            return { synced: true, version: committedVersion };
+        }
+
+        // Google Drive 개별 바이너리 파일 업로드 (4MB 초과 동영상은 Resumable 업로드, 4MB 이하는 Multipart 업로드, 기존 ID가 있으면 PATCH 갱신)
+        async function uploadBinaryAssetToDrive(fileOrBlob, fileName, mimeType, folderId, existingFileId = null) {
+            if (!isDriveTokenValid()) {
+                const err = new Error('DRIVE_AUTH_EXPIRED');
+                err.code = 'DRIVE_AUTH_EXPIRED';
+                throw err;
+            }
+            const safeMime = mimeType || fileOrBlob.type || 'application/octet-stream';
+            const size = fileOrBlob.size || 0;
+            const useResumable = size > 4 * 1024 * 1024 && !existingFileId;
+
+            if (useResumable) {
+                const metadata = {
+                    name: fileName,
+                    mimeType: safeMime,
+                    ...(folderId ? { parents: [folderId] } : {})
                 };
-            } catch (err) {
-                console.error(err);
-                showToast("저장 오류가 발생했습니다.", "error");
-                elements.renderProgress.classList.remove('animate-pulse');
-                elements.loadingOverlay.style.display = 'none';
+                const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${state.googleAccessToken}`,
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'X-Upload-Content-Type': safeMime,
+                        'X-Upload-Content-Length': String(size)
+                    },
+                    body: JSON.stringify(metadata)
+                });
+                if (initRes.status === 401 || initRes.status === 403) {
+                    const authErr = new Error('DRIVE_AUTH_EXPIRED');
+                    authErr.code = 'DRIVE_AUTH_EXPIRED';
+                    throw authErr;
+                }
+                if (!initRes.ok) throw new Error(`Resumable init failed (${initRes.status})`);
+                const uploadUrl = initRes.headers.get('Location');
+                if (!uploadUrl) throw new Error('Missing resumable Location header');
+
+                const putRes = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': safeMime },
+                    body: fileOrBlob
+                });
+                if (!putRes.ok) throw new Error(`Resumable upload failed (${putRes.status})`);
+                const uploaded = await putRes.json();
+                return uploaded.id;
+            } else {
+                const metadata = existingFileId
+                    ? { name: fileName, mimeType: safeMime }
+                    : { name: fileName, mimeType: safeMime, ...(folderId ? { parents: [folderId] } : {}) };
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', fileOrBlob);
+
+                const url = existingFileId
+                    ? `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart&fields=id,name`
+                    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name';
+                const method = existingFileId ? 'PATCH' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { Authorization: `Bearer ${state.googleAccessToken}` },
+                    body: form
+                });
+                if (res.status === 401 || res.status === 403) {
+                    const authErr = new Error('DRIVE_AUTH_EXPIRED');
+                    authErr.code = 'DRIVE_AUTH_EXPIRED';
+                    throw authErr;
+                }
+                if (!res.ok) throw new Error(`Drive upload failed (${res.status})`);
+                const uploaded = await res.json();
+                return uploaded.id;
             }
         }
 
-        async function loadProjectsFromDB(typeFilter) {
+        async function downloadDriveFileAsBlob(driveFileId, fileName = 'restored_media', fallbackMime = 'application/octet-stream') {
+            if (!driveFileId || !isDriveTokenValid()) return null;
+            const res = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
+                headers: { Authorization: `Bearer ${state.googleAccessToken}` }
+            });
+            if (res.status === 401 || res.status === 403) {
+                const authErr = new Error('DRIVE_AUTH_EXPIRED');
+                authErr.code = 'DRIVE_AUTH_EXPIRED';
+                throw authErr;
+            }
+            if (!res.ok) throw new Error(`Drive download failed (${res.status})`);
+            const blob = await res.blob();
+            return new File([blob], fileName, { type: blob.type || fallbackMime });
+        }
+
+        // 아직 Google Drive에 올라가지 않은 미디어(사진, 영상, 배경음, 커스텀 배경, 커스텀 폰트, 커스텀 스티커)만 선별하여 업로드
+        async function syncPendingProjectAssetsToDrive(silent = false) {
+            if (!isDriveTokenValid()) {
+                return { allUploaded: false, expired: true, failedCount: 0 };
+            }
+            const folderId = await ensureGdriveFolder();
+            const tasks = [];
+
+            // 1) 슬라이드 사진·영상 중 driveFileId가 없는 항목
+            state.images.forEach((img, idx) => {
+                if (!img.driveFileId && img.rawFile && !img.isPlaceholder) {
+                    tasks.push({
+                        kind: 'slide',
+                        label: img.fileName || `사진_${idx + 1}.jpg`,
+                        run: async () => {
+                            img.uploadStatus = 'uploading';
+                            const fid = await uploadBinaryAssetToDrive(
+                                img.rawFile,
+                                `slide_${state.projectId || 'proj'}_${idx + 1}_${img.fileName || 'media'}`,
+                                img.rawFile.type || (img.type === 'video' ? 'video/mp4' : 'image/jpeg'),
+                                folderId
+                            );
+                            img.driveFileId = fid;
+                            img.uploadStatus = 'synced';
+                        },
+                        onFail: () => { img.uploadStatus = 'error'; }
+                    });
+                }
+            });
+
+            // 2) 사용자 배경음 (customBgmFile)
+            if (elements.bgmSelect.value === 'custom' && state.customBgmFile && !state.customBgmDriveFileId) {
+                tasks.push({
+                    kind: 'bgm',
+                    label: state.customBgmFile.name || '배경음악.mp3',
+                    run: async () => {
+                        const fid = await uploadBinaryAssetToDrive(
+                            state.customBgmFile,
+                            `bgm_${state.projectId || 'proj'}_${state.customBgmFile.name || 'audio.mp3'}`,
+                            state.customBgmFile.type || 'audio/mpeg',
+                            folderId
+                        );
+                        state.customBgmDriveFileId = fid;
+                        state.customBgmFileName = state.customBgmFile.name || '배경음악.mp3';
+                    },
+                    onFail: () => {}
+                });
+            }
+
+            // 3) 인트로·아웃트로 전용 배경 이미지 (customBgFile)
+            if (state.bgMode === 'custom' && state.customBgFile && !state.customBgDriveFileId) {
+                tasks.push({
+                    kind: 'bg',
+                    label: state.customBgFileName || '전용배경.jpg',
+                    run: async () => {
+                        const fid = await uploadBinaryAssetToDrive(
+                            state.customBgFile,
+                            `bg_${state.projectId || 'proj'}_${state.customBgFileName || 'bg.jpg'}`,
+                            state.customBgFile.type || 'image/jpeg',
+                            folderId
+                        );
+                        state.customBgDriveFileId = fid;
+                    },
+                    onFail: () => {}
+                });
+            }
+
+            // 4) 사용자 업로드 글씨체 (state.customFonts)
+            state.customFonts.forEach((cf) => {
+                if (!cf.driveFileId && cf.rawFile) {
+                    tasks.push({
+                        kind: 'font',
+                        label: cf.fileName || `${cf.labelName}.ttf`,
+                        run: async () => {
+                            const fid = await uploadBinaryAssetToDrive(
+                                cf.rawFile,
+                                `font_${state.projectId || 'proj'}_${cf.fileName || 'custom.ttf'}`,
+                                cf.rawFile.type || 'font/ttf',
+                                folderId
+                            );
+                            cf.driveFileId = fid;
+                        },
+                        onFail: () => {}
+                    });
+                }
+            });
+
+            // 5) 사용자 업로드 스티커 (state.overlays where content === 'custom-img')
+            state.overlays.forEach((ov, idx) => {
+                if (ov.content === 'custom-img' && !ov.driveFileId && ov.rawFile) {
+                    tasks.push({
+                        kind: 'sticker',
+                        label: `${ov.label || '커스텀스티커'}.jpg`,
+                        run: async () => {
+                            const fid = await uploadBinaryAssetToDrive(
+                                ov.rawFile,
+                                `sticker_${state.projectId || 'proj'}_${idx + 1}.jpg`,
+                                ov.rawFile.type || 'image/jpeg',
+                                folderId
+                            );
+                            ov.driveFileId = fid;
+                        },
+                        onFail: () => {}
+                    });
+                }
+            });
+
+            if (tasks.length === 0) {
+                return { allUploaded: true, expired: false, failedCount: 0 };
+            }
+
+            let completed = 0;
+            let failedCount = 0;
+            const total = tasks.length;
+
+            for (const task of tasks) {
+                const stepNum = completed + 1;
+                const progressText = `사진·음원 업로드 중 ${stepNum}/${total} (${task.label})`;
+                updateSyncStatusDisplay('uploading_media', progressText);
+                if (!silent) {
+                    elements.loadingTitle.textContent = `Google Drive 미디어 업로드 중 (${stepNum}/${total})`;
+                    elements.loadingSubtitle.textContent = `'${task.label}' 파일을 안전하게 업로드하고 있습니다.`;
+                    elements.renderProgress.classList.remove('animate-pulse');
+                    elements.renderProgress.style.width = `${Math.round((stepNum / total) * 100)}%`;
+                    elements.renderTimeText.textContent = `${stepNum} / ${total}`;
+                }
+                try {
+                    await task.run();
+                    completed++;
+                } catch (err) {
+                    task.onFail();
+                    if (err && err.code === 'DRIVE_AUTH_EXPIRED') {
+                        state.googleAccessToken = null;
+                        state.googleTokenExpiresAt = 0;
+                        updateGdriveUiStatus();
+                        return { allUploaded: false, expired: true, failedCount: total - completed };
+                    }
+                    console.error(`Asset upload failed (${task.label}):`, err);
+                    failedCount++;
+                }
+            }
+
+            renderStoryboard();
+            return { allUploaded: failedCount === 0, expired: false, failedCount };
+        }
+
+        async function saveProjectToDB(type = 'draft', options = {}) {
+            const { silent = false, forceOverwrite = false } = options;
+            if (state.images.length === 0) {
+                if (!silent) showToast('저장할 미디어가 없습니다.', 'error');
+                return;
+            }
+
+            if (!silent) {
+                elements.loadingOverlay.style.display = 'flex';
+                elements.loadingTitle.textContent = currentUser ? "온라인 프로젝트 동기화 준비 중..." : "이 기기에 임시저장 중...";
+                elements.loadingSubtitle.textContent = "잠시만 기다려 주세요.";
+                elements.renderProgress.style.width = "100%";
+                elements.renderProgress.classList.add('animate-pulse');
+                elements.renderTimeText.textContent = "";
+            }
+            updateSyncStatusDisplay('saving');
+
+            if (!state.projectId) {
+                state.projectId = "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+            }
+
+            try {
+                // 1) Google 로그인 + Drive 연결 상태라면 미업로드 미디어(사진·영상·음원·폰트·스티커)를 먼저 개별 업로드
+                let driveSyncResult = { allUploaded: false, expired: false, failedCount: 0 };
+                if (currentUser && currentUser.uid && isDriveTokenValid()) {
+                    driveSyncResult = await syncPendingProjectAssetsToDrive(silent);
+                }
+
+                const projectData = buildCurrentProjectObject(type, state.projectVersion || 1);
+
+                // 2) 기기 내 IndexedDB에 최신 상태(driveFileId 포함) 저장
+                const db = await initDB();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.objectStore(STORE_NAME).put(projectData);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => reject(e);
+                });
+
+                // 3) Google 로그인 상태라면 Firestore에 편집 정보(메타데이터 + 각 미디어의 driveFileId) 저장
+                if (currentUser && currentUser.uid && firestoreDb) {
+                    try {
+                        const res = await syncProjectMetadataToFirestore(projectData, forceOverwrite);
+                        if (res.synced) {
+                            state.projectVersion = res.version;
+                            projectData.version = res.version;
+                            projectData.syncedVersion = res.version;
+                        }
+
+                        // Drive가 연결되어 있으면 Drive 폴더 내 프로젝트 메타데이터 파일도 중복 생성 없이 기존 파일 갱신(PATCH)
+                        if (isDriveTokenValid()) {
+                            try {
+                                await upsertProjectManifestOnDrive(projectData);
+                                projectData.driveManifestFileId = state.driveManifestFileId;
+                            } catch (mErr) {
+                                console.warn("Drive manifest upsert warning:", mErr);
+                            }
+                        }
+
+                        const tx2 = db.transaction(STORE_NAME, 'readwrite');
+                        tx2.objectStore(STORE_NAME).put(projectData);
+
+                        const summary = getProjectMediaSyncSummary();
+                        if (driveSyncResult.expired) {
+                            state.pendingResumeActionAfterDriveAuth = 'save';
+                            updateSyncStatusDisplay('drive_reconnect_needed', 'Drive 인증이 만료되었습니다. [Drive 연결]을 눌러 이어서 저장하세요.');
+                            if (!silent) {
+                                elements.renderProgress.classList.remove('animate-pulse');
+                                elements.loadingOverlay.style.display = 'none';
+                                showToast("편집 정보는 저장되었으나 Google Drive 권한이 만료되었습니다. [Drive 연결]을 눌러주세요.", "error");
+                            }
+                            return;
+                        }
+
+                        if (driveSyncResult.failedCount > 0) {
+                            updateSyncStatusDisplay('error', `미디어 ${driveSyncResult.failedCount}개 업로드 실패 · [지금 저장]을 눌러 재시도하세요`);
+                            if (!silent) {
+                                elements.renderProgress.classList.remove('animate-pulse');
+                                elements.loadingOverlay.style.display = 'none';
+                                showToast(`미디어 ${driveSyncResult.failedCount}개 업로드에 실패했습니다. [지금 저장]을 눌러 재시도해 주세요.`, "error");
+                            }
+                            return;
+                        }
+
+                        state.hasUnsavedChanges = false;
+                        if (summary.allSynced) {
+                            updateSyncStatusDisplay('all_synced');
+                            if (!silent) {
+                                elements.renderProgress.classList.remove('animate-pulse');
+                                elements.loadingOverlay.style.display = 'none';
+                                showToast(`모든 변경사항과 미디어(${summary.totalAssets}개)가 온라인에 완벽히 저장되었습니다! (v${state.projectVersion})`);
+                            }
+                        } else {
+                            state.pendingResumeActionAfterDriveAuth = 'save';
+                            updateSyncStatusDisplay('metadata_synced');
+                            if (!silent) {
+                                elements.renderProgress.classList.remove('animate-pulse');
+                                elements.loadingOverlay.style.display = 'none';
+                                showToast(`편집 정보(v${state.projectVersion})가 저장되었습니다. 사진·음원까지 다른 기기에서 보려면 하단 [Drive 연결]을 눌러주세요!`);
+                            }
+                        }
+                    } catch (cloudErr) {
+                        if (!silent) {
+                            elements.renderProgress.classList.remove('animate-pulse');
+                            elements.loadingOverlay.style.display = 'none';
+                        }
+                        if (cloudErr && cloudErr.code === 'VERSION_CONFLICT') {
+                            lastConflictServerDoc = cloudErr.serverDoc;
+                            updateSyncStatusDisplay('conflict');
+                            openVersionConflictModal(cloudErr.serverDoc);
+                            return;
+                        }
+                        console.warn("Firestore sync warning:", cloudErr);
+                        const errMsg = cloudErr && cloudErr.code === 'permission-denied'
+                            ? "Firestore 보안 규칙(Rules) 게시가 필요합니다 · 이 기기에는 저장됨"
+                            : "네트워크 지연으로 이 기기에 우선 저장되었습니다";
+                        updateSyncStatusDisplay('error', errMsg);
+                        if (!silent) {
+                            showToast(`이 기기에는 저장되었으나 온라인 동기화에 실패했습니다 (${cloudErr.code || '연결 확인'}).`, "error");
+                        }
+                    }
+                } else {
+                    state.hasUnsavedChanges = false;
+                    updateSyncStatusDisplay('local_saved');
+                    if (!silent) {
+                        elements.renderProgress.classList.remove('animate-pulse');
+                        elements.loadingOverlay.style.display = 'none';
+                        showToast('이 기기에 안전하게 저장되었습니다.');
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                updateSyncStatusDisplay('error');
+                if (!silent) {
+                    elements.renderProgress.classList.remove('animate-pulse');
+                    elements.loadingOverlay.style.display = 'none';
+                    showToast("저장 중 오류가 발생했습니다.", "error");
+                }
+            }
+        }
+
+        // 같은 프로젝트 저장 시 Drive에 JSON 파일이 중복 생성되지 않도록 기존 파일 ID를 찾아 PATCH로 갱신
+        async function upsertProjectManifestOnDrive(projectData) {
+            if (!isDriveTokenValid()) return null;
+            const folderId = await ensureGdriveFolder();
+            const manifestFileName = `포이무비_프로젝트__${projectData.id}.json`;
+
+            let targetFileId = state.driveManifestFileId || projectData.driveManifestFileId || null;
+            if (!targetFileId && folderId) {
+                const q = encodeURIComponent(`'${folderId}' in parents and name='${manifestFileName}' and trashed=false`);
+                const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
+                    headers: { Authorization: `Bearer ${state.googleAccessToken}` }
+                });
+                if (searchRes.ok) {
+                    const sData = await searchRes.json();
+                    if (sData.files && sData.files.length > 0) {
+                        targetFileId = sData.files[0].id;
+                    }
+                }
+            }
+
+            const lightManifest = buildFirestoreMetadataDoc(projectData, projectData.version || 1);
+            delete lightManifest.serverUpdatedAt;
+            const blob = new Blob([JSON.stringify(lightManifest, null, 2)], { type: 'application/json' });
+            const savedId = await uploadBinaryAssetToDrive(blob, manifestFileName, 'application/json', folderId, targetFileId);
+            state.driveManifestFileId = savedId;
+            return savedId;
+        }
+
+        function openVersionConflictModal(serverDoc) {
+            if (!elements.conflictModal) return;
+            const sVer = serverDoc?.version || '?';
+            const sDev = serverDoc?.lastModifiedByDevice || '다른 기기';
+            const sTime = serverDoc?.updatedAt ? new Date(serverDoc.updatedAt).toLocaleTimeString('ko-KR') : '';
+            if (elements.conflictVersionInfo) {
+                elements.conflictVersionInfo.textContent = `서버 최신 버전: v${sVer} (${sDev}에서 ${sTime}에 수정됨) / 현재 기기 기준 버전: v${state.projectVersion || 1}`;
+            }
+            elements.conflictModal.style.display = 'flex';
+        }
+
+        // Firestore 문서와 로컬 IndexedDB 프로젝트를 병합하여 목록으로 반환
+        async function loadProjectsFromDB(typeFilter, customOwnerKey = null) {
+            const db = await initDB();
+            const targetOwner = customOwnerKey || getActiveOwnerKey();
+            const localList = await new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const req = tx.objectStore(STORE_NAME).getAll();
+                req.onsuccess = () => {
+                    const filtered = req.result
+                        .filter(p => getProjectOwnerKey(p) === targetOwner && p.type === typeFilter);
+                    resolve(filtered);
+                };
+                req.onerror = () => resolve([]);
+            });
+
+            // 비로그인 모드이거나 다른 오너 조회 시 로컬 목록만 반환
+            if (!currentUser || !currentUser.uid || targetOwner !== currentUser.uid || !firestoreDb) {
+                return localList.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+            }
+
+            // 로그인 상태: Firestore에서 users/{uid}/projects 목록을 조회하여 로컬 캐시와 병합
+            try {
+                const snap = await firestoreDb
+                    .collection('users')
+                    .doc(currentUser.uid)
+                    .collection('projects')
+                    .where('type', '==', typeFilter)
+                    .get();
+
+                const byId = new Map();
+                localList.forEach(lp => {
+                    byId.set(lp.id, { ...lp, _hasLocalMedia: true, _isCloudSynced: Boolean(lp.syncedVersion) });
+                });
+
+                snap.forEach(doc => {
+                    const cloudDoc = doc.data();
+                    if (!cloudDoc || !cloudDoc.id) return;
+                    const existingLocal = byId.get(cloudDoc.id);
+                    const rebuiltFromCloud = convertFirestoreDocToProjectObject(cloudDoc, existingLocal);
+                    byId.set(cloudDoc.id, rebuiltFromCloud);
+                });
+
+                return Array.from(byId.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+            } catch (err) {
+                console.warn("Firestore list fetch fallback to local:", err);
+                return localList.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+            }
+        }
+
+        function convertFirestoreDocToProjectObject(cloudDoc, existingLocal = null) {
+            const s = cloudDoc.settings || {};
+            const localImages = (existingLocal && existingLocal.data && Array.isArray(existingLocal.data.images))
+                ? existingLocal.data.images
+                : [];
+
+            // 슬라이드 메타데이터와 로컬 기기에 있는 원본 파일(id 또는 fileName 일치)을 지능적으로 매칭
+            const mergedImages = (cloudDoc.slidesMeta || []).map((meta, idx) => {
+                const matchedLocal = localImages.find(li => String(li.id) === String(meta.id))
+                    || localImages.find(li => li.fileName && meta.fileName && li.fileName === meta.fileName);
+                return {
+                    id: meta.id || `slide_${idx}`,
+                    index: idx,
+                    type: meta.type || 'image',
+                    fileName: meta.fileName || `장면_${idx + 1}`,
+                    driveFileId: meta.driveFileId || (matchedLocal ? matchedLocal.driveFileId : null) || null,
+                    src: matchedLocal ? matchedLocal.src : null,
+                    rawFile: matchedLocal ? matchedLocal.rawFile : null,
+                    effect: meta.effect || 'zoom-in',
+                    phrase: meta.phrase !== undefined ? meta.phrase : '',
+                    duration: Number(meta.duration) || 4,
+                    videoMuted: Boolean(meta.videoMuted),
+                    subtitlePos: meta.subtitlePos || null
+                };
+            });
+
+            const hasAllLocalBlobs = mergedImages.length > 0 && mergedImages.every(m => Boolean(m.rawFile || m.src));
+
+            return {
+                id: cloudDoc.id,
+                ownerUid: cloudDoc.ownerUid || currentUser?.uid,
+                ownerMode: 'google',
+                ownerEmail: cloudDoc.ownerEmail || currentUser?.email || '',
+                userId: cloudDoc.ownerUid || currentUser?.uid,
+                version: Number(cloudDoc.version) || 1,
+                syncedVersion: Number(cloudDoc.version) || 1,
+                type: cloudDoc.type || 'draft',
+                title: cloudDoc.title || '포이무비 힐링 영상',
+                updatedAt: cloudDoc.updatedAt || Date.now(),
+                lastModifiedByDevice: cloudDoc.lastModifiedByDevice || '온라인',
+                mediaCount: cloudDoc.mediaCount !== undefined ? cloudDoc.mediaCount : mergedImages.length,
+                syncedMediaCount: cloudDoc.syncedMediaCount || 0,
+                mediaSyncStatus: cloudDoc.mediaSyncStatus || 'local_only',
+                _isCloudSynced: true,
+                _hasLocalMedia: hasAllLocalBlobs,
+                data: {
+                    ...(existingLocal ? existingLocal.data : {}),
+                    ...s,
+                    customBgFile: existingLocal?.data?.customBgFile || null,
+                    customBgSrc: existingLocal?.data?.customBgSrc || null,
+                    customBgDriveFileId: s.customBgDriveFileId || existingLocal?.data?.customBgDriveFileId || null,
+                    customBgFileName: s.customBgFileName || existingLocal?.data?.customBgFileName || null,
+                    customBgmFile: existingLocal?.data?.customBgmFile || null,
+                    customBgmDriveFileId: s.customBgmDriveFileId || existingLocal?.data?.customBgmDriveFileId || null,
+                    customBgmFileName: s.customBgmFileName || existingLocal?.data?.customBgmFileName || null,
+                    customFontsMeta: s.customFontsMeta || existingLocal?.data?.customFontsMeta || [],
+                    images: mergedImages
+                }
+            };
+        }
+
+        // 다른 기기에서 만든 프로젝트를 열었을 때 원본 사진이 아직 이 기기에 없으면 편집 가능한 안내 플레이스홀더 이미지를 생성
+        function createMissingMediaPlaceholderImage(imgData, idx) {
+            return new Promise((resolve) => {
+                const c = document.createElement('canvas');
+                c.width = 720;
+                c.height = 960;
+                const pCtx = c.getContext('2d');
+                const grad = pCtx.createLinearGradient(0, 0, 0, c.height);
+                grad.addColorStop(0, '#132a23');
+                grad.addColorStop(1, '#091410');
+                pCtx.fillStyle = grad;
+                pCtx.fillRect(0, 0, c.width, c.height);
+
+                pCtx.strokeStyle = 'rgba(110, 231, 183, 0.35)';
+                pCtx.lineWidth = 3;
+                pCtx.strokeRect(40, 40, c.width - 80, c.height - 80);
+
+                pCtx.fillStyle = '#6ee7b7';
+                pCtx.font = '800 34px "Pretendard", sans-serif';
+                pCtx.textAlign = 'center';
+                pCtx.fillText(`장면 #${String(idx + 1).padStart(2, '0')} · 원본 미디어 대기 중`, c.width / 2, c.height / 2 - 55);
+
+                pCtx.fillStyle = '#fafaf9';
+                pCtx.font = '700 28px "Pretendard", sans-serif';
+                pCtx.fillText(imgData.fileName || `사진_${idx + 1}`, c.width / 2, c.height / 2 + 5);
+
+                pCtx.fillStyle = '#a8a29e';
+                pCtx.font = '600 22px "Pretendard", sans-serif';
+                pCtx.fillText('자막·시간·순서 편집 내용이 온라인 동기화되어 있습니다', c.width / 2, c.height / 2 + 65);
+                pCtx.fillText('(동일한 사진을 추가하거나 3단계 Drive 연동 시 원본 복원)', c.width / 2, c.height / 2 + 102);
+
+                const dataUrl = c.toDataURL('image/jpeg', 0.85);
+                const img = new Image();
+                img.onload = () => resolve({ img, dataUrl });
+                img.src = dataUrl;
+            });
+        }
+
+        async function getLocalDeviceProjectsList() {
             const db = await initDB();
             return new Promise((resolve) => {
                 const tx = db.transaction(STORE_NAME, 'readonly');
                 const req = tx.objectStore(STORE_NAME).getAll();
                 req.onsuccess = () => {
-                    const filtered = req.result
-                        .filter(p => (!currentUser || p.userId === currentUser.id) && p.type === typeFilter)
-                        .sort((a, b) => b.updatedAt - a.updatedAt);
-                    resolve(filtered);
+                    const list = req.result
+                        .filter(p => getProjectOwnerKey(p) === LOCAL_DEVICE_OWNER_KEY)
+                        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                    resolve(list);
                 };
+                req.onerror = () => resolve([]);
             });
         }
 
+        async function getLocalDeviceProjectsCount() {
+            const list = await getLocalDeviceProjectsList();
+            return list.length;
+        }
+
+        // 사용자가 체크박스로 선택한 로컬 프로젝트만 내 계정으로 복사 및 Firestore 동기화
+        async function openSelectiveLocalMigrationModal() {
+            if (!currentUser || !currentUser.uid) {
+                showToast("먼저 Google 계정으로 로그인해 주세요.", "error");
+                return;
+            }
+            const localProjs = await getLocalDeviceProjectsList();
+            if (localProjs.length === 0) {
+                showToast("가져올 로컬 작업물이 없습니다.", "error");
+                return;
+            }
+            if (!elements.localMigrationModal || !elements.migrationItemsList) return;
+            elements.migrationItemsList.innerHTML = '';
+
+            localProjs.forEach(lp => {
+                const row = document.createElement('label');
+                row.className = 'flex items-center justify-between gap-3 p-3.5 rounded-xl bg-stone-50 hover:bg-emerald-50/60 border-2 border-stone-300 cursor-pointer transition';
+                const slideCnt = lp.data?.images?.length || 0;
+                const dateStr = new Date(lp.updatedAt || Date.now()).toLocaleString('ko-KR', {
+                    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
+                row.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <input type="checkbox" value="${lp.id}" checked class="migration-check-item w-4 h-4 accent-emerald-800 rounded cursor-pointer shrink-0">
+                        <div class="min-w-0">
+                            <p class="text-sm font-extrabold text-zinc-950 truncate">${lp.title || '제목 없음'}</p>
+                            <p class="text-xs font-bold text-zinc-600">장면 ${slideCnt}개 · ${dateStr} 수정</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded bg-stone-200 text-zinc-800 text-[11px] font-extrabold shrink-0">${lp.type === 'final' ? '최종완료' : '임시저장'}</span>
+                `;
+                elements.migrationItemsList.appendChild(row);
+            });
+
+            elements.localMigrationModal.style.display = 'flex';
+        }
+
+        async function confirmSelectedLocalMigration() {
+            if (!currentUser || !currentUser.uid) return;
+            const checkedIds = Array.from(document.querySelectorAll('.migration-check-item:checked')).map(el => el.value);
+            if (checkedIds.length === 0) {
+                showToast("가져올 프로젝트를 1개 이상 선택해 주세요.", "error");
+                return;
+            }
+            elements.localMigrationModal.style.display = 'none';
+            const localProjs = await getLocalDeviceProjectsList();
+            const targetProjs = localProjs.filter(lp => checkedIds.includes(lp.id));
+
+            const db = await initDB();
+            const migratedList = [];
+            await new Promise((resolve) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                targetProjs.forEach(lp => {
+                    const clonedId = `${lp.id}_acct_${currentUser.uid.slice(0, 6)}`;
+                    const migratedCopy = {
+                        ...lp,
+                        id: clonedId,
+                        ownerUid: currentUser.uid,
+                        ownerMode: 'google',
+                        ownerEmail: currentUser.email || '',
+                        userId: currentUser.uid,
+                        version: 1,
+                        updatedAt: Date.now()
+                    };
+                    store.put(migratedCopy);
+                    migratedList.push(migratedCopy);
+                });
+                tx.oncomplete = () => resolve();
+            });
+
+            // 선택한 프로젝트의 편집 정보(메타데이터)를 Firestore에도 즉시 업로드
+            if (firestoreDb) {
+                for (const mp of migratedList) {
+                    try {
+                        await syncProjectMetadataToFirestore(mp, true);
+                    } catch (e) {
+                        console.warn("Migrated project Firestore sync warning:", e);
+                    }
+                }
+            }
+
+            showToast(`선택한 ${migratedList.length}개의 프로젝트를 '${currentUser.name}' 계정으로 가져왔습니다!`);
+            renderWorkspaceTab(currentTab);
+        }
+
         async function deleteProject(id) {
-            showConfirm("정말 이 작업물을 삭제하시겠습니까?\n삭제된 작업물은 복구할 수 없습니다.", async () => {
+            showConfirm("정말 이 작업물을 삭제하시겠습니까?\n(이 기기와 온라인 프로젝트 목록에서 모두 삭제됩니다.)", async () => {
                 const db = await initDB();
                 const tx = db.transaction(STORE_NAME, 'readwrite');
                 tx.objectStore(STORE_NAME).delete(id);
-                tx.oncomplete = () => {
-                    if (state.projectId === id) state.projectId = null;
+                tx.oncomplete = async () => {
+                    if (currentUser && currentUser.uid && firestoreDb) {
+                        try {
+                            await firestoreDb.collection('users').doc(currentUser.uid).collection('projects').doc(id).delete();
+                        } catch (e) {
+                            console.warn("Firestore delete warning:", e);
+                        }
+                    }
+                    if (state.projectId === id) {
+                        state.projectId = null;
+                        state.projectVersion = 0;
+                    }
                     renderWorkspaceTab(currentTab);
-                    showToast("삭제되었습니다.");
+                    showToast("프로젝트가 삭제되었습니다.");
                 };
             });
         }
@@ -2059,6 +3186,33 @@
 
             state.projectId = project.id || ("proj_" + Date.now());
             state.projectTitle = project.title || "포이무비 힐링 영상";
+            state.driveManifestFileId = project.driveManifestFileId || null;
+            state.customBgDriveFileId = project.data.customBgDriveFileId || null;
+            state.customBgFileName = project.data.customBgFileName || null;
+            state.customBgmDriveFileId = project.data.customBgmDriveFileId || null;
+            state.customBgmFileName = project.data.customBgmFileName || null;
+
+            // 커스텀 업로드 글씨체 복원 (Drive에서 다운로드 포함)
+            if (Array.isArray(project.data.customFontsMeta) && project.data.customFontsMeta.length > 0) {
+                for (const cfMeta of project.data.customFontsMeta) {
+                    const alreadyLoaded = ALL_FONTS.includes(cfMeta.fontFamilyId);
+                    if (!alreadyLoaded && cfMeta.driveFileId && isDriveTokenValid()) {
+                        try {
+                            const fontFile = await downloadDriveFileAsBlob(cfMeta.driveFileId, cfMeta.fileName || `${cfMeta.labelName}.ttf`, 'font/ttf');
+                            if (fontFile) {
+                                const buf = await fontFile.arrayBuffer();
+                                const ff = new FontFace(cfMeta.fontFamilyId, buf);
+                                await ff.load();
+                                document.fonts.add(ff);
+                                ALL_FONTS.push(cfMeta.fontFamilyId);
+                                state.customFonts.push({ ...cfMeta, rawFile: fontFile });
+                            }
+                        } catch (fErr) {
+                            console.warn("Custom font Drive restore error:", fErr);
+                        }
+                    }
+                }
+            }
             state.aspectRatio = project.data.aspectRatio || 'vertical';
             state.fontFamily = project.data.fontFamily || 'Gowun Dodum';
             state.introFontFamily = project.data.introFontFamily || 'same';
@@ -2074,7 +3228,7 @@
             state.logoBadgeStyle = project.data.logoBadgeStyle || 'fowi-glass';
             state.logoScale = project.data.logoScale || 1.0;
             state.subtitleScale = project.data.subtitleScale || 1.0;
-            state.subtitleBgStyle = project.data.subtitleBgStyle || 'shadow';
+            state.subtitleBgStyle = project.data.subtitleBgStyle || 'pill';
             state.subtitleAnimStyle = project.data.subtitleAnimStyle || 'dissolve';
             state.bgMode = project.data.bgMode || 'auto';
             state.bgScope = project.data.bgScope || 'intro-outro';
@@ -2087,14 +3241,26 @@
             state.globalSubtitlePos = project.data.globalSubtitlePos ? { ...project.data.globalSubtitlePos } : null;
             state.selectedOverlayId = null;
             state.overlays = await Promise.all((project.data.overlays || []).map(async (ov) => {
-                if (ov.type === 'sticker' && ov.content === 'custom-img' && ov.customImgSrc) {
-                    const imgEl = await new Promise((res) => {
-                        const im = new Image();
-                        im.onload = () => res(im);
-                        im.onerror = () => res(null);
-                        im.src = ov.customImgSrc;
-                    });
-                    return { ...ov, customImgEl: imgEl };
+                if (ov.type === 'sticker' && ov.content === 'custom-img') {
+                    let srcUrl = ov.customImgSrc;
+                    let rawFileObj = serializedToFile(ov.rawFile);
+                    if (!rawFileObj && !srcUrl && ov.driveFileId && isDriveTokenValid()) {
+                        try {
+                            rawFileObj = await downloadDriveFileAsBlob(ov.driveFileId, `${ov.label || 'sticker'}.jpg`, 'image/jpeg');
+                            if (rawFileObj) srcUrl = URL.createObjectURL(rawFileObj);
+                        } catch (sErr) {
+                            console.warn("Sticker Drive restore error:", sErr);
+                        }
+                    }
+                    if (srcUrl) {
+                        const imgEl = await new Promise((res) => {
+                            const im = new Image();
+                            im.onload = () => res(im);
+                            im.onerror = () => res(null);
+                            im.src = srcUrl;
+                        });
+                        return { ...ov, rawFile: rawFileObj, customImgSrc: srcUrl, customImgEl: imgEl };
+                    }
                 }
                 return { ...ov };
             }));
@@ -2125,10 +3291,18 @@
             if (elements.bgScopeSelect) elements.bgScopeSelect.value = state.bgScope;
             if (elements.bgBlurSelect) elements.bgBlurSelect.value = state.bgBlurStyle;
 
-            const restoredBgFile = serializedToFile(project.data.customBgFile);
+            let restoredBgFile = serializedToFile(project.data.customBgFile);
+            if (!restoredBgFile && !project.data.customBgSrc && state.customBgDriveFileId && isDriveTokenValid()) {
+                try {
+                    restoredBgFile = await downloadDriveFileAsBlob(state.customBgDriveFileId, state.customBgFileName || 'custom_bg.jpg', 'image/jpeg');
+                } catch (bgErr) {
+                    console.warn("Custom BG Drive download error:", bgErr);
+                }
+            }
             if (restoredBgFile || project.data.customBgSrc) {
-                await applyCustomBackgroundSource(restoredBgFile, project.data.customBgSrc, restoredBgFile ? restoredBgFile.name : '전용 배경 이미지');
-            } else if (state.bgMode === 'custom') {
+                await applyCustomBackgroundSource(restoredBgFile, project.data.customBgSrc, restoredBgFile ? restoredBgFile.name : (state.customBgFileName || '전용 배경 이미지'));
+                state.customBgDriveFileId = project.data.customBgDriveFileId || state.customBgDriveFileId;
+            } else if (state.bgMode === 'custom' && !state.customBgDriveFileId) {
                 clearCustomBackground(false);
             }
             if (elements.bgmVolumeSlider) {
@@ -2144,7 +3318,15 @@
                 URL.revokeObjectURL(state.customBgmObjectUrl);
                 state.customBgmObjectUrl = null;
             }
-            state.customBgmFile = serializedToFile(project.data.customBgmFile) || null;
+            let restoredBgmBlob = serializedToFile(project.data.customBgmFile) || null;
+            if (!restoredBgmBlob && state.customBgmDriveFileId && isDriveTokenValid()) {
+                try {
+                    restoredBgmBlob = await downloadDriveFileAsBlob(state.customBgmDriveFileId, state.customBgmFileName || 'custom_bgm.mp3', 'audio/mpeg');
+                } catch (bgmErr) {
+                    console.warn("Custom BGM Drive download error:", bgmErr);
+                }
+            }
+            state.customBgmFile = restoredBgmBlob;
             const bgmValue = project.data.bgmSelectValue !== undefined ? project.data.bgmSelectValue : 'procedural';
             elements.bgmSelect.value = bgmValue;
             state.lastValidBgmValue = bgmValue;
@@ -2165,14 +3347,57 @@
                 elements.customBgmInfo.classList.remove('flex');
             }
 
-            const loadPromises = (project.data.images || []).map(imgData => new Promise((resolve) => {
-                const fallbackTimer = setTimeout(() => resolve(null), 10000);
+            state.projectVersion = Number(project.version) || 1;
+            let placeholderCount = 0;
+            let downloadedFromDriveCount = 0;
+            const rawSlides = project.data.images || [];
+
+            // Drive에 저장된 슬라이드 파일이 있고 로컬 파일이 없는 경우 순차적으로 다운로드하여 진행률 표시
+            for (let i = 0; i < rawSlides.length; i++) {
+                const sItem = rawSlides[i];
+                const hasLocal = Boolean(serializedToFile(sItem.rawFile) || sItem.src);
+                if (!hasLocal && sItem.driveFileId && isDriveTokenValid()) {
+                    elements.loadingTitle.textContent = `Google Drive에서 미디어 복원 중 (${i + 1}/${rawSlides.length})`;
+                    elements.loadingSubtitle.textContent = `'${sItem.fileName || `장면 #${i + 1}`}' 파일을 내려받고 있습니다...`;
+                    elements.renderProgress.classList.remove('animate-pulse');
+                    elements.renderProgress.style.width = `${Math.round(((i + 1) / rawSlides.length) * 100)}%`;
+                    elements.renderTimeText.textContent = `${i + 1} / ${rawSlides.length}`;
+                    try {
+                        const dlFile = await downloadDriveFileAsBlob(
+                            sItem.driveFileId,
+                            sItem.fileName || `slide_${i + 1}.${sItem.type === 'video' ? 'mp4' : 'jpg'}`,
+                            sItem.type === 'video' ? 'video/mp4' : 'image/jpeg'
+                        );
+                        if (dlFile) {
+                            sItem.rawFile = dlFile;
+                            downloadedFromDriveCount++;
+                        }
+                    } catch (dlErr) {
+                        console.warn(`Slide #${i + 1} Drive download failed:`, dlErr);
+                    }
+                }
+            }
+
+            const loadPromises = rawSlides.map((imgData, idx) => new Promise((resolve) => {
+                const fallbackTimer = setTimeout(() => resolve(null), 15000);
                 const restoredBlob = serializedToFile(imgData.rawFile);
                 let mediaSrc = imgData.src;
                 if (restoredBlob) mediaSrc = URL.createObjectURL(restoredBlob);
                 if (!mediaSrc) {
                     clearTimeout(fallbackTimer);
-                    return resolve(null);
+                    placeholderCount++;
+                    createMissingMediaPlaceholderImage(imgData, idx).then(({ img, dataUrl }) => {
+                        resolve({
+                            ...imgData,
+                            isPlaceholder: true,
+                            uploadStatus: imgData.driveFileId ? 'synced' : 'pending',
+                            rawFile: null,
+                            src: dataUrl,
+                            mediaElement: img,
+                            blurredBgCanvas: createPreBlurredCanvas(img)
+                        });
+                    });
+                    return;
                 }
 
                 if (imgData.type === 'video') {
@@ -2223,14 +3448,50 @@
 
             elements.renderProgress.classList.remove('animate-pulse');
             elements.loadingOverlay.style.display = 'none';
+            if (downloadedFromDriveCount > 0) {
+                try {
+                    const cachedObj = buildCurrentProjectObject(project.type || 'draft', state.projectVersion);
+                    const db = await initDB();
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.objectStore(STORE_NAME).put(cachedObj);
+                } catch (cErr) {
+                    console.warn("Local cache update after Drive download skipped:", cErr);
+                }
+            }
+
+            state.hasUnsavedChanges = false;
             updateDurations();
             renderStoryboard();
             updateUI();
             drawFrame(0);
-            showToast(`'${state.projectTitle}' 작업물을 불러왔습니다.`);
+            const summary = getProjectMediaSyncSummary();
+            const hasRemoteDrivePlaceholders = placeholderCount > 0 && state.images.some(i => i.isPlaceholder && i.driveFileId);
+
+            if (hasRemoteDrivePlaceholders && !isDriveTokenValid()) {
+                state.pendingResumeActionAfterDriveAuth = 'restore';
+                updateSyncStatusDisplay('drive_reconnect_needed', `원본 미디어(${placeholderCount}개)를 Google Drive에서 내려받으려면 우측 [Drive 연결]을 눌러주세요`);
+                showToast(`'${state.projectTitle}' 편집 정보가 복원되었습니다. 하단 [Drive 연결]을 누르면 원본 사진·음원(${placeholderCount}개)이 즉시 다운로드됩니다!`);
+            } else if (currentUser && (project._isCloudSynced || summary.allSynced)) {
+                updateSyncStatusDisplay(
+                    (summary.allSynced && placeholderCount === 0) ? 'all_synced' : 'metadata_synced',
+                    placeholderCount > 0 ? `편집 정보(v${state.projectVersion}) 복원됨 · 미업로드 미디어 ${placeholderCount}개` : null
+                );
+                showToast(downloadedFromDriveCount > 0
+                    ? `'${state.projectTitle}' (v${state.projectVersion})의 사진·음원 ${downloadedFromDriveCount}개를 Google Drive에서 완벽히 복원했습니다!`
+                    : `'${state.projectTitle}' (v${state.projectVersion}) 작업물을 불러왔습니다.`);
+            } else {
+                updateSyncStatusDisplay('local_saved');
+                showToast(`'${state.projectTitle}' 작업물을 불러왔습니다.`);
+            }
         }
 
+        let cachedWorkspaceProjects = [];
         async function restoreProject(id) {
+            const found = cachedWorkspaceProjects.find(p => p.id === id);
+            if (found) {
+                await applyProjectObjectToState(found);
+                return;
+            }
             const db = await initDB();
             const tx = db.transaction(STORE_NAME, 'readonly');
             const req = tx.objectStore(STORE_NAME).get(id);
@@ -2256,12 +3517,36 @@
 
             elements.projectList.innerHTML = '';
 
+            if (elements.workspaceOwnerLabel) {
+                elements.workspaceOwnerLabel.textContent = currentUser
+                    ? `현재 보관소: ${currentUser.name} (${currentUser.email || 'Google 계정'})`
+                    : `현재 보관소: 이 기기에서 사용 (로그인 없이 이 기기에만 저장됨)`;
+            }
+
+            if (elements.localMigrationBanner) {
+                if (currentUser && currentUser.uid) {
+                    const localCount = await getLocalDeviceProjectsCount();
+                    if (localCount > 0) {
+                        elements.localMigrationCount.textContent = String(localCount);
+                        elements.localMigrationBanner.classList.remove('hidden');
+                        elements.localMigrationBanner.classList.add('flex');
+                    } else {
+                        elements.localMigrationBanner.classList.add('hidden');
+                        elements.localMigrationBanner.classList.remove('flex');
+                    }
+                } else {
+                    elements.localMigrationBanner.classList.add('hidden');
+                    elements.localMigrationBanner.classList.remove('flex');
+                }
+            }
+
             if (type === 'cloud') {
                 await renderCloudWorkspaceItems();
                 return;
             }
 
             const projects = await loadProjectsFromDB(type);
+            cachedWorkspaceProjects = projects;
 
             if (projects.length === 0) {
                 elements.emptyProjectsText.textContent = "저장된 작업물이 없습니다.";
@@ -2340,9 +3625,39 @@
 
                 const dateEl = document.createElement('p');
                 dateEl.className = 'text-xs font-mono font-bold text-zinc-700 mt-1';
-                dateEl.textContent = dateStr;
+                const verStr = p.version ? `v${p.version} · ` : '';
+                const devStr = p.lastModifiedByDevice ? `${p.lastModifiedByDevice} · ` : '';
+                dateEl.textContent = `${verStr}${devStr}${dateStr}`;
+
+                // 편집 정보 동기화 상태 vs 미디어 동기화 상태 구분 배지
+                const syncBadgeRow = document.createElement('div');
+                syncBadgeRow.className = 'flex flex-wrap gap-1 mt-2';
+                const metaBadge = document.createElement('span');
+                if (p._isCloudSynced) {
+                    metaBadge.className = 'px-2 py-0.5 rounded bg-emerald-50 text-emerald-900 border border-emerald-300 text-[11px] font-extrabold';
+                    metaBadge.textContent = '☁️ 편집정보 온라인 동기화됨';
+                } else {
+                    metaBadge.className = 'px-2 py-0.5 rounded bg-stone-100 text-zinc-700 border border-stone-300 text-[11px] font-bold';
+                    metaBadge.textContent = '📱 이 기기에만 저장됨';
+                }
+                const mediaBadge = document.createElement('span');
+                const mCount = p.mediaCount !== undefined ? p.mediaCount : (p.data?.images?.length || 0);
+                if (p.mediaSyncStatus === 'synced' && mCount > 0) {
+                    mediaBadge.className = 'px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-300 text-[11px] font-extrabold';
+                    mediaBadge.textContent = `✅ 미디어 Drive 동기화 (${mCount}개)`;
+                } else if (p._hasLocalMedia) {
+                    mediaBadge.className = 'px-2 py-0.5 rounded bg-stone-100 text-zinc-800 border border-stone-300 text-[11px] font-bold';
+                    mediaBadge.textContent = `🖼️ 미디어 이 기기 보관 (${mCount}개)`;
+                } else {
+                    mediaBadge.className = 'px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 text-[11px] font-extrabold';
+                    mediaBadge.textContent = `📷 원본 사진 다른 기기 보관 (${mCount}개)`;
+                }
+                syncBadgeRow.appendChild(metaBadge);
+                syncBadgeRow.appendChild(mediaBadge);
+
                 infoBox.appendChild(titleEl);
                 infoBox.appendChild(dateEl);
+                infoBox.appendChild(syncBadgeRow);
 
                 const btnRow = document.createElement('div');
                 btnRow.className = 'flex gap-2 mt-auto pt-2.5 border-t border-stone-200';
@@ -2450,7 +3765,7 @@
             const tx = db.transaction(STORE_NAME, 'readonly');
             const req = tx.objectStore(STORE_NAME).getAll();
             req.onsuccess = () => {
-                const userProjects = req.result.filter(p => !currentUser || p.userId === currentUser.id);
+                const userProjects = req.result.filter(p => getProjectOwnerKey(p) === getActiveOwnerKey());
                 if (userProjects.length === 0) {
                     showToast("백업할 데이터가 없습니다.", "error");
                     return;
@@ -2479,7 +3794,10 @@
                     const db = await initDB();
                     const tx = db.transaction(STORE_NAME, 'readwrite');
                     const normalizedProjects = importedProjects.map(p => {
-                        if (currentUser) p.userId = currentUser.id;
+                        const activeOwner = getActiveOwnerKey();
+                        p.ownerUid = activeOwner;
+                        p.ownerMode = currentUser ? 'google' : 'local';
+                        p.userId = activeOwner;
                         if (p.data) {
                             p.data.customBgmFile = serializedToFile(p.data.customBgmFile);
                             p.data.customBgFile = serializedToFile(p.data.customBgFile);
@@ -2534,16 +3852,18 @@
         }
 
         function connectGoogleDriveAccount() {
-            const clientId = (elements.googleClientIdInput?.value || state.googleClientId || "").trim();
+            if (!currentUser || !currentUser.uid) {
+                elements.transferModal.style.display = 'none';
+                elements.loginModal.style.display = 'flex';
+                showToast("Google Drive를 연결하려면 먼저 Google 계정으로 로그인해 주세요.", "error");
+                return;
+            }
+            const clientId = (FOWI_APP_CONFIG.googleDriveClientId || state.googleClientId || "").trim();
             if (!clientId) {
-                elements.loginModal.style.display = 'none';
-                elements.transferModal.style.display = 'flex';
-                elements.googleClientIdInput.focus();
-                showToast("먼저 Google Cloud OAuth Client ID를 입력해 주세요.", "error");
+                showToast("외부 서비스 설정 필요: FOWI_APP_CONFIG.googleDriveClientId 설정이 필요합니다.", "error");
                 return;
             }
             state.googleClientId = clientId;
-            safeSetStorage('forestGoogleClientId', clientId);
 
             if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
                 showToast("Google 인증 스크립트를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.", "error");
@@ -2553,17 +3873,38 @@
             try {
                 googleTokenClient = window.google.accounts.oauth2.initTokenClient({
                     client_id: clientId,
-                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile',
+                    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
+                    hint: currentUser.email || undefined,
                     callback: async (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.error) {
+                            showToast("Google Drive 권한 연결이 취소되었거나 실패했습니다.", "error");
+                            return;
+                        }
                         if (tokenResponse && tokenResponse.access_token) {
                             state.googleAccessToken = tokenResponse.access_token;
-                            await fetchGoogleUserProfile();
+                            const expSec = Number(tokenResponse.expires_in) || 3599;
+                            state.googleTokenExpiresAt = Date.now() + Math.max(300, expSec - 120) * 1000;
+                            const accountMatched = await verifyDriveAccountMatchesCurrentUser();
+                            if (!accountMatched) return;
                             await ensureGdriveFolder();
                             updateGdriveUiStatus();
+                            updateSyncStatusDisplay(state.hasUnsavedChanges ? 'unsaved' : (getProjectMediaSyncSummary().allSynced ? 'all_synced' : 'metadata_synced'));
                             elements.loginModal.style.display = 'none';
-                            showToast("Google Drive 클라우드와 성공적으로 연결되었습니다!");
+                            showToast("Google Drive와 성공적으로 연결되었습니다!");
+
                             if (elements.workspaceModal.style.display === 'flex' && currentTab === 'cloud') {
                                 renderWorkspaceTab('cloud');
+                            }
+
+                            // Drive 연결 직후 대기 중이던 업로드('save') 또는 원본 미디어 복원('restore') 자동 이어하기
+                            const pendingAction = state.pendingResumeActionAfterDriveAuth;
+                            state.pendingResumeActionAfterDriveAuth = null;
+                            if (pendingAction === 'save' && state.images.length > 0) {
+                                await saveProjectToDB('draft', { silent: false });
+                            } else if (pendingAction === 'restore' || (state.images.some(i => i.isPlaceholder && i.driveFileId))) {
+                                const currentProjObj = buildCurrentProjectObject('draft', state.projectVersion || 1);
+                                currentProjObj._isCloudSynced = true;
+                                await applyProjectObjectToState(currentProjObj);
                             }
                         }
                     }
@@ -2571,31 +3912,34 @@
                 googleTokenClient.requestAccessToken({ prompt: 'consent' });
             } catch (err) {
                 console.error("Google OAuth init error:", err);
-                showToast("Client ID 형식이 올바르지 않거나 초기화에 실패했습니다.", "error");
+                showToast("Google Drive 인증 초기화에 실패했습니다. 설정값을 확인해 주세요.", "error");
             }
         }
 
-        async function fetchGoogleUserProfile() {
-            if (!state.googleAccessToken) return;
+        async function verifyDriveAccountMatchesCurrentUser() {
+            if (!state.googleAccessToken) return false;
             try {
                 const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                     headers: { Authorization: `Bearer ${state.googleAccessToken}` }
                 });
                 if (res.ok) {
                     const info = await res.json();
-                    currentUser = {
-                        id: info.sub || 'google_user',
-                        name: info.name || 'Google 사용자',
-                        picture: info.picture || ''
-                    };
-                    safeSetStorage('forestAppUser', currentUser);
-                    elements.loginBtn.classList.add('hidden');
-                    elements.userMenu.classList.remove('hidden');
-                    elements.userMenu.classList.add('flex');
-                    elements.logoutBtn.textContent = (currentUser.name || '숲').charAt(0);
+                    const driveEmail = (info.email || '').toLowerCase().trim();
+                    const appEmail = (currentUser?.email || '').toLowerCase().trim();
+                    if (appEmail && driveEmail && appEmail !== driveEmail) {
+                        state.googleAccessToken = null;
+                        state.gdriveEmail = null;
+                        state.gdriveFolderId = null;
+                        updateGdriveUiStatus();
+                        showToast(`앱에 로그인한 계정(${appEmail})과 Drive 연결 계정(${driveEmail})이 다릅니다! 동일한 계정으로 다시 연결해 주세요.`, "error");
+                        return false;
+                    }
+                    state.gdriveEmail = driveEmail;
                 }
+                return true;
             } catch (e) {
-                console.warn('User profile fetch skipped:', e);
+                console.warn('Drive email check skipped:', e);
+                return true;
             }
         }
 
@@ -2635,47 +3979,12 @@
         }
 
         async function uploadProjectToGoogleDrive(projectData, silent = false) {
-            if (!state.googleAccessToken) {
+            if (!isDriveTokenValid()) {
+                state.pendingResumeActionAfterDriveAuth = 'save';
                 if (!silent) connectGoogleDriveAccount();
                 return;
             }
-            if (!silent) {
-                elements.loadingOverlay.style.display = 'flex';
-                elements.loadingTitle.textContent = "Google Drive에 업로드 중...";
-                elements.renderProgress.style.width = "100%";
-                elements.renderProgress.classList.add('animate-pulse');
-            }
-            try {
-                const folderId = await ensureGdriveFolder();
-                const serialized = await serializeProjectForExport(projectData);
-                const fileName = `${serialized.title || '포이무비프로젝트'}__${serialized.id}.json`;
-
-                const metadata = {
-                    name: fileName,
-                    mimeType: 'application/json',
-                    ...(folderId ? { parents: [folderId] } : {})
-                };
-
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', new Blob([JSON.stringify([serialized])], { type: 'application/json' }));
-
-                const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${state.googleAccessToken}` },
-                    body: form
-                });
-                if (!res.ok) throw new Error('Drive upload failed');
-                if (!silent) showToast("Google Drive 보관함에 안전하게 저장되었습니다!");
-            } catch (err) {
-                console.error(err);
-                if (!silent) showToast("Google Drive 업로드 중 오류가 발생했습니다.", "error");
-            } finally {
-                if (!silent) {
-                    elements.renderProgress.classList.remove('animate-pulse');
-                    elements.loadingOverlay.style.display = 'none';
-                }
-            }
+            await saveProjectToDB(projectData?.type || 'draft', { silent });
         }
 
         async function renderCloudWorkspaceItems() {
@@ -3117,6 +4426,49 @@
             });
         }
 
+        function playCameraShutterSound() {
+            if (!audioCtx || !masterGainNode) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+
+                // 1) Auto-focus double beep ("삐-빅!") slightly before shutter
+                [0, 0.09].forEach((offset, idx) => {
+                    const beepOsc = audioCtx.createOscillator();
+                    const beepGain = audioCtx.createGain();
+                    beepOsc.type = 'sine';
+                    beepOsc.frequency.setValueAtTime(idx === 0 ? 2400 : 2850, now + offset);
+                    beepGain.gain.setValueAtTime(0.0001, now + offset);
+                    beepGain.gain.linearRampToValueAtTime(0.08, now + offset + 0.015);
+                    beepGain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.065);
+                    beepOsc.connect(beepGain);
+                    beepGain.connect(masterGainNode);
+                    beepOsc.start(now + offset);
+                    beepOsc.stop(now + offset + 0.07);
+                });
+
+                // 2) Mechanical DSLR shutter double click ("찰-칵!") at +0.26s and +0.33s
+                [0.26, 0.33].forEach((clickOffset, idx) => {
+                    const bufLen = Math.floor(audioCtx.sampleRate * 0.065);
+                    const noiseBuf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+                    const data = noiseBuf.getChannelData(0);
+                    for (let i = 0; i < bufLen; i++) {
+                        const t = i / audioCtx.sampleRate;
+                        const env = Math.exp(-t * (idx === 0 ? 90 : 70));
+                        const mech = Math.sin(2 * Math.PI * (900 * Math.exp(-t * 38)) * t);
+                        data[i] = ((Math.random() * 2 - 1) * 0.65 + mech * 0.35) * env;
+                    }
+                    const noiseSrc = audioCtx.createBufferSource();
+                    noiseSrc.buffer = noiseBuf;
+                    const clickGain = audioCtx.createGain();
+                    clickGain.gain.setValueAtTime(idx === 0 ? 0.32 : 0.42, now + clickOffset);
+                    noiseSrc.connect(clickGain);
+                    clickGain.connect(masterGainNode);
+                    noiseSrc.start(now + clickOffset);
+                });
+            } catch (e) {}
+        }
+
         function stopProceduralAmbient() {
             if (windNode) {
                 try { windNode.stop(); } catch (e) {}
@@ -3303,8 +4655,16 @@
                     }
                 });
 
+                state.customFonts.push({
+                    fontFamilyId: fontFamilyId,
+                    labelName: rawName,
+                    fileName: file.name || `${rawName}.ttf`,
+                    rawFile: file,
+                    driveFileId: null
+                });
+                markUnsavedChanges();
                 setFont(fontFamilyId);
-                showToast(`'${rawName}' 폰트가 성공적으로 등록되어 영상에 적용되었습니다!`);
+                showToast(`'${rawName}' 폰트가 등록되었습니다! 저장 시 Google Drive에 함께 백업됩니다.`);
             } catch (err) {
                 console.error('Custom font load error:', err);
                 showToast("유효한 폰트 파일(.ttf, .otf, .woff)이 아니거나 불러오기에 실패했습니다.", "error");
@@ -3344,12 +4704,14 @@
 
         async function applyCustomBackgroundSource(fileObj, dataUrlFallback = null, labelName = '전용 배경 이미지') {
             return new Promise((resolve) => {
-                const handleLoadedImage = (img, finalDataUrl, finalFile) => {
+                const handleLoadedImage = (img, finalDataUrl, finalFile, existingDriveId = null) => {
                     state.customBgFile = finalFile || null;
+                    state.customBgDriveFileId = existingDriveId || null;
+                    state.customBgFileName = labelName || (finalFile && finalFile.name) || 'custom_bg.jpg';
                     state.customBgSrc = finalDataUrl;
                     state.customBgElement = img;
-                    state.customBgBlurredSoft = createPreBlurredCanvas(img, 0.62, 84);
-                    state.customBgBlurredDeep = createPreBlurredCanvas(img, 0.78, 56);
+                    state.customBgBlurredSoft = createPreBlurredCanvas(img, 0.32, 84);
+                    state.customBgBlurredDeep = createPreBlurredCanvas(img, 0.52, 56);
                     state.bgMode = 'custom';
                     if (elements.bgModeSelect) elements.bgModeSelect.value = 'custom';
                     if (elements.customBgInfo) {
@@ -3452,14 +4814,14 @@
             }
             if (mediaObj.type === 'video') {
                 drawCoverImage(videoBlurCtx, mediaObj.mediaElement, videoBlurCanvas.width, videoBlurCanvas.height);
-                videoBlurCtx.fillStyle = blurStyle === 'deep' ? 'rgba(14, 12, 10, 0.82)' : 'rgba(18, 15, 12, 0.72)';
+                videoBlurCtx.fillStyle = blurStyle === 'deep' ? 'rgba(14, 12, 10, 0.52)' : 'rgba(18, 15, 12, 0.36)';
                 videoBlurCtx.fillRect(0, 0, videoBlurCanvas.width, videoBlurCanvas.height);
                 ctx.imageSmoothingEnabled = true;
                 ctx.drawImage(videoBlurCanvas, 0, 0, cw, ch);
             } else {
                 if (blurStyle === 'clear') {
                     drawCoverImage(ctx, mediaObj.mediaElement, cw, ch);
-                    ctx.fillStyle = sceneType === 'slide' ? 'rgba(14, 12, 10, 0.62)' : 'rgba(10, 12, 15, 0.48)';
+                    ctx.fillStyle = sceneType === 'slide' ? 'rgba(14, 12, 10, 0.32)' : 'rgba(10, 12, 15, 0.20)';
                     ctx.fillRect(0, 0, cw, ch);
                 } else {
                     if (!mediaObj.blurredBgCanvas) {
@@ -3593,8 +4955,8 @@
                 const matSide = isVertical ? 28 : 22;
                 const matBottom = isVertical ? 38 : 28;
                 ctx.save();
-                ctx.shadowColor = 'rgba(0,0,0,0.75)';
-                ctx.shadowBlur = 50;
+                ctx.shadowColor = 'rgba(0,0,0,0.32)';
+                ctx.shadowBlur = 32;
                 ctx.shadowOffsetY = 24;
                 ctx.fillStyle = '#faf8f5';
                 ctx.fillRect(offsetX - matSide, offsetY - matSide, drawW + matSide * 2, drawH + matSide + matBottom);
@@ -3613,8 +4975,8 @@
                 const radius = isVertical ? 36 : 28;
                 const borderPad = isVertical ? 18 : 14;
                 ctx.save();
-                ctx.shadowColor = 'rgba(0,0,0,0.65)';
-                ctx.shadowBlur = 45;
+                ctx.shadowColor = 'rgba(0,0,0,0.28)';
+                ctx.shadowBlur = 28;
                 ctx.shadowOffsetY = 20;
                 drawRoundedRectPath(ctx, offsetX - borderPad, offsetY - borderPad, drawW + borderPad * 2, drawH + borderPad * 2, radius + 8);
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
@@ -3634,8 +4996,8 @@
                 const topPad = isVertical ? 26 : 20;
                 const bottomPad = isVertical ? 130 : 95;
                 ctx.save();
-                ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                ctx.shadowBlur = 48;
+                ctx.shadowColor = 'rgba(0,0,0,0.32)';
+                ctx.shadowBlur = 32;
                 ctx.shadowOffsetY = 22;
                 ctx.fillStyle = '#fbf9f5';
                 ctx.fillRect(offsetX - sidePad, offsetY - topPad, drawW + sidePad * 2, drawH + topPad + bottomPad);
@@ -3687,6 +5049,8 @@
         }
 
         function drawBokehParticles(ctx, width, height, timeInSeconds) {
+            // 아지랑이가 일렁이는 빛망울 효과 제거 요청에 따라 비활성화
+            return;
             ctx.save();
             particles.forEach((p) => {
                 if (state.isPlaying || state.isRecording) {
@@ -3784,7 +5148,7 @@
             return state.overlays.filter(ov => ov.scope === 'all' || ov.targetSceneKey === key);
         }
 
-        function addStickerOverlay(stickerType, customImgEl = null, customImgSrc = null, customLabel = null) {
+        function addStickerOverlay(stickerType, customImgEl = null, customImgSrc = null, customLabel = null, customRawFile = null, existingDriveFileId = null) {
             const sceneKey = getCurrentSceneKey();
             const count = state.overlays.length;
             const offsetJitter = ((count % 5) - 2) * 0.04;
@@ -3795,6 +5159,8 @@
                 label: customLabel || (stickerType === 'fowi-mascot' ? '포이 캐릭터' : (stickerType === 'forest-logo' ? '숲체원 로고' : stickerType)),
                 customImgEl: customImgEl,
                 customImgSrc: customImgSrc,
+                rawFile: customRawFile || null,
+                driveFileId: existingDriveFileId || null,
                 x: Math.max(0.15, Math.min(0.85, 0.5 + offsetJitter)),
                 y: Math.max(0.15, Math.min(0.75, 0.32 + offsetJitter)),
                 scale: 1.0,
@@ -4087,17 +5453,158 @@
                 const data = scene.type === 'intro' ? state.intro : state.outro;
                 const refMedia = scene.type === 'intro' ? state.images[0] : state.images[state.images.length - 1];
                 const isCustomOrPresetIntro = state.bgMode && state.bgMode !== 'auto';
-                drawBlurredBackdrop(ctx, refMedia, width, height, isCustomOrPresetIntro ? 0.88 : 0.62, scene.type);
+                drawBlurredBackdrop(ctx, refMedia, width, height, 0.96, scene.type);
 
-                const bgGrad = ctx.createRadialGradient(width / 2, height / 2, width * 0.1, width / 2, height / 2, width * 0.95);
-                bgGrad.addColorStop(0, isCustomOrPresetIntro ? 'rgba(10, 14, 18, 0.32)' : 'rgba(12, 16, 20, 0.52)');
-                bgGrad.addColorStop(1, isCustomOrPresetIntro ? 'rgba(6, 8, 12, 0.74)' : 'rgba(8, 10, 14, 0.86)');
+                // 표지(인트로·아웃트로)의 검은 덮개를 아주 은은하게 줄여 배경 사진과 색감이 화사하게 살아나도록 조정
+                const bgGrad = ctx.createRadialGradient(width / 2, height / 2, width * 0.15, width / 2, height / 2, width * 0.98);
+                bgGrad.addColorStop(0, 'rgba(10, 14, 18, 0.10)');
+                bgGrad.addColorStop(1, 'rgba(8, 10, 14, 0.28)');
                 ctx.fillStyle = bgGrad;
                 ctx.fillRect(0, 0, width, height);
 
                 applyColorGradeAndSunRays(ctx, width, height);
                 drawBokehParticles(ctx, width, height, timeInSeconds);
                 drawEditorialFrameBorder(ctx, width, height, isVertical);
+
+                if (scene.type === 'intro' && (state.intro.style === 'fowi-shutter') && fowiMascotLogo.complete && fowiMascotLogo.naturalWidth > 0) {
+                    const dur = Math.max(2.2, scene.duration || 3.5);
+                    const normT = Math.max(0, Math.min(1, scene.elapsed / dur));
+                    const walkEnd = 0.38;
+                    const shutterMoment = 0.56;
+
+                    if ((state.isPlaying || state.isRecording) && normT >= 0.44 && normT < 0.58 && !state.intro._shutterTriggered) {
+                        state.intro._shutterTriggered = true;
+                        playCameraShutterSound();
+                    } else if (normT < 0.20) {
+                        state.intro._shutterTriggered = false;
+                    }
+
+                    // 1) 카메라 뷰파인더 코너 브래킷 & AF LOCK 표시
+                    ctx.save();
+                    const vfMx = isVertical ? 84 : 130;
+                    const vfMy = isVertical ? 150 : 105;
+                    const cLen = isVertical ? 48 : 44;
+                    const isFocused = normT >= 0.42;
+                    ctx.strokeStyle = isFocused ? 'rgba(110, 231, 183, 0.92)' : 'rgba(255, 250, 240, 0.68)';
+                    ctx.lineWidth = isFocused ? 4.5 : 3;
+                    ctx.beginPath();
+                    // TL
+                    ctx.moveTo(vfMx, vfMy + cLen); ctx.lineTo(vfMx, vfMy); ctx.lineTo(vfMx + cLen, vfMy);
+                    // TR
+                    ctx.moveTo(width - vfMx - cLen, vfMy); ctx.lineTo(width - vfMx, vfMy); ctx.lineTo(width - vfMx, vfMy + cLen);
+                    // BL
+                    ctx.moveTo(vfMx, height - vfMy - cLen); ctx.lineTo(vfMx, height - vfMy); ctx.lineTo(vfMx + cLen, height - vfMy);
+                    // BR
+                    ctx.moveTo(width - vfMx - cLen, height - vfMy); ctx.lineTo(width - vfMx, height - vfMy); ctx.lineTo(width - vfMx, height - vfMy - cLen);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(vfMx + 32, vfMy + 36, 9, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = isFocused ? '#6ee7b7' : '#fafaf9';
+                    ctx.font = `800 ${isVertical ? 24 : 22}px "Pretendard", sans-serif`;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(isFocused ? 'AF LOCK ● READY' : 'REC · FoWI STUDIO', vfMx + 52, vfMy + 36);
+                    ctx.restore();
+
+                    // 2) 포이 캐릭터 총총 걸어오기 -> 정지 후 카메라 조준 -> 찰칵!
+                    const baseCharSize = isVertical ? 460 : 420;
+                    let charX = width / 2;
+                    let charY = height * (isVertical ? 0.39 : 0.38);
+                    let charScale = 1.0;
+                    let charRot = 0;
+
+                    if (normT < walkEnd) {
+                        const wp = easeOutCubic(normT / walkEnd);
+                        charX = width * (-0.15 + 0.65 * wp);
+                        const stepPhase = (normT / walkEnd) * 4.0 * Math.PI;
+                        const bounceY = Math.abs(Math.sin(stepPhase)) * (isVertical ? 42 : 32) * (1 - 0.25 * wp);
+                        charY -= bounceY;
+                        charRot = (Math.sin(stepPhase) * 6.0 * (1 - 0.6 * wp) * Math.PI) / 180;
+                        charScale = 0.86 + 0.14 * wp;
+                    } else if (normT < shutterMoment) {
+                        const ap = easeOutCubic((normT - walkEnd) / (shutterMoment - walkEnd));
+                        charScale = 1.0 + 0.11 * ap;
+                        charY -= Math.sin(ap * Math.PI) * 10;
+                    } else {
+                        const pp = easeOutCubic(Math.min(1, (normT - shutterMoment) / 0.25));
+                        charScale = 1.11 - 0.08 * pp;
+                    }
+
+                    ctx.save();
+                    ctx.translate(charX, charY);
+                    ctx.rotate(charRot);
+                    ctx.scale(charScale, charScale);
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+                    ctx.shadowBlur = 28;
+                    ctx.shadowOffsetY = 14;
+                    ctx.drawImage(fowiMascotLogo, -baseCharSize / 2, -baseCharSize / 2, baseCharSize, baseCharSize);
+                    ctx.restore();
+
+                    // 3) 하단 인트로 타이틀 & 서브타이틀 (포이 아래쪽에 세련되게 배치)
+                    const textAlpha = Math.min(1, scene.elapsed / 0.8) * (scene.duration - scene.elapsed < 0.6 ? Math.max(0, (scene.duration - scene.elapsed) / 0.6) : 1);
+                    const revealP = Math.min(1, scene.elapsed / 0.9);
+                    const titleY = height * (isVertical ? 0.71 : 0.74);
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.shadowColor = 'rgba(0,0,0,0.78)';
+                    ctx.shadowBlur = 18;
+                    ctx.fillStyle = '#fafaf9';
+                    const fowiTitleSize = Math.round(fontSizeIntroTitle * 0.78);
+                    ctx.font = `700 ${fowiTitleSize}px "${activeIntroFont}", sans-serif`;
+                    drawWrapText(
+                        ctx,
+                        data.title,
+                        width / 2,
+                        titleY,
+                        width * 0.84,
+                        Math.round(fowiTitleSize * 1.3),
+                        revealP,
+                        textAlpha,
+                        false,
+                        'float'
+                    );
+
+                    ctx.fillStyle = '#e7e5e4';
+                    ctx.font = `400 ${Math.round(fontSizeIntroSubtitle * 0.88)}px "${activeIntroFont}", sans-serif`;
+                    drawWrapText(
+                        ctx,
+                        data.subtitle,
+                        width / 2,
+                        titleY + (isVertical ? 125 : 105),
+                        width * 0.84,
+                        Math.round(fontSizeIntroSubtitle * 1.2),
+                        revealP,
+                        textAlpha * 0.92,
+                        false,
+                        'float'
+                    );
+                    ctx.restore();
+
+                    // 4) 찰칵! 화이트 카메라 플래시 폭발 연출
+                    if (normT >= shutterMoment - 0.02 && normT <= shutterMoment + 0.22) {
+                        let flashAlpha = 0;
+                        if (normT < shutterMoment + 0.03) {
+                            flashAlpha = (normT - (shutterMoment - 0.02)) / 0.05;
+                        } else {
+                            flashAlpha = 1.0 - easeOutCubic((normT - (shutterMoment + 0.03)) / 0.19);
+                        }
+                        flashAlpha = Math.max(0, Math.min(1, flashAlpha));
+                        if (flashAlpha > 0.01) {
+                            ctx.save();
+                            ctx.fillStyle = `rgba(255, 253, 245, ${flashAlpha.toFixed(3)})`;
+                            ctx.fillRect(0, 0, width, height);
+                            ctx.restore();
+                        }
+                    }
+
+                    drawCustomOverlays(ctx, width, height, isVertical, scene);
+                    drawWatermarkBadge(ctx, width, height, isVertical);
+                    return;
+                }
 
                 let alpha = Math.min(scene.elapsed / 1.2, 1);
                 if (scene.type === 'intro' && scene.duration - scene.elapsed < 0.8) {
@@ -4157,7 +5664,7 @@
             } else if (scene.type === 'slide') {
                 const imgObj = state.images[scene.index];
                 activeVideoIndices.add(scene.index);
-                const fadeDuration = state.transitionEffect === 'fadeblack' ? 1.4 : 1.0;
+                const fadeDuration = state.transitionEffect === 'fadeblack' ? 0.52 : 0.45;
                 const isTransitioning = (scene.elapsed < fadeDuration && state.transitionEffect !== 'none');
                 
                 if (isTransitioning && scene.index === 0) {
@@ -4263,13 +5770,13 @@
                 applyColorGradeAndSunRays(ctx, width, height);
 
                 ctx.globalAlpha = 1.0;
-                const vignette = ctx.createRadialGradient(width / 2, height / 2, width / 2.2, width / 2, height / 2, width * 1.15);
+                // 사진 가장자리 어두운 효과(비네팅)를 대폭 축소하여 사진 전체가 맑고 밝게 보이도록 조정
+                const vignette = ctx.createRadialGradient(width / 2, height / 2, width * 0.58, width / 2, height / 2, width * 1.18);
                 vignette.addColorStop(0, 'rgba(0,0,0,0)');
-                vignette.addColorStop(1, 'rgba(0,0,0,0.72)');
+                vignette.addColorStop(0.75, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, 'rgba(0,0,0,0.16)');
                 ctx.fillStyle = vignette;
                 ctx.fillRect(0, 0, width, height);
-
-                drawBokehParticles(ctx, width, height, timeInSeconds);
 
                 if (state.frameStyle === 'cinema') {
                     const barH = isVertical ? 150 : 95;
@@ -4283,14 +5790,7 @@
                     ctx.moveTo(0, height - barH); ctx.lineTo(width, height - barH);
                     ctx.stroke();
                 }
-
-                const gradHeight = isVertical ? 560 : 380;
-                const gradient = ctx.createLinearGradient(0, height - gradHeight, 0, height);
-                gradient.addColorStop(0, 'rgba(12, 12, 12, 0)');
-                gradient.addColorStop(0.68, 'rgba(12, 12, 12, 0.78)');
-                gradient.addColorStop(1, 'rgba(12, 12, 12, 0.95)');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, height - gradHeight, width, gradHeight);
+                // 하단의 넓은 검은 그라데이션 제거 (자막 글자 바로 뒤에만 깔끔한 캡슐 배경이 들어가도록 개선)
 
                 drawEditorialFrameBorder(ctx, width, height, isVertical);
 
@@ -4347,7 +5847,7 @@
                         'none'
                     );
                 } else {
-                    const textRevealP = motionStyle === 'none' ? 1.0 : Math.min(1.0, scene.elapsed / 0.95);
+                    const textRevealP = motionStyle === 'none' ? 1.0 : Math.min(1.0, scene.elapsed / 0.42);
                     const hasBothPhrases = scene.index > 0 && prevPhrase.length > 0 && currentPhrase.length > 0;
                     const dividerAlpha = hasBothPhrases ? 1.0 : (currentPhrase.length > 0 ? easeOutCubic(textRevealP) : 0);
                     if (dividerAlpha > 0.01) {
@@ -4886,6 +6386,7 @@
 
                 const loadedItems = (await Promise.all(loadPromises)).filter(item => item !== null);
                 state.images = [...state.images, ...loadedItems];
+                markUnsavedChanges();
                 
                 updateDurations();
                 renderStoryboard();
@@ -5029,6 +6530,29 @@
             contentWrap.className = 'flex-1 flex flex-col justify-between h-full min-w-0';
 
             if (type === 'intro' || type === 'outro') {
+                if (type === 'intro') {
+                    const introStyleRow = document.createElement('div');
+                    introStyleRow.className = 'flex items-center justify-between gap-2 mb-2 bg-emerald-50/90 border border-emerald-300 rounded-xl px-3 py-1.5';
+                    const styleLabel = document.createElement('span');
+                    styleLabel.className = 'text-xs font-extrabold text-emerald-950 flex items-center gap-1 whitespace-nowrap';
+                    styleLabel.innerHTML = '<i data-lucide="camera" class="w-3.5 h-3.5 text-emerald-800"></i> 인트로 연출';
+                    const styleSelect = document.createElement('select');
+                    styleSelect.className = 'bg-white border border-emerald-400 rounded-lg px-2 py-1 text-xs font-extrabold text-zinc-950 focus:outline-none cursor-pointer';
+                    styleSelect.innerHTML = `
+                        <option value="fowi-shutter" ${(data.style || 'fowi-shutter') === 'fowi-shutter' ? 'selected' : ''}>📸 포이가 걸어와 찰칵! (효과음 포함)</option>
+                        <option value="classic" ${data.style === 'classic' ? 'selected' : ''}>🎬 클래식 타이틀만 표시 (기본)</option>
+                    `;
+                    styleSelect.addEventListener('change', (e) => {
+                        state.intro.style = e.target.value;
+                        seekToSegment('intro', null);
+                        showToast(state.intro.style === 'fowi-shutter'
+                            ? "인트로에 '포이 찰칵 출사 애니메이션'이 적용되었습니다!"
+                            : "인트로가 '클래식 타이틀 모드'로 변경되었습니다.");
+                    });
+                    introStyleRow.appendChild(styleLabel);
+                    introStyleRow.appendChild(styleSelect);
+                    contentWrap.appendChild(introStyleRow);
+                }
                 const titleArea = document.createElement('textarea');
                 titleArea.className = 'w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2 text-sm lg:text-base font-extrabold text-zinc-950 resize-none h-[52px] mb-2 focus:outline-none focus:border-zinc-900';
                 titleArea.placeholder = '위쪽 메인 문구';
@@ -5060,6 +6584,21 @@
                 nameSpan.title = dispName;
                 fileBadge.appendChild(numSpan);
                 fileBadge.appendChild(nameSpan);
+                if (data.driveFileId && !data.isPlaceholder) {
+                    const syncedTag = document.createElement('span');
+                    syncedTag.className = 'px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-extrabold shrink-0';
+                    syncedTag.title = '이 미디어는 Google Drive에 업로드되어 다른 기기에서도 즉시 복원됩니다';
+                    syncedTag.textContent = '☁️Drive';
+                    fileBadge.appendChild(syncedTag);
+                } else if (data.uploadStatus === 'error') {
+                    const retryBtn = document.createElement('button');
+                    retryBtn.type = 'button';
+                    retryBtn.className = 'px-1.5 py-0.5 rounded bg-red-100 hover:bg-red-200 text-red-800 border border-red-300 text-[10px] font-extrabold shrink-0';
+                    retryBtn.textContent = '🔴재시도';
+                    retryBtn.title = '업로드 실패한 이 파일을 다시 업로드합니다';
+                    retryBtn.addEventListener('click', () => saveProjectToDB('draft', { silent: false }));
+                    fileBadge.appendChild(retryBtn);
+                }
                 metaRow.appendChild(fileBadge);
 
                 const quickBtnGroup = document.createElement('div');
@@ -5246,6 +6785,7 @@
         }
 
         function updateState(type, index, key, value) {
+            markUnsavedChanges();
             if (type === 'intro') state.intro[key] = value;
             else if (type === 'outro') state.outro[key] = value;
             else if (state.images[index]) state.images[index][key] = value;
@@ -5319,15 +6859,22 @@
                     const store = tx.objectStore(STORE_NAME);
                     const req = store.get(id);
                     req.onsuccess = () => {
-                        const project = req.result;
+                        const project = req.result || cachedWorkspaceProjects.find(cp => cp.id === id);
                         if (project) {
                             project.title = newTitle.trim();
                             project.updatedAt = Date.now();
                             store.put(project);
-                            tx.oncomplete = () => {
+                            tx.oncomplete = async () => {
                                 if (state.projectId === id) state.projectTitle = project.title;
+                                if (currentUser && currentUser.uid && firestoreDb) {
+                                    try {
+                                        await syncProjectMetadataToFirestore(project, true);
+                                    } catch (e) {
+                                        console.warn("Firestore rename sync warning:", e);
+                                    }
+                                }
                                 renderWorkspaceTab(currentTab);
-                                showToast("이름이 변경되었습니다.");
+                                showToast("프로젝트 이름이 변경되었습니다.");
                             };
                         }
                     };
@@ -5338,18 +6885,233 @@
             });
         }
 
-        function init() {
-            if (currentUser) {
+
+        function markUnsavedChanges() {
+            if (state.images.length > 0) {
+                state.hasUnsavedChanges = true;
+                updateSyncStatusDisplay('unsaved');
+                if (autoSyncTimer) clearTimeout(autoSyncTimer);
+                // 이미 생성된 프로젝트가 있으면 4초간 추가 입력이 없을 때 자동 저장 실행
+                if (state.projectId) {
+                    autoSyncTimer = setTimeout(() => {
+                        if (state.hasUnsavedChanges && state.images.length > 0 && !state.isRecording) {
+                            saveProjectToDB('draft', { silent: true });
+                        }
+                    }, 4000);
+                }
+            }
+        }
+
+        function resetEditorWorkspaceForAccountChange() {
+            stopPlayback();
+            state.images.forEach(img => {
+                if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+            });
+            state.images = [];
+            state.overlays = [];
+            state.selectedOverlayId = null;
+            state.projectId = null;
+            state.projectTitle = null;
+            state.projectVersion = 0;
+            state.hasUnsavedChanges = false;
+            clearCustomBackground(false);
+            clearWorkspaceThumbUrls();
+            elements.workspaceModal.style.display = 'none';
+            elements.projectList.innerHTML = '';
+            updateDurations();
+            renderStoryboard();
+            renderOverlayListUI();
+            updateOverlayInspectorUI();
+            updateUI();
+            const ctx = elements.ctx;
+            ctx.fillStyle = '#0f1419';
+            ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
+        }
+
+        function updateAuthHeaderUI() {
+            const configured = isFirebaseConfigured();
+            if (elements.firebaseConfigNotice) {
+                if (configured) {
+                    elements.firebaseConfigNotice.classList.add('hidden');
+                } else {
+                    elements.firebaseConfigNotice.classList.remove('hidden');
+                }
+            }
+
+            if (currentUser && currentUser.uid) {
                 elements.loginBtn.classList.add('hidden');
                 elements.userMenu.classList.remove('hidden');
                 elements.userMenu.classList.add('flex');
-                elements.logoutBtn.textContent = (currentUser.name || '숲').charAt(0);
-            }
-
-            if (elements.googleClientIdInput && state.googleClientId) {
-                elements.googleClientIdInput.value = state.googleClientId;
+                if (elements.userAvatarInitial) {
+                    elements.userAvatarInitial.textContent = (currentUser.name || 'G').charAt(0).toUpperCase();
+                }
+                if (elements.headerAuthModeBadge && elements.headerAuthModeText) {
+                    elements.headerAuthModeBadge.className = "px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-300 text-[11px] sm:text-xs font-extrabold text-emerald-950 whitespace-nowrap flex items-center gap-1";
+                    elements.headerAuthModeText.textContent = `${currentUser.name}${currentUser.email ? ' (' + currentUser.email.split('@')[0] + ')' : ''}`;
+                }
+            } else {
+                elements.userMenu.classList.add('hidden');
+                elements.userMenu.classList.remove('flex');
+                elements.loginBtn.classList.remove('hidden');
+                if (elements.headerAuthModeBadge && elements.headerAuthModeText) {
+                    elements.headerAuthModeBadge.className = "px-2.5 py-1 rounded-lg bg-stone-100 border border-stone-300 text-[11px] sm:text-xs font-extrabold text-zinc-800 whitespace-nowrap flex items-center gap-1";
+                    elements.headerAuthModeText.textContent = configured ? "이 기기에서 사용 (비로그인)" : "이 기기에서 사용 (외부 인증 설정 필요)";
+                }
             }
             updateGdriveUiStatus();
+        }
+
+        function initFirebaseAuthEngine() {
+            updateAuthHeaderUI();
+            if (!isFirebaseConfigured()) {
+                return;
+            }
+            if (!window.firebase || !window.firebase.auth) {
+                console.warn("Firebase SDK를 불러오지 못했습니다.");
+                return;
+            }
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(FOWI_APP_CONFIG.firebaseConfig);
+                }
+                firebaseAuthInstance = firebase.auth();
+                if (firebase.firestore) {
+                    firestoreDb = firebase.firestore();
+                }
+                firebaseAuthInstance.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+                // 모바일 리디렉션 로그인 후 돌아왔을 때 결과 처리
+                firebaseAuthInstance.getRedirectResult().then((result) => {
+                    if (result && result.user) {
+                        elements.loginModal.style.display = 'none';
+                        showToast(`'${result.user.displayName || result.user.email}' 계정으로 로그인되었습니다!`);
+                    }
+                }).catch((err) => {
+                    if (err && err.code !== 'auth/popup-closed-by-user') {
+                        showToast(`Google 로그인 처리 중 오류가 발생했습니다: ${err.message || err.code}`, "error");
+                    }
+                });
+
+                // 인증 상태 변화 실시간 감지 및 새로고침 후 자동 복원
+                let previousUid = null;
+                firebaseAuthInstance.onAuthStateChanged((fbUser) => {
+                    if (fbUser) {
+                        const newUid = fbUser.uid;
+                        if (previousUid && previousUid !== newUid) {
+                            // 다른 계정으로 전환된 경우 이전 계정의 편집 화면과 토큰을 완전히 초기화
+                            state.googleAccessToken = null;
+                            state.gdriveEmail = null;
+                            state.gdriveFolderId = null;
+                            resetEditorWorkspaceForAccountChange();
+                        }
+                        previousUid = newUid;
+                        currentUser = {
+                            id: fbUser.uid,
+                            uid: fbUser.uid,
+                            name: fbUser.displayName || (fbUser.email ? fbUser.email.split('@')[0] : 'Google 사용자'),
+                            email: fbUser.email || '',
+                            photoURL: fbUser.photoURL || '',
+                            isFirebaseAuth: true
+                        };
+                    } else {
+                        if (previousUid !== null) {
+                            state.googleAccessToken = null;
+                            state.gdriveEmail = null;
+                            state.gdriveFolderId = null;
+                            resetEditorWorkspaceForAccountChange();
+                        }
+                        previousUid = null;
+                        currentUser = null;
+                    }
+                    updateAuthHeaderUI();
+                    if (elements.workspaceModal.style.display === 'flex') {
+                        renderWorkspaceTab(currentTab);
+                    }
+                });
+            } catch (err) {
+                console.error("Firebase init error:", err);
+                showToast("Firebase 초기화 설정값을 확인해 주세요.", "error");
+            }
+        }
+
+        async function startFirebaseGoogleLogin(forceSelectAccount = true) {
+            if (!isFirebaseConfigured()) {
+                if (elements.firebaseConfigNotice) {
+                    elements.firebaseConfigNotice.classList.remove('hidden');
+                }
+                showToast("외부 서비스 설정 필요: 코드 상단 FOWI_APP_CONFIG에 Firebase 설정값을 입력해야 Google 로그인이 작동합니다.", "error");
+                return;
+            }
+            if (!firebaseAuthInstance) {
+                initFirebaseAuthEngine();
+            }
+            if (!firebaseAuthInstance) {
+                showToast("Firebase 인증 모듈을 초기화할 수 없습니다.", "error");
+                return;
+            }
+
+            const provider = new firebase.auth.GoogleAuthProvider();
+            if (forceSelectAccount) {
+                provider.setCustomParameters({ prompt: 'select_account' });
+            }
+
+            try {
+                const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+                const result = await firebaseAuthInstance.signInWithPopup(provider);
+                if (result && result.user) {
+                    elements.loginModal.style.display = 'none';
+                    showToast(`환영합니다! '${result.user.displayName || result.user.email}' 계정으로 로그인되었습니다.`);
+                }
+            } catch (err) {
+                const code = err && err.code ? err.code : '';
+                if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+                    showToast("팝업이 차단되어 모바일/리디렉션 로그인 화면으로 이동합니다...");
+                    await firebaseAuthInstance.signInWithRedirect(provider);
+                } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+                    showToast("Google 로그인이 취소되었습니다. '이 기기에서 사용'으로 계속 작업하실 수 있습니다.", "error");
+                } else {
+                    console.error("Google sign-in error:", err);
+                    showToast(`Google 로그인에 실패했습니다 (${code || '설정 확인 필요'}).`, "error");
+                }
+            }
+        }
+
+        function handleUserLogout() {
+            const proceedLogout = async () => {
+                state.googleAccessToken = null;
+                state.gdriveEmail = null;
+                state.gdriveFolderId = null;
+                resetEditorWorkspaceForAccountChange();
+                if (firebaseAuthInstance && currentUser) {
+                    try {
+                        await firebaseAuthInstance.signOut();
+                    } catch (e) {}
+                }
+                currentUser = null;
+                updateAuthHeaderUI();
+                showToast("로그아웃되어 '이 기기에서 사용' 모드로 전환되었습니다.");
+            };
+
+            if (state.images.length > 0 && state.hasUnsavedChanges) {
+                showConfirm("현재 편집 중인 작업물에 저장하지 않은 변경사항이 있습니다.\n로그아웃하면 현재 편집 화면이 초기화됩니다. 계속하시겠습니까?", proceedLogout);
+            } else {
+                showConfirm("로그아웃 하시겠습니까?\n(이 기기에 저장된 기존 작업물은 삭제되지 않습니다.)", proceedLogout);
+            }
+        }
+
+        function handleSwitchGoogleAccount() {
+            const proceedSwitch = () => {
+                startFirebaseGoogleLogin(true);
+            };
+            if (state.images.length > 0 && state.hasUnsavedChanges) {
+                showConfirm("현재 편집 중인 작업물에 저장하지 않은 변경사항이 있습니다.\n다른 계정으로 전환하면 현재 편집 화면이 초기화됩니다. 계속하시겠습니까?", proceedSwitch);
+            } else {
+                proceedSwitch();
+            }
+        }
+
+        function init() {
+            initFirebaseAuthEngine();
 
             elements.openInstallModalBtn.addEventListener('click', () => {
                 elements.installAppModal.style.display = 'flex';
@@ -5368,39 +7130,108 @@
                 deferredPwaPrompt = null;
             });
 
-            elements.loginBtn.addEventListener('click', () => { elements.loginModal.style.display = 'flex'; });
+            elements.loginBtn.addEventListener('click', () => {
+                updateAuthHeaderUI();
+                elements.loginModal.style.display = 'flex';
+            });
             elements.closeLoginBtn.addEventListener('click', () => { elements.loginModal.style.display = 'none'; });
             elements.loginOpenTransferBtn.addEventListener('click', () => {
                 elements.loginModal.style.display = 'none';
                 elements.transferModal.style.display = 'flex';
             });
 
+            // 실제 Firebase Google 로그인 실행 (가상 로그인 완전 제거)
             elements.mockLoginBtn.addEventListener('click', () => {
-                if (state.googleClientId && state.googleClientId.trim() !== '') {
-                    connectGoogleDriveAccount();
-                    return;
-                }
-                currentUser = { id: 'user_123', name: '포이무비 매니저' };
-                safeSetStorage('forestAppUser', currentUser);
-                elements.loginModal.style.display = 'none';
-                elements.loginBtn.classList.add('hidden');
-                elements.userMenu.classList.remove('hidden');
-                elements.userMenu.classList.add('flex');
-                showToast("안전하게 로그인되었습니다. (기기 간 이어하기로 언제든 전송 가능)");
+                startFirebaseGoogleLogin(true);
             });
 
-            elements.logoutBtn.addEventListener('click', () => {
-                showConfirm("로그아웃 하시겠습니까?", () => {
-                    safeSetStorage('forestAppUser', null);
-                    currentUser = null;
-                    state.googleAccessToken = null;
-                    updateGdriveUiStatus();
-                    elements.userMenu.classList.add('hidden');
-                    elements.userMenu.classList.remove('flex');
-                    elements.loginBtn.classList.remove('hidden');
-                    showToast("로그아웃 되었습니다.");
+            // '이 기기에서 사용 (로그인 없이 시작)' 명시적 선택
+            if (elements.startLocalModeBtn) {
+                elements.startLocalModeBtn.addEventListener('click', () => {
+                    elements.loginModal.style.display = 'none';
+                    updateAuthHeaderUI();
+                    showToast("'이 기기에서 사용' 모드로 작업합니다. 작업물은 현재 기기에 저장됩니다.");
                 });
-            });
+            }
+
+            if (elements.switchAccountBtn) {
+                elements.switchAccountBtn.addEventListener('click', handleSwitchGoogleAccount);
+            }
+
+            elements.logoutBtn.addEventListener('click', handleUserLogout);
+            const expLogout = document.getElementById('explicit-logout-btn');
+            if (expLogout) expLogout.addEventListener('click', handleUserLogout);
+
+            if (elements.newBlankProjectBtn) {
+                elements.newBlankProjectBtn.addEventListener('click', () => {
+                    if (state.images.length > 0 && state.hasUnsavedChanges) {
+                        showConfirm("저장하지 않은 편집 내용이 있습니다. 새 프로젝트를 시작하시겠습니까?", () => {
+                            resetEditorWorkspaceForAccountChange();
+                            showToast("새 프로젝트 작업 공간이 준비되었습니다.");
+                        });
+                    } else {
+                        resetEditorWorkspaceForAccountChange();
+                        showToast("새 프로젝트 작업 공간이 준비되었습니다.");
+                    }
+                });
+            }
+
+            if (elements.migrateLocalProjectsBtn) {
+                elements.migrateLocalProjectsBtn.addEventListener('click', openSelectiveLocalMigrationModal);
+            }
+            if (elements.closeMigrationModalBtn) {
+                elements.closeMigrationModalBtn.addEventListener('click', () => { elements.localMigrationModal.style.display = 'none'; });
+            }
+            if (elements.cancelMigrationBtn) {
+                elements.cancelMigrationBtn.addEventListener('click', () => { elements.localMigrationModal.style.display = 'none'; });
+            }
+            if (elements.confirmMigrationBtn) {
+                elements.confirmMigrationBtn.addEventListener('click', confirmSelectedLocalMigration);
+            }
+            if (elements.syncNowBtn) {
+                elements.syncNowBtn.addEventListener('click', () => saveProjectToDB('draft', { silent: false }));
+            }
+            if (elements.reconnectDriveSyncBtn) {
+                elements.reconnectDriveSyncBtn.addEventListener('click', () => {
+                    if (!state.pendingResumeActionAfterDriveAuth) {
+                        state.pendingResumeActionAfterDriveAuth = state.images.some(i => i.isPlaceholder && i.driveFileId) ? 'restore' : 'save';
+                    }
+                    connectGoogleDriveAccount();
+                });
+            }
+            if (elements.closeConflictModalBtn) {
+                elements.closeConflictModalBtn.addEventListener('click', () => { elements.conflictModal.style.display = 'none'; });
+            }
+            if (elements.conflictSaveCopyBtn) {
+                elements.conflictSaveCopyBtn.addEventListener('click', async () => {
+                    elements.conflictModal.style.display = 'none';
+                    state.projectId = "proj_" + Date.now() + "_copy";
+                    state.projectVersion = 0;
+                    state.projectTitle = `${state.projectTitle || state.intro.title || '포이무비 영상'} (${getDeviceLabel()} 사본)`;
+                    await saveProjectToDB('draft', { silent: false, forceOverwrite: true });
+                });
+            }
+            if (elements.conflictLoadServerBtn) {
+                elements.conflictLoadServerBtn.addEventListener('click', async () => {
+                    elements.conflictModal.style.display = 'none';
+                    if (lastConflictServerDoc) {
+                        const db = await initDB();
+                        const localMatch = await new Promise((res) => {
+                            const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(lastConflictServerDoc.id);
+                            req.onsuccess = () => res(req.result || null);
+                            req.onerror = () => res(null);
+                        });
+                        const merged = convertFirestoreDocToProjectObject(lastConflictServerDoc, localMatch);
+                        await applyProjectObjectToState(merged);
+                    }
+                });
+            }
+            if (elements.conflictOverwriteBtn) {
+                elements.conflictOverwriteBtn.addEventListener('click', async () => {
+                    elements.conflictModal.style.display = 'none';
+                    await saveProjectToDB('draft', { silent: false, forceOverwrite: true });
+                });
+            }
 
             elements.openTransferBtn.addEventListener('click', () => {
                 if (elements.googleClientIdInput) elements.googleClientIdInput.value = state.googleClientId || '';
@@ -5512,7 +7343,10 @@
                         URL.revokeObjectURL(state.customBgmObjectUrl);
                     }
                     state.customBgmFile = file;
+                    state.customBgmDriveFileId = null;
+                    state.customBgmFileName = file.name;
                     state.customBgmObjectUrl = URL.createObjectURL(file);
+                    markUnsavedChanges();
                     elements.bgmAudio.src = state.customBgmObjectUrl;
                     elements.customBgmInfo.classList.remove('hidden');
                     elements.customBgmInfo.classList.add('flex');
@@ -5760,8 +7594,9 @@
                     const file = e.target.files[0];
                     if (file) {
                         try {
-                            const { img, dataUrl } = await optimizeImageFile(file, 600);
-                            addStickerOverlay('custom-img', img, dataUrl, file.name.replace(/\.[^.]+$/, ''));
+                            const { img, dataUrl, rawFile } = await optimizeImageFile(file, 600);
+                            addStickerOverlay('custom-img', img, dataUrl, file.name.replace(/\.[^.]+$/, ''), rawFile, null);
+                            markUnsavedChanges();
                         } catch (err) {
                             showToast("스티커 이미지를 불러오지 못했습니다.", "error");
                         }
