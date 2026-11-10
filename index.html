@@ -1021,6 +1021,17 @@
 
                 <!-- 하단 액션 푸터 (저장 상태 실시간 표시 + 지금 저장 + 영상 추출) -->
                 <div class="p-4 sm:p-5 border-t-2 border-stone-200 bg-white shadow-[0_-10px_30px_rgba(0,0,0,0.04)] z-20 space-y-3">
+                    <!-- 다른 기기에서 편집 중이거나 최신 버전이 감지되었을 때 표시되는 실시간 보호 배너 -->
+                    <div id="other-device-editing-banner" class="hidden items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-amber-50 border-2 border-amber-400 text-amber-950">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-600 animate-ping shrink-0"></span>
+                            <span id="other-device-editing-text" class="text-xs font-extrabold truncate">다른 기기에서 현재 이 프로젝트를 편집 중입니다 (90초 자동 만료 보호)</span>
+                        </div>
+                        <button id="resolve-version-conflict-btn" type="button" class="hidden px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white text-[11px] font-extrabold whitespace-nowrap transition shrink-0">
+                            버전 선택
+                        </button>
+                    </div>
+
                     <!-- 저장 상태 및 편집정보/미디어 동기화 구분 표시줄 -->
                     <div id="sync-status-bar" class="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-stone-100 border border-stone-300">
                         <div class="flex flex-col min-w-0">
@@ -1031,6 +1042,9 @@
                             <span id="sync-media-subtext" class="text-[11px] font-bold text-zinc-600 truncate pl-4">편집 정보와 미디어 저장 상태가 이곳에 구분 표시됩니다</span>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
+                            <button id="retry-failed-sync-btn" type="button" class="hidden px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold transition items-center gap-1 whitespace-nowrap shadow-sm" title="실패한 항목만 이어서 다시 저장합니다">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 다시 시도
+                            </button>
                             <button id="reconnect-drive-sync-btn" type="button" class="hidden px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition items-center gap-1 whitespace-nowrap shadow-sm" title="Google Drive 권한을 연결하고 사진·음원 업로드를 이어서 진행합니다">
                                 <i data-lucide="cloud" class="w-3.5 h-3.5"></i> Drive 연결
                             </button>
@@ -1925,6 +1939,8 @@
             customBgDriveFileId: null,
             customBgFileName: null,
             pendingResumeActionAfterDriveAuth: null,
+            pendingOnlineSyncOnReconnect: false,
+            remoteActiveSession: null,
             hasUnsavedChanges: false
         };
 
@@ -1939,7 +1955,13 @@
         let currentUser = null; // 오직 실제 Firebase Google 인증이 완료된 경우에만 객체가 할당됨 (비로그인 시 null = '이 기기에서 사용')
         let firebaseAuthInstance = null;
         let firestoreDb = null;
+        let localAutoSaveTimer = null;
         let autoSyncTimer = null;
+        let sessionHeartbeatTimer = null;
+        let activeProjectUnsubscribe = null;
+        let authSessionEpoch = 0; // 계정 전환·로그아웃 시 진행 중인 비동기 요청 결과를 무효화하기 위한 세대 카운터
+        const DEVICE_SESSION_ID = "sess_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+        const ACTIVE_SESSION_LEASE_MS = 90000; // 90초 자동 만료 (비정상 종료 시 영구 잠금 방지)
         let lastConflictServerDoc = null;
         let workspaceThumbUrls = [];
         let googleTokenClient = null;
@@ -2049,10 +2071,14 @@
             localMigrationBanner: document.getElementById('local-migration-banner'),
             localMigrationCount: document.getElementById('local-migration-count'),
             migrateLocalProjectsBtn: document.getElementById('migrate-local-projects-btn'),
+            otherDeviceEditingBanner: document.getElementById('other-device-editing-banner'),
+            otherDeviceEditingText: document.getElementById('other-device-editing-text'),
+            resolveVersionConflictBtn: document.getElementById('resolve-version-conflict-btn'),
             syncStatusBar: document.getElementById('sync-status-bar'),
             syncStatusDot: document.getElementById('sync-status-dot'),
             syncStatusText: document.getElementById('sync-status-text'),
             syncMediaSubtext: document.getElementById('sync-media-subtext'),
+            retryFailedSyncBtn: document.getElementById('retry-failed-sync-btn'),
             reconnectDriveSyncBtn: document.getElementById('reconnect-drive-sync-btn'),
             syncNowBtn: document.getElementById('sync-now-btn'),
             projectVersionBadge: document.getElementById('project-version-badge'),
@@ -2192,6 +2218,16 @@
                 }
             }
 
+            if (elements.retryFailedSyncBtn) {
+                if (statusKey === 'error') {
+                    elements.retryFailedSyncBtn.classList.remove('hidden');
+                    elements.retryFailedSyncBtn.classList.add('flex');
+                } else {
+                    elements.retryFailedSyncBtn.classList.add('hidden');
+                    elements.retryFailedSyncBtn.classList.remove('flex');
+                }
+            }
+
             if (statusKey === 'unsaved') {
                 elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0";
                 elements.syncStatusText.textContent = "변경사항 있음 (저장 대기)";
@@ -2234,10 +2270,14 @@
                 elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-600 animate-bounce shrink-0";
                 elements.syncStatusText.textContent = "다른 기기 수정 감지됨 · 버전 확인 필요";
                 elements.syncMediaSubtext.textContent = customDetail || "덮어쓰기 방지를 위해 버전 확인 창에서 선택해 주세요";
+            } else if (statusKey === 'offline_saved') {
+                elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0";
+                elements.syncStatusText.textContent = "연결 끊김 · 이 기기에 임시저장됨";
+                elements.syncMediaSubtext.textContent = customDetail || "네트워크가 복구되면 변경사항을 자동으로 온라인에 동기화합니다";
             } else if (statusKey === 'error') {
                 elements.syncStatusDot.className = "w-2.5 h-2.5 rounded-full bg-red-600 shrink-0";
-                elements.syncStatusText.textContent = "저장 실패 · 다시 시도";
-                elements.syncMediaSubtext.textContent = customDetail || "[지금 저장]을 눌러 실패한 항목만 이어서 다시 업로드할 수 있습니다";
+                elements.syncStatusText.textContent = "저장 실패 · 다시 시도 가능";
+                elements.syncMediaSubtext.textContent = customDetail || "이 기기에는 안전하게 보관되었습니다 · 우측 [다시 시도] 또는 [지금 저장]을 눌러주세요";
             }
         }
 
@@ -2376,6 +2416,12 @@
                 updatedAt: Date.now(),
                 serverUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 lastModifiedByDevice: getDeviceLabel(),
+                activeSession: {
+                    sessionId: DEVICE_SESSION_ID,
+                    deviceLabel: getDeviceLabel(),
+                    updatedAt: Date.now(),
+                    expiresAt: Date.now() + ACTIVE_SESSION_LEASE_MS
+                },
                 driveManifestFileId: projectObj.driveManifestFileId || state.driveManifestFileId || null,
                 mediaCount: summary.totalAssets,
                 syncedMediaCount: summary.syncedAssets,
@@ -2444,6 +2490,131 @@
                 },
                 slidesMeta: slidesMeta
             };
+        }
+
+        function isRemoteSessionCurrentlyActive(activeSessionObj) {
+            if (!activeSessionObj || !activeSessionObj.sessionId) return false;
+            if (activeSessionObj.sessionId === DEVICE_SESSION_ID) return false;
+            const exp = Number(activeSessionObj.expiresAt) || 0;
+            return exp > Date.now();
+        }
+
+        function updateOtherDeviceBannerUI(remoteSession = null, conflictDoc = null) {
+            if (!elements.otherDeviceEditingBanner || !elements.otherDeviceEditingText) return;
+            const hasConflict = Boolean(conflictDoc);
+            const hasOtherActive = isRemoteSessionCurrentlyActive(remoteSession);
+
+            if (hasConflict) {
+                elements.otherDeviceEditingBanner.classList.remove('hidden');
+                elements.otherDeviceEditingBanner.classList.add('flex');
+                const dev = conflictDoc.lastModifiedByDevice || '다른 기기';
+                elements.otherDeviceEditingText.textContent = `${dev}에서 새 버전(v${conflictDoc.version || '?'})을 저장했습니다 · 덮어쓰기 방지를 위해 버전을 선택해 주세요`;
+                if (elements.resolveVersionConflictBtn) {
+                    elements.resolveVersionConflictBtn.classList.remove('hidden');
+                }
+            } else if (hasOtherActive) {
+                elements.otherDeviceEditingBanner.classList.remove('hidden');
+                elements.otherDeviceEditingBanner.classList.add('flex');
+                const dev = remoteSession.deviceLabel || '다른 기기';
+                elements.otherDeviceEditingText.textContent = `현재 ${dev}에서 이 프로젝트를 열어 편집 중입니다 · 동시 저장 시 사본으로 안전하게 분리할 수 있습니다`;
+                if (elements.resolveVersionConflictBtn) {
+                    elements.resolveVersionConflictBtn.classList.add('hidden');
+                }
+            } else {
+                elements.otherDeviceEditingBanner.classList.add('hidden');
+                elements.otherDeviceEditingBanner.classList.remove('flex');
+                if (elements.resolveVersionConflictBtn) {
+                    elements.resolveVersionConflictBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        async function refreshActiveProjectSessionLease(clearLease = false) {
+            if (!currentUser || !currentUser.uid || !firestoreDb || !state.projectId) return;
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+            try {
+                const docRef = firestoreDb.collection('users').doc(currentUser.uid).collection('projects').doc(state.projectId);
+                await docRef.update({
+                    activeSession: {
+                        sessionId: DEVICE_SESSION_ID,
+                        deviceLabel: getDeviceLabel(),
+                        updatedAt: Date.now(),
+                        expiresAt: clearLease ? 0 : (Date.now() + ACTIVE_SESSION_LEASE_MS)
+                    }
+                });
+            } catch (e) {
+                // 아직 서버에 문서가 생성되기 전이거나 오프라인인 경우 조용히 무시
+            }
+        }
+
+        function stopActiveProjectRealtimeSubscription(releaseLease = false) {
+            if (sessionHeartbeatTimer) {
+                clearInterval(sessionHeartbeatTimer);
+                sessionHeartbeatTimer = null;
+            }
+            if (releaseLease && state.projectId && currentUser && firestoreDb) {
+                refreshActiveProjectSessionLease(true);
+            }
+            if (activeProjectUnsubscribe) {
+                try { activeProjectUnsubscribe(); } catch (e) {}
+                activeProjectUnsubscribe = null;
+            }
+            state.remoteActiveSession = null;
+            updateOtherDeviceBannerUI(null, null);
+        }
+
+        function subscribeToActiveProjectRealtime(projectId) {
+            stopActiveProjectRealtimeSubscription(false);
+            if (!currentUser || !currentUser.uid || !firestoreDb || !projectId) return;
+
+            const capturedEpoch = authSessionEpoch;
+            const docRef = firestoreDb.collection('users').doc(currentUser.uid).collection('projects').doc(projectId);
+
+            activeProjectUnsubscribe = docRef.onSnapshot((snap) => {
+                if (capturedEpoch !== authSessionEpoch || state.projectId !== projectId) return;
+                if (!snap.exists) return;
+                const data = snap.data();
+                if (!data) return;
+
+                state.remoteActiveSession = data.activeSession || null;
+                const remoteVer = Number(data.version) || 1;
+                const localVer = Number(state.projectVersion) || 0;
+
+                if (localVer > 0 && remoteVer > localVer && data.activeSession?.sessionId !== DEVICE_SESSION_ID) {
+                    lastConflictServerDoc = data;
+                    updateOtherDeviceBannerUI(data.activeSession, data);
+                    if (state.hasUnsavedChanges) {
+                        updateSyncStatusDisplay('conflict', `${data.lastModifiedByDevice || '다른 기기'}에서 새 버전(v${remoteVer})이 저장되었습니다`);
+                    }
+                } else {
+                    updateOtherDeviceBannerUI(data.activeSession, null);
+                }
+            }, (err) => {
+                console.warn("Realtime project listener warning:", err);
+            });
+
+            // 45초마다 편집 중 임대 시간(90초 만료)을 갱신하여 비정상 종료 시에도 최대 90초 뒤 자동 해제되도록 보장
+            sessionHeartbeatTimer = setInterval(() => {
+                if (capturedEpoch !== authSessionEpoch || !state.projectId || document.visibilityState === 'hidden') return;
+                refreshActiveProjectSessionLease(false);
+            }, 45000);
+        }
+
+        // 기기 내 IndexedDB에만 즉시 가볍게 저장하는 로컬 임시저장 함수 (1.2초 디바운스용)
+        async function saveProjectLocallyOnly(type = 'draft') {
+            if (state.images.length === 0) return null;
+            if (!state.projectId) {
+                state.projectId = "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+            }
+            const projectData = buildCurrentProjectObject(type, state.projectVersion || 1);
+            const db = await initDB();
+            await new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put(projectData);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+            return projectData;
         }
 
         // Firestore 트랜잭션 기반 원자적 버전 검사 및 저장
@@ -2715,6 +2886,10 @@
 
         async function saveProjectToDB(type = 'draft', options = {}) {
             const { silent = false, forceOverwrite = false } = options;
+            const capturedEpoch = authSessionEpoch;
+            if (localAutoSaveTimer) { clearTimeout(localAutoSaveTimer); localAutoSaveTimer = null; }
+            if (autoSyncTimer) { clearTimeout(autoSyncTimer); autoSyncTimer = null; }
+
             if (state.images.length === 0) {
                 if (!silent) showToast('저장할 미디어가 없습니다.', 'error');
                 return;
@@ -2735,10 +2910,24 @@
             }
 
             try {
+                // 오프라인 상태 감지 시 기기 내 IndexedDB에 안전하게 임시저장하고 재연결 대기 상태로 전환
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                    await saveProjectLocallyOnly(type);
+                    state.pendingOnlineSyncOnReconnect = true;
+                    updateSyncStatusDisplay('offline_saved');
+                    if (!silent) {
+                        elements.renderProgress.classList.remove('animate-pulse');
+                        elements.loadingOverlay.style.display = 'none';
+                        showToast('오프라인 상태입니다. 이 기기에 안전하게 임시저장되었으며 인터넷 연결 복구 시 자동 동기화됩니다.');
+                    }
+                    return;
+                }
+
                 // 1) Google 로그인 + Drive 연결 상태라면 미업로드 미디어(사진·영상·음원·폰트·스티커)를 먼저 개별 업로드
                 let driveSyncResult = { allUploaded: false, expired: false, failedCount: 0 };
                 if (currentUser && currentUser.uid && isDriveTokenValid()) {
                     driveSyncResult = await syncPendingProjectAssetsToDrive(silent);
+                    if (capturedEpoch !== authSessionEpoch) return;
                 }
 
                 const projectData = buildCurrentProjectObject(type, state.projectVersion || 1);
@@ -2751,15 +2940,23 @@
                     tx.oncomplete = () => resolve();
                     tx.onerror = (e) => reject(e);
                 });
+                if (capturedEpoch !== authSessionEpoch) return;
 
                 // 3) Google 로그인 상태라면 Firestore에 편집 정보(메타데이터 + 각 미디어의 driveFileId) 저장
                 if (currentUser && currentUser.uid && firestoreDb) {
                     try {
                         const res = await syncProjectMetadataToFirestore(projectData, forceOverwrite);
+                        if (capturedEpoch !== authSessionEpoch) return;
                         if (res.synced) {
                             state.projectVersion = res.version;
                             projectData.version = res.version;
                             projectData.syncedVersion = res.version;
+                            state.pendingOnlineSyncOnReconnect = false;
+                            lastConflictServerDoc = null;
+                            updateOtherDeviceBannerUI(state.remoteActiveSession, null);
+                            if (!activeProjectUnsubscribe) {
+                                subscribeToActiveProjectRealtime(projectData.id);
+                            }
                         }
 
                         // Drive가 연결되어 있으면 Drive 폴더 내 프로젝트 메타데이터 파일도 중복 생성 없이 기존 파일 갱신(PATCH)
@@ -2982,6 +3179,7 @@
                 title: cloudDoc.title || '포이무비 힐링 영상',
                 updatedAt: cloudDoc.updatedAt || Date.now(),
                 lastModifiedByDevice: cloudDoc.lastModifiedByDevice || '온라인',
+                activeSession: cloudDoc.activeSession || null,
                 mediaCount: cloudDoc.mediaCount !== undefined ? cloudDoc.mediaCount : mergedImages.length,
                 syncedMediaCount: cloudDoc.syncedMediaCount || 0,
                 mediaSyncStatus: cloudDoc.mediaSyncStatus || 'local_only',
@@ -3460,6 +3658,10 @@
             }
 
             state.hasUnsavedChanges = false;
+            if (currentUser && currentUser.uid && state.projectId) {
+                subscribeToActiveProjectRealtime(state.projectId);
+                refreshActiveProjectSessionLease(false);
+            }
             updateDurations();
             renderStoryboard();
             updateUI();
@@ -3654,6 +3856,12 @@
                 }
                 syncBadgeRow.appendChild(metaBadge);
                 syncBadgeRow.appendChild(mediaBadge);
+                if (isRemoteSessionCurrentlyActive(p.activeSession)) {
+                    const activeEditBadge = document.createElement('span');
+                    activeEditBadge.className = 'px-2 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-400 text-[11px] font-extrabold animate-pulse';
+                    activeEditBadge.textContent = `✏️ ${p.activeSession.deviceLabel || '다른 기기'}에서 편집 중`;
+                    syncBadgeRow.appendChild(activeEditBadge);
+                }
 
                 infoBox.appendChild(titleEl);
                 infoBox.appendChild(dateEl);
@@ -6889,20 +7097,57 @@
         function markUnsavedChanges() {
             if (state.images.length > 0) {
                 state.hasUnsavedChanges = true;
-                updateSyncStatusDisplay('unsaved');
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                    state.pendingOnlineSyncOnReconnect = true;
+                    updateSyncStatusDisplay('offline_saved', '오프라인 편집 중 · 변경사항을 이 기기에 자동 임시저장합니다');
+                } else {
+                    updateSyncStatusDisplay('unsaved');
+                }
+
+                // 1) 1.2초 디바운스 로컬 자동 임시저장 (잦은 자막·시간 수정 시에도 기기 내 작업 손실 0% 보장)
+                if (localAutoSaveTimer) clearTimeout(localAutoSaveTimer);
+                localAutoSaveTimer = setTimeout(async () => {
+                    if (state.hasUnsavedChanges && state.images.length > 0 && !state.isRecording) {
+                        try {
+                            await saveProjectLocallyOnly('draft');
+                            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                                updateSyncStatusDisplay('offline_saved');
+                            }
+                        } catch (e) {
+                            console.warn("Local auto-save skipped:", e);
+                        }
+                    }
+                }, 1200);
+
+                // 2) 4.5초 디바운스 온라인 묶음 자동저장 (연속 입력을 하나로 묶어 서버에 반영)
                 if (autoSyncTimer) clearTimeout(autoSyncTimer);
-                // 이미 생성된 프로젝트가 있으면 4초간 추가 입력이 없을 때 자동 저장 실행
                 if (state.projectId) {
                     autoSyncTimer = setTimeout(() => {
                         if (state.hasUnsavedChanges && state.images.length > 0 && !state.isRecording) {
+                            if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+                                state.pendingOnlineSyncOnReconnect = true;
+                                updateSyncStatusDisplay('offline_saved');
+                                return;
+                            }
                             saveProjectToDB('draft', { silent: true });
                         }
-                    }, 4000);
+                    }, 4500);
                 }
             }
         }
 
+        function cleanupInFlightAccountOperations(releaseLease = true) {
+            authSessionEpoch++;
+            if (localAutoSaveTimer) { clearTimeout(localAutoSaveTimer); localAutoSaveTimer = null; }
+            if (autoSyncTimer) { clearTimeout(autoSyncTimer); autoSyncTimer = null; }
+            stopActiveProjectRealtimeSubscription(releaseLease);
+            lastConflictServerDoc = null;
+            state.pendingOnlineSyncOnReconnect = false;
+            state.pendingResumeActionAfterDriveAuth = null;
+        }
+
         function resetEditorWorkspaceForAccountChange() {
+            cleanupInFlightAccountOperations(true);
             stopPlayback();
             state.images.forEach(img => {
                 if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
@@ -7191,6 +7436,40 @@
             if (elements.syncNowBtn) {
                 elements.syncNowBtn.addEventListener('click', () => saveProjectToDB('draft', { silent: false }));
             }
+            if (elements.retryFailedSyncBtn) {
+                elements.retryFailedSyncBtn.addEventListener('click', () => saveProjectToDB('draft', { silent: false }));
+            }
+            if (elements.resolveVersionConflictBtn) {
+                elements.resolveVersionConflictBtn.addEventListener('click', () => {
+                    if (lastConflictServerDoc) {
+                        openVersionConflictModal(lastConflictServerDoc);
+                    }
+                });
+            }
+
+            // 네트워크 오프라인 전환 및 재연결 자동 복구 리스너
+            window.addEventListener('offline', async () => {
+                if (state.images.length > 0) {
+                    state.pendingOnlineSyncOnReconnect = true;
+                    try { await saveProjectLocallyOnly('draft'); } catch (e) {}
+                    updateSyncStatusDisplay('offline_saved');
+                    showToast("네트워크 연결이 끊겼습니다. 편집 내용은 이 기기에 안전하게 자동 저장됩니다.", "error");
+                }
+            });
+
+            window.addEventListener('online', () => {
+                if (state.images.length > 0 && (state.pendingOnlineSyncOnReconnect || state.hasUnsavedChanges)) {
+                    showToast("인터넷 연결이 복구되었습니다! 대기 중이던 변경사항을 온라인에 동기화합니다.");
+                    saveProjectToDB('draft', { silent: true });
+                }
+            });
+
+            // 브라우저 탭 종료·숨김 시 활성 세션 임대를 해제하고 로컬 임시저장 보장
+            window.addEventListener('pagehide', () => {
+                if (state.projectId && currentUser && firestoreDb) {
+                    refreshActiveProjectSessionLease(true);
+                }
+            });
             if (elements.reconnectDriveSyncBtn) {
                 elements.reconnectDriveSyncBtn.addEventListener('click', () => {
                     if (!state.pendingResumeActionAfterDriveAuth) {
