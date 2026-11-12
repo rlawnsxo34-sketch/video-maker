@@ -672,7 +672,19 @@
                                 <option value="float">☁️ 시네마틱 소프트 플로팅 (은은하게 떠오름)</option>
                                 <option value="none">⚡ 모션 없음 (즉시 깔끔하게 전환)</option>
                             </select>
-                            <p class="text-xs font-bold text-zinc-700 leading-snug">💡 연속된 두 사진의 자막이 똑같으면 자막이 다시 내려오지 않고 한자리에 자연스럽게 이어집니다.</p>
+                            <div class="pt-1.5 space-y-1.5">
+                                <label for="subtitle-delay-select" class="text-xs sm:text-sm font-extrabold text-zinc-900 flex items-center justify-between">
+                                    <span>⏱️ 사진 전환 후 자막 등장 타이밍 (시선 집중 연출)</span>
+                                    <span class="text-[11px] font-extrabold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">사진 먼저 · 자막 뒤이어</span>
+                                </label>
+                                <select id="subtitle-delay-select" class="w-full bg-white border-2 border-stone-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-zinc-950 font-extrabold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                    <option value="0.4" selected>🌿 사진이 먼저 자리 잡은 직후 등장 (0.4초 뒤 · 가장 자연스러움/추천)</option>
+                                    <option value="0.25">⚡ 사진 전환 중 경쾌하게 뒤따라 등장 (0.25초 뒤 · 빠른 호흡)</option>
+                                    <option value="0.6">🌅 사진에 시선을 충분히 준 뒤 등장 (0.6초 뒤 · 여유로운 여운)</option>
+                                    <option value="0">🎬 사진과 자막 동시에 바로 등장 (0.0초 · 지연 없음)</option>
+                                </select>
+                            </div>
+                            <p class="text-xs font-bold text-zinc-700 leading-snug">💡 사진이 먼저 또렷해지며 시선을 끈 직후(0.4초 뒤) 자막이 부드럽게 따라 나오며, 연속된 두 사진의 자막이 같을 때는 끊김 없이 고정 유지됩니다.</p>
                         </div>
 
                         <div class="flex flex-col gap-2.5 pt-4 border-t border-stone-300">
@@ -2094,6 +2106,7 @@
             subtitleScale: 1.0,
             subtitleBgStyle: 'pill',
             subtitleAnimStyle: 'dissolve',
+            subtitleDelaySec: 0.4,
             bgMode: 'auto',
             bgScope: 'intro-outro',
             bgBlurStyle: 'soft',
@@ -2247,6 +2260,7 @@
             customFontInput: document.getElementById('custom-font-input'),
             overlayFontSelect: document.getElementById('overlay-font-select'),
             subtitleAnimSelect: document.getElementById('subtitle-anim-select'),
+            subtitleDelaySelect: document.getElementById('subtitle-delay-select'),
             bgModeSelect: document.getElementById('bg-mode-select'),
             bgScopeSelect: document.getElementById('bg-scope-select'),
             bgBlurSelect: document.getElementById('bg-blur-select'),
@@ -2566,6 +2580,7 @@
                     subtitleScale: state.subtitleScale,
                     subtitleBgStyle: state.subtitleBgStyle,
                     subtitleAnimStyle: state.subtitleAnimStyle,
+                    subtitleDelaySec: state.subtitleDelaySec !== undefined ? Number(state.subtitleDelaySec) : 0.4,
                     bgMode: state.bgMode,
                     bgScope: state.bgScope,
                     bgBlurStyle: state.bgBlurStyle,
@@ -2698,6 +2713,7 @@
                     subtitleScale: Number(d.subtitleScale) || 1.0,
                     subtitleBgStyle: d.subtitleBgStyle || 'pill',
                     subtitleAnimStyle: d.subtitleAnimStyle || 'dissolve',
+                    subtitleDelaySec: d.subtitleDelaySec !== undefined ? Number(d.subtitleDelaySec) : 0.4,
                     bgMode: d.bgMode || 'auto',
                     bgScope: d.bgScope || 'intro-outro',
                     bgBlurStyle: d.bgBlurStyle || 'soft',
@@ -3755,6 +3771,7 @@
             state.subtitleScale = project.data.subtitleScale || 1.0;
             state.subtitleBgStyle = project.data.subtitleBgStyle || 'pill';
             state.subtitleAnimStyle = project.data.subtitleAnimStyle || 'dissolve';
+            state.subtitleDelaySec = project.data.subtitleDelaySec !== undefined ? Number(project.data.subtitleDelaySec) : 0.4;
             state.bgMode = project.data.bgMode || 'auto';
             state.bgScope = project.data.bgScope || 'intro-outro';
             state.bgBlurStyle = project.data.bgBlurStyle || 'soft';
@@ -3829,6 +3846,7 @@
             if (elements.subtitleSizeSelect) elements.subtitleSizeSelect.value = String(state.subtitleScale);
             if (elements.subtitleBgSelect) elements.subtitleBgSelect.value = state.subtitleBgStyle;
             if (elements.subtitleAnimSelect) elements.subtitleAnimSelect.value = state.subtitleAnimStyle;
+            if (elements.subtitleDelaySelect) elements.subtitleDelaySelect.value = String(state.subtitleDelaySec);
             if (elements.bgModeSelect) elements.bgModeSelect.value = state.bgMode;
             if (elements.bgScopeSelect) elements.bgScopeSelect.value = state.bgScope;
             if (elements.bgBlurSelect) elements.bgBlurSelect.value = state.bgBlurStyle;
@@ -6879,7 +6897,9 @@
                 ctx.textBaseline = 'middle';
                 const currentPhrase = (imgObj.phrase || "").trim();
                 const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "").trim() : "";
+                const nextPhrase = scene.index < state.images.length - 1 ? (state.images[scene.index + 1].phrase || "").trim() : "";
                 const isSameAsPrev = scene.index > 0 && currentPhrase.length > 0 && currentPhrase === prevPhrase;
+                const isSameAsNext = scene.index < state.images.length - 1 && currentPhrase.length > 0 && currentPhrase === nextPhrase;
                 const defaultTextY = height - (state.frameStyle === 'cinema' ? (isVertical ? 250 : 185) : (isVertical ? 215 : 155));
                 const customSubPos = state.syncSubtitlePosAcrossSlides ? state.globalSubtitlePos : (imgObj.subtitlePos || state.globalSubtitlePos);
                 const textX = customSubPos && customSubPos.x !== undefined ? customSubPos.x * width : (width / 2);
@@ -6893,6 +6913,19 @@
                 };
                 const dividerHalfW = isVertical ? 90 : 120;
                 const motionStyle = state.subtitleAnimStyle || 'dissolve';
+
+                // 사진이 먼저 시선을 끈 뒤 자막이 자연스럽게 뒤따라 나오는 시간차(Delay) 계산
+                // (슬라이드 길이가 짧은 경우에도 읽을 시간이 부족하지 않도록 최대 슬라이드 길이의 22% 이내로 자동 보정)
+                const rawSubDelay = state.subtitleDelaySec !== undefined ? Math.max(0, Number(state.subtitleDelaySec)) : 0.4;
+                const effSubDelay = Math.min(rawSubDelay, Math.max(0, (scene.duration || 4) * 0.22));
+                const revealDur = 0.38;
+                const isEditingMainSubWhilePaused = (!state.isPlaying && !state.isRecording && state.selectedOverlayId === '__main_subtitle__');
+
+                // 다음 장면으로 넘어가기 직전 0.22초 동안 이전 자막을 먼저 살짝 정리해 주어 다음 사진이 깨끗하게 등장하도록 연출
+                const remInSlide = Math.max(0, (scene.duration || 4) - scene.elapsed);
+                const endFadeOutAlpha = (!isSameAsNext && effSubDelay > 0.05 && remInSlide < 0.22 && (state.isPlaying || state.isRecording))
+                    ? easeOutCubic(Math.max(0, remInSlide / 0.22))
+                    : 1.0;
 
                 const colorMap = {
                     white: '#fafaf9',
@@ -6912,30 +6945,56 @@
                 ctx.shadowBlur = state.subtitleColorStyle === 'outline' ? 6 : 15;
 
                 if (isSameAsPrev) {
-                    // 연속된 두 슬라이드의 자막이 동일할 때: 전환 애니메이션 없이 완벽하게 고정 유지!
-                    drawEditorialDivider(ctx, textX, dividerY, dividerHalfW, 1.0);
-                    drawWrapText(
-                        ctx,
-                        currentPhrase,
-                        textX,
-                        textY,
-                        width * 0.84,
-                        lineHeightSlide,
-                        1.0,
-                        1.0,
-                        state.subtitleBgStyle === 'pill',
-                        'none'
-                    );
+                    // 연속된 두 슬라이드의 자막이 동일할 때: 전환 애니메이션이나 지연 없이 완벽하게 고정 유지!
+                    if (endFadeOutAlpha > 0.01) {
+                        drawEditorialDivider(ctx, textX, dividerY, dividerHalfW, endFadeOutAlpha);
+                        drawWrapText(
+                            ctx,
+                            currentPhrase,
+                            textX,
+                            textY,
+                            width * 0.84,
+                            lineHeightSlide,
+                            1.0,
+                            endFadeOutAlpha,
+                            state.subtitleBgStyle === 'pill',
+                            'none'
+                        );
+                    }
+                } else if (effSubDelay > 0.01 && !isEditingMainSubWhilePaused) {
+                    // [사진 먼저 -> 자막 뒤이어 등장 모드]:
+                    // 0 ~ effSubDelay(예: 0.4초) 동안은 사진만 먼저 선명하게 전환되어 사진에 시선이 집중되고,
+                    // effSubDelay 직후부터 revealDur(0.38초) 동안 자막이 부드럽게 등장!
+                    const delayedElapsed = scene.elapsed - effSubDelay;
+                    if (delayedElapsed > 0 && currentPhrase.length > 0) {
+                        const textRevealP = motionStyle === 'none' ? 1.0 : Math.min(1.0, delayedElapsed / revealDur);
+                        const currAlpha = easeOutCubic(textRevealP) * endFadeOutAlpha;
+                        if (currAlpha > 0.01) {
+                            drawEditorialDivider(ctx, textX, dividerY, dividerHalfW, currAlpha);
+                            drawWrapText(
+                                ctx,
+                                currentPhrase,
+                                textX,
+                                textY,
+                                width * 0.84,
+                                lineHeightSlide,
+                                motionStyle === 'float' ? textRevealP : 1.0,
+                                currAlpha,
+                                state.subtitleBgStyle === 'pill',
+                                motionStyle === 'float' ? 'float' : 'dissolve'
+                            );
+                        }
+                    }
                 } else {
-                    const textRevealP = motionStyle === 'none' ? 1.0 : Math.min(1.0, scene.elapsed / 0.42);
+                    // [사진과 자막 동시 등장 모드 (0.0초)] 또는 일시정지 중 자막 위치 편집 상태
+                    const textRevealP = (motionStyle === 'none' || isEditingMainSubWhilePaused) ? 1.0 : Math.min(1.0, scene.elapsed / 0.42);
                     const hasBothPhrases = scene.index > 0 && prevPhrase.length > 0 && currentPhrase.length > 0;
                     const dividerAlpha = hasBothPhrases ? 1.0 : (currentPhrase.length > 0 ? easeOutCubic(textRevealP) : 0);
                     if (dividerAlpha > 0.01) {
                         drawEditorialDivider(ctx, textX, dividerY, dividerHalfW, dividerAlpha);
                     }
 
-                    // 이전 자막과 다를 때: 제자리 소프트 디졸브 시 전환 초반에 이전 자막이 잔잔히 사라지며 새 자막과 교차
-                    if (motionStyle === 'dissolve' && isTransitioning && scene.index > 0 && prevPhrase.length > 0) {
+                    if (motionStyle === 'dissolve' && isTransitioning && scene.index > 0 && prevPhrase.length > 0 && !isEditingMainSubWhilePaused) {
                         const rawP = Math.max(0, Math.min(scene.elapsed / fadeDuration, 1.0));
                         const prevOutAlpha = Math.max(0, 1 - easeOutCubic(Math.min(1, rawP * 1.65)));
                         const currInAlpha = easeOutCubic(Math.max(0, (rawP - 0.18) / 0.82));
@@ -8887,7 +8946,18 @@
             if (elements.subtitleAnimSelect) {
                 elements.subtitleAnimSelect.addEventListener('change', (e) => {
                     state.subtitleAnimStyle = e.target.value;
+                    markUnsavedChanges();
                     if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                });
+            }
+            if (elements.subtitleDelaySelect) {
+                elements.subtitleDelaySelect.addEventListener('change', (e) => {
+                    state.subtitleDelaySec = Math.max(0, parseFloat(e.target.value) || 0);
+                    markUnsavedChanges();
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                    showToast(state.subtitleDelaySec > 0
+                        ? `사진이 먼저 나온 뒤 ${state.subtitleDelaySec}초 후에 자막이 자연스럽게 등장합니다.`
+                        : "사진과 자막이 동시에 등장하도록 변경되었습니다.");
                 });
             }
             if (elements.bgModeSelect) {
