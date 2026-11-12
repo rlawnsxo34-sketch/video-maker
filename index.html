@@ -937,6 +937,95 @@
                         </div>
                         <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
 
+                        <!-- 배경음(BGM) 세부 구간 연출: 음원 시작 지점 · 영상 내 시작 타이밍 · 중간 멈춤 후 재개 · 아웃트로 페이드아웃 -->
+                        <div class="pt-4 border-t-2 border-stone-300 space-y-3.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <h3 class="text-sm sm:text-base font-extrabold text-zinc-950 flex items-center gap-1.5 whitespace-nowrap">
+                                    <i data-lucide="SlidersHorizontal" class="w-4 h-4 lg:w-5 lg:h-5 text-emerald-800 shrink-0"></i> 배경음 구간·페이드 세부 연출
+                                </h3>
+                                <span class="text-xs font-extrabold text-emerald-950 bg-emerald-100 px-2.5 py-0.5 rounded-md border border-emerald-300 whitespace-nowrap">시작 위치 · 중간 멈춤 · 페이드</span>
+                            </div>
+
+                            <!-- ① 음원 파일 내 시작 지점 (전주 건너뛰기 / 하이라이트 시작 위치) -->
+                            <div class="bg-white rounded-xl p-3 border-2 border-stone-300 space-y-2 shadow-sm">
+                                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                    <label for="bgm-audio-offset-input" class="text-xs sm:text-sm font-extrabold text-zinc-950 flex items-center gap-1.5">
+                                        <i data-lucide="scissors" class="w-4 h-4 text-emerald-800 shrink-0"></i> ① 음원 파일 내 시작 위치 (전주 건너뛰기)
+                                    </label>
+                                    <button id="bgm-preview-offset-btn" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-xs font-extrabold flex items-center gap-1 transition whitespace-nowrap" title="설정한 음원 시작 위치부터 4초간 미리 들어봅니다">
+                                        <i data-lucide="headphones" class="w-3.5 h-3.5 text-emerald-800"></i> 4초 미리듣기
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2.5">
+                                    <input id="bgm-audio-offset-slider" type="range" min="0" max="240" step="0.5" value="0" class="flex-1 accent-emerald-800 cursor-pointer h-2 bg-stone-300 rounded-lg">
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <input id="bgm-audio-offset-input" type="number" min="0" max="1200" step="0.5" value="0" class="w-16 bg-stone-50 border-2 border-stone-300 rounded-lg px-2 py-1 text-center font-mono font-extrabold text-zinc-950 text-xs sm:text-sm focus:outline-none focus:border-zinc-900">
+                                        <span class="text-xs font-extrabold text-zinc-800">초부터</span>
+                                    </div>
+                                </div>
+                                <p class="text-[11px] font-bold text-zinc-600 leading-snug">업로드한 음원이나 외부 스트리밍 곡의 앞부분 전주를 건너뛰고 원하는 하이라이트 구간(예: 32.5초)부터 재생합니다.</p>
+                            </div>
+
+                            <!-- ② 영상 내 배경음 시작 타이밍 -->
+                            <div class="bg-white rounded-xl p-3 border-2 border-stone-300 space-y-2 shadow-sm">
+                                <label for="bgm-start-timing-select" class="text-xs sm:text-sm font-extrabold text-zinc-950 flex items-center gap-1.5">
+                                    <i data-lucide="play-circle" class="w-4 h-4 text-emerald-800 shrink-0"></i> ② 영상에서 배경음이 켜지는 시점
+                                </label>
+                                <select id="bgm-start-timing-select" class="w-full bg-stone-50 border-2 border-stone-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                    <option value="intro" selected>🎬 영상 시작(인트로)부터 바로 재생 (기본)</option>
+                                    <option value="first-slide">📸 인트로(포이 찰칵) 끝난 뒤 첫 번째 사진부터 시작</option>
+                                    <option value="custom-sec">⏱️ 내가 지정한 영상 시간(초)부터 시작</option>
+                                </select>
+                                <div id="bgm-start-delay-row" class="hidden items-center justify-between gap-2 pt-1">
+                                    <span class="text-xs font-extrabold text-zinc-800">영상 시작 후 몇 초 뒤부터 배경음을 켤까요?</span>
+                                    <div class="flex items-center gap-1">
+                                        <input id="bgm-start-delay-input" type="number" min="0" max="300" step="0.5" value="3.5" class="w-16 bg-stone-50 border-2 border-stone-300 rounded-lg px-2 py-1 text-center font-mono font-extrabold text-zinc-950 text-xs sm:text-sm focus:outline-none focus:border-zinc-900">
+                                        <span class="text-xs font-extrabold text-zinc-800">초 뒤</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ③ 중간 장면에서 배경음 멈춘 뒤 다시 시작할 때 방식 -->
+                            <div class="bg-white rounded-xl p-3 border-2 border-stone-300 space-y-2 shadow-sm">
+                                <label for="bgm-resume-mode-select" class="text-xs sm:text-sm font-extrabold text-zinc-950 flex items-center gap-1.5">
+                                    <i data-lucide="pause-circle" class="w-4 h-4 text-emerald-800 shrink-0"></i> ③ 중간에 배경음 멈춘 뒤 다시 시작할 때
+                                </label>
+                                <select id="bgm-resume-mode-select" class="w-full bg-stone-50 border-2 border-stone-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-950 font-bold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                    <option value="continue" selected>▶️ 멈췄던 지점부터 자연스럽게 이어서 재생 (권장)</option>
+                                    <option value="restart">🔄 다시 켜질 때 음원 시작 위치(①)부터 새로 시작</option>
+                                </select>
+                                <p class="text-[11px] font-bold text-zinc-600 leading-snug">💡 아래 스토리보드의 각 장면 카드에 있는 <b>[🎵 배경음 켜짐 / ⏸️ 이 장면 배경음 멈춤]</b> 버튼을 누르면 원하는 사진·동영상 구간에서만 배경음을 껐다가 다음 장면에서 다시 켤 수 있습니다.</p>
+                            </div>
+
+                            <!-- ④ 인트로 페이드인 & 아웃트로 페이드아웃(서서히 작아지기) -->
+                            <div class="bg-white rounded-xl p-3 border-2 border-stone-300 space-y-2.5 shadow-sm">
+                                <div class="text-xs sm:text-sm font-extrabold text-zinc-950 flex items-center gap-1.5">
+                                    <i data-lucide="trending-down" class="w-4 h-4 text-emerald-800 shrink-0"></i> ④ 시작(페이드인) & 아웃트로 소리 작아지기(페이드아웃)
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div class="space-y-1">
+                                        <label for="bgm-fade-in-select" class="text-[11px] font-extrabold text-zinc-700 block">시작할 때 소리 커지기 (페이드인)</label>
+                                        <select id="bgm-fade-in-select" class="w-full bg-stone-50 border-2 border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                            <option value="0">즉시 원래 볼륨으로 시작 (없음)</option>
+                                            <option value="1.0">부드럽게 커지기 (1.0초)</option>
+                                            <option value="1.5" selected>자연스럽게 커지기 (1.5초 · 기본)</option>
+                                            <option value="3.0">천천히 은은하게 커지기 (3.0초)</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label for="bgm-fade-out-select" class="text-[11px] font-extrabold text-zinc-700 block">아웃트로에서 소리 작아지기 (페이드아웃)</label>
+                                        <select id="bgm-fade-out-select" class="w-full bg-stone-50 border-2 border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                            <option value="outro-full" selected>🌅 아웃트로 구간 전체 동안 서서히 작아지기 (추천)</option>
+                                            <option value="2.5">자연스럽게 작아지기 (마지막 2.5초)</option>
+                                            <option value="4.0">길고 깊은 여운으로 작아지기 (마지막 4.0초)</option>
+                                            <option value="1.5">짧고 깔끔하게 작아지기 (마지막 1.5초)</option>
+                                            <option value="0">작아지지 않고 끝까지 유지 (끄기)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 동영상 원본 소리 & 배경음 스마트 볼륨 조절 (오토 더킹) -->
                         <div class="pt-4 border-t-2 border-stone-300 space-y-3.5">
                             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1096,27 +1185,66 @@
                     </div>
                 </div>
 
-                <!-- 플레이어 컨트롤 + 포토카드/썸네일 즉시 캡처 버튼 -->
-                <div class="mt-5 lg:mt-6 w-full max-w-lg lg:max-w-xl bg-white rounded-2xl p-3.5 lg:p-4 shadow-md border-2 border-stone-300 flex items-center gap-3 relative z-10">
-                    <button id="play-btn" class="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-zinc-900 hover:bg-black flex items-center justify-center text-white transition active:scale-95 disabled:opacity-40 shrink-0" title="재생 / 일시정지">
-                        <i data-lucide="play" class="w-5 h-5 ml-0.5"></i>
-                    </button>
-                    <button id="stop-btn" class="w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-stone-100 hover:bg-stone-200 border border-stone-300 flex items-center justify-center text-zinc-900 transition active:scale-95 disabled:opacity-40 shrink-0" title="정지 및 처음으로">
-                        <i data-lucide="square" class="w-4 h-4"></i>
-                    </button>
-                    
-                    <div class="flex-1 flex items-center gap-3 px-1">
-                        <span id="current-time-display" class="text-xs sm:text-sm font-mono font-extrabold text-zinc-950">00:00</span>
-                        <div class="flex-1 h-2.5 bg-stone-200 rounded-full cursor-pointer relative overflow-hidden" id="progress-bar-container">
-                            <div id="progress-bar" class="absolute top-0 left-0 h-full bg-zinc-900 pointer-events-none transition-colors" style="width: 0%;"></div>
+                <!-- 플레이어 컨트롤 + 정밀 구간 탐색(드래그 스크러빙 · 0.1초/1초 미세 이동 · 장면 점프) + 포토카드 캡처 -->
+                <div class="mt-4 lg:mt-5 w-full max-w-xl lg:max-w-2xl bg-white rounded-2xl p-3.5 lg:p-4 shadow-md border-2 border-stone-300 flex flex-col gap-2.5 relative z-10 select-none">
+                    <!-- 1열: 현재 장면 배지 + 0.1초 정밀 타임라인 바 (드래그 핸들 & 장면 경계 눈금 포함) -->
+                    <div class="flex items-center gap-2.5 px-0.5">
+                        <span id="current-scene-badge" class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-950 border border-emerald-300 text-[11px] font-extrabold whitespace-nowrap shrink-0">대기 중</span>
+                        <span id="current-time-display" class="text-xs sm:text-sm font-mono font-extrabold text-zinc-950 w-14 text-right shrink-0">00:00.0</span>
+                        <div class="flex-1 h-5 flex items-center cursor-pointer relative touch-none group py-1" id="progress-bar-container" title="마우스나 손가락으로 좌우로 드래그하여 0.1초 단위로 세밀하게 구간을 확인하세요">
+                            <!-- 트랙 배경 -->
+                            <div class="w-full h-2.5 bg-stone-200 rounded-full relative overflow-hidden border border-stone-300">
+                                <!-- 장면 경계선 및 배경음 멈춤 구간 표시 레이어 -->
+                                <div id="progress-scene-markers" class="absolute inset-0 pointer-events-none z-10"></div>
+                                <!-- 진행률 채움 바 -->
+                                <div id="progress-bar" class="absolute top-0 left-0 h-full bg-zinc-900 pointer-events-none transition-none" style="width: 0%;"></div>
+                            </div>
+                            <!-- 드래그 스크러빙 손잡이 (핸들) -->
+                            <div id="progress-thumb" class="w-4 h-4 rounded-full bg-white border-[3px] border-zinc-950 shadow-md absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-transform group-hover:scale-125 z-20" style="left: 0%;"></div>
+                            <!-- 드래그/호버 시 정밀 시간 및 장면 번호 툴팁 -->
+                            <div id="progress-hover-tooltip" class="hidden absolute -top-8 -translate-x-1/2 px-2 py-0.5 rounded bg-zinc-950 text-white text-[11px] font-mono font-extrabold whitespace-nowrap pointer-events-none shadow z-30">00:00.0</div>
                         </div>
-                        <span id="total-time-display" class="text-xs sm:text-sm font-mono font-bold text-zinc-700">00:00</span>
+                        <span id="total-time-display" class="text-xs sm:text-sm font-mono font-bold text-zinc-700 w-14 shrink-0">00:00.0</span>
                     </div>
 
-                    <button id="capture-photo-btn" type="button" class="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 border-2 border-stone-300 text-zinc-950 font-extrabold text-xs sm:text-sm flex items-center gap-1.5 transition active:scale-95 disabled:opacity-40 shrink-0 whitespace-nowrap" title="현재 캔버스 장면을 고화질 포토카드/썸네일 이미지(.png)로 저장합니다" disabled>
-                        <i data-lucide="camera" class="w-4 h-4 text-zinc-800 shrink-0"></i>
-                        <span class="hidden sm:inline">포토카드 저장</span>
-                    </button>
+                    <!-- 2열: 재생/정지 + 이전·다음 장면 점프 + 0.1초/1.0초 미세 조절 버튼 + 포토카드 저장 -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                        <div class="flex items-center gap-1.5">
+                            <button id="play-btn" class="w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-zinc-900 hover:bg-black flex items-center justify-center text-white transition active:scale-95 disabled:opacity-40 shrink-0" title="재생 / 일시정지 (스페이스바)">
+                                <i data-lucide="play" class="w-5 h-5 ml-0.5"></i>
+                            </button>
+                            <button id="stop-btn" class="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-stone-100 hover:bg-stone-200 border border-stone-300 flex items-center justify-center text-zinc-900 transition active:scale-95 disabled:opacity-40 shrink-0" title="정지 및 처음으로">
+                                <i data-lucide="square" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <!-- 정밀 구간 이동 버튼 그룹 (이전 컷 / -1초 / -0.1초 / +0.1초 / +1초 / 다음 컷) -->
+                        <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-xl border border-stone-300 flex-wrap justify-center">
+                            <button id="prev-scene-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 text-zinc-900 border border-stone-300 text-[11px] sm:text-xs font-extrabold transition active:scale-95 disabled:opacity-40 whitespace-nowrap" title="이전 장면(컷) 시작 지점으로 이동" disabled>
+                                |◀ 이전 컷
+                            </button>
+                            <button id="seek-back-1s-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 text-zinc-900 border border-stone-300 text-[11px] sm:text-xs font-mono font-extrabold transition active:scale-95 disabled:opacity-40 whitespace-nowrap" title="1.0초 뒤로 이동 (Shift + 왼쪽 방향키)" disabled>
+                                -1.0s
+                            </button>
+                            <button id="seek-back-01s-btn" type="button" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-[11px] sm:text-xs font-mono font-extrabold transition active:scale-95 disabled:opacity-40 whitespace-nowrap" title="0.1초 단위로 세밀하게 뒤로 이동 (왼쪽 방향키)" disabled>
+                                -0.1s
+                            </button>
+                            <button id="seek-fwd-01s-btn" type="button" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-[11px] sm:text-xs font-mono font-extrabold transition active:scale-95 disabled:opacity-40 whitespace-nowrap" title="0.1초 단위로 세밀하게 앞으로 이동 (오른쪽 방향키)" disabled>
+                                +0.1s
+                            </button>
+                            <button id="seek-fwd-1s-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 text-zinc-900 border border-stone-300 text-[11px] sm:text-xs font-mono font-extrabold transition active:scale-95 disabled:opacity-40 whitespace-nowrap" title="1.0초 앞으로 이동 (Shift + 오른쪽 방향키)" disabled>
+                                +1.0s
+                            </button>
+                            <button id="next-scene-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 text-zinc-900 border border-stone-300 text-[11px] sm:text-xs font-extrabold transition active:scale-95 disabled:opacity-40 whitespace-nowrap" title="다음 장면(컷) 시작 지점으로 이동" disabled>
+                                다음 컷 ▶|
+                            </button>
+                        </div>
+
+                        <button id="capture-photo-btn" type="button" class="px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 border-2 border-stone-300 text-zinc-950 font-extrabold text-xs sm:text-sm flex items-center gap-1.5 transition active:scale-95 disabled:opacity-40 shrink-0 whitespace-nowrap" title="현재 캔버스 장면을 고화질 포토카드/썸네일 이미지(.png)로 저장합니다" disabled>
+                            <i data-lucide="camera" class="w-4 h-4 text-zinc-800 shrink-0"></i>
+                            <span class="hidden sm:inline">포토카드 저장</span>
+                        </button>
+                    </div>
                 </div>
             </main>
         </div>
@@ -1394,6 +1522,15 @@
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = Math.floor(seconds % 60).toString().padStart(2, '0');
             return `${m}:${s}`;
+        }
+
+        function formatTimePrecise(seconds) {
+            if (isNaN(seconds) || seconds < 0) return "00:00.0";
+            const clamped = Math.max(0, seconds);
+            const m = Math.floor(clamped / 60).toString().padStart(2, '0');
+            const s = Math.floor(clamped % 60).toString().padStart(2, '0');
+            const tenths = Math.floor((clamped * 10) % 10);
+            return `${m}:${s}.${tenths}`;
         }
 
         function easeInOutCubic(x) {
@@ -1912,6 +2049,15 @@
             dragOffsetNormX: 0,
             dragOffsetNormY: 0,
             bgmVolume: 0.85,
+            bgmAudioOffsetSec: 0,
+            bgmStartTiming: 'intro',
+            bgmStartDelaySec: 3.5,
+            bgmResumeMode: 'continue',
+            bgmFadeInSec: 1.5,
+            bgmFadeOutMode: 'outro-full',
+            isScrubbingTimeline: false,
+            wasPlayingBeforeScrub: false,
+            bgmPreviewStopTimer: null,
             videoAudioMode: 'ducking',
             videoVolume: 1.0,
             duckingBgmRatio: 0.18,
@@ -1982,6 +2128,16 @@
             saveDraftBtn: document.getElementById('save-draft-btn'),
             progressBar: document.getElementById('progress-bar'),
             progressContainer: document.getElementById('progress-bar-container'),
+            progressThumb: document.getElementById('progress-thumb'),
+            progressSceneMarkers: document.getElementById('progress-scene-markers'),
+            progressHoverTooltip: document.getElementById('progress-hover-tooltip'),
+            currentSceneBadge: document.getElementById('current-scene-badge'),
+            prevSceneBtn: document.getElementById('prev-scene-btn'),
+            nextSceneBtn: document.getElementById('next-scene-btn'),
+            seekBack1sBtn: document.getElementById('seek-back-1s-btn'),
+            seekBack01sBtn: document.getElementById('seek-back-01s-btn'),
+            seekFwd01sBtn: document.getElementById('seek-fwd-01s-btn'),
+            seekFwd1sBtn: document.getElementById('seek-fwd-1s-btn'),
             currentTimeDisplay: document.getElementById('current-time-display'),
             totalTimeDisplay: document.getElementById('total-time-display'),
             estimatedTimeDisplay: document.getElementById('estimated-time'),
@@ -1993,6 +2149,15 @@
             bgmSelect: document.getElementById('bgm-select'),
             bgmVolumeSlider: document.getElementById('bgm-volume-slider'),
             bgmVolumeLabel: document.getElementById('bgm-volume-label'),
+            bgmAudioOffsetSlider: document.getElementById('bgm-audio-offset-slider'),
+            bgmAudioOffsetInput: document.getElementById('bgm-audio-offset-input'),
+            bgmPreviewOffsetBtn: document.getElementById('bgm-preview-offset-btn'),
+            bgmStartTimingSelect: document.getElementById('bgm-start-timing-select'),
+            bgmStartDelayRow: document.getElementById('bgm-start-delay-row'),
+            bgmStartDelayInput: document.getElementById('bgm-start-delay-input'),
+            bgmResumeModeSelect: document.getElementById('bgm-resume-mode-select'),
+            bgmFadeInSelect: document.getElementById('bgm-fade-in-select'),
+            bgmFadeOutSelect: document.getElementById('bgm-fade-out-select'),
             customBgmInput: document.getElementById('custom-bgm-input'),
             bgmAudio: document.getElementById('bgm-audio'),
             customBgmInfo: document.getElementById('custom-bgm-info'),
@@ -2326,6 +2491,12 @@
                     customBgDriveFileId: state.customBgDriveFileId || null,
                     customBgFileName: state.customBgFileName || null,
                     bgmVolume: state.bgmVolume,
+                    bgmAudioOffsetSec: Number(state.bgmAudioOffsetSec) || 0,
+                    bgmStartTiming: state.bgmStartTiming || 'intro',
+                    bgmStartDelaySec: Number(state.bgmStartDelaySec) || 0,
+                    bgmResumeMode: state.bgmResumeMode || 'continue',
+                    bgmFadeInSec: state.bgmFadeInSec !== undefined ? Number(state.bgmFadeInSec) : 1.5,
+                    bgmFadeOutMode: state.bgmFadeOutMode || 'outro-full',
                     videoAudioMode: state.videoAudioMode,
                     videoVolume: state.videoVolume,
                     duckingBgmRatio: state.duckingBgmRatio,
@@ -2381,6 +2552,7 @@
                         phrase: img.phrase,
                         duration: img.duration,
                         videoMuted: Boolean(img.videoMuted),
+                        bgmPaused: Boolean(img.bgmPaused),
                         subtitlePos: img.subtitlePos ? { ...img.subtitlePos } : null
                     }))
                 }
@@ -2400,6 +2572,7 @@
                 phrase: img.phrase || '',
                 duration: Number(img.duration) || 4,
                 videoMuted: Boolean(img.videoMuted),
+                bgmPaused: Boolean(img.bgmPaused),
                 subtitlePos: img.subtitlePos ? { x: Number(img.subtitlePos.x), y: Number(img.subtitlePos.y) } : null
             }));
 
@@ -2447,6 +2620,12 @@
                     customBgDriveFileId: d.customBgDriveFileId || state.customBgDriveFileId || null,
                     customBgFileName: d.customBgFileName || state.customBgFileName || null,
                     bgmVolume: d.bgmVolume !== undefined ? Number(d.bgmVolume) : 0.85,
+                    bgmAudioOffsetSec: d.bgmAudioOffsetSec !== undefined ? Number(d.bgmAudioOffsetSec) : (Number(state.bgmAudioOffsetSec) || 0),
+                    bgmStartTiming: d.bgmStartTiming || state.bgmStartTiming || 'intro',
+                    bgmStartDelaySec: d.bgmStartDelaySec !== undefined ? Number(d.bgmStartDelaySec) : (Number(state.bgmStartDelaySec) || 3.5),
+                    bgmResumeMode: d.bgmResumeMode || state.bgmResumeMode || 'continue',
+                    bgmFadeInSec: d.bgmFadeInSec !== undefined ? Number(d.bgmFadeInSec) : 1.5,
+                    bgmFadeOutMode: d.bgmFadeOutMode || state.bgmFadeOutMode || 'outro-full',
                     bgmSelectValue: d.bgmSelectValue !== undefined ? d.bgmSelectValue : 'procedural',
                     customBgmDriveFileId: d.customBgmDriveFileId || state.customBgmDriveFileId || null,
                     customBgmFileName: d.customBgmFileName || state.customBgmFileName || null,
@@ -3161,6 +3340,7 @@
                     phrase: meta.phrase !== undefined ? meta.phrase : '',
                     duration: Number(meta.duration) || 4,
                     videoMuted: Boolean(meta.videoMuted),
+                    bgmPaused: Boolean(meta.bgmPaused !== undefined ? meta.bgmPaused : (matchedLocal && matchedLocal.bgmPaused)),
                     subtitlePos: meta.subtitlePos || null
                 };
             });
@@ -3432,6 +3612,23 @@
             state.bgScope = project.data.bgScope || 'intro-outro';
             state.bgBlurStyle = project.data.bgBlurStyle || 'soft';
             state.bgmVolume = project.data.bgmVolume !== undefined ? project.data.bgmVolume : 0.85;
+            state.bgmAudioOffsetSec = project.data.bgmAudioOffsetSec !== undefined ? Number(project.data.bgmAudioOffsetSec) : 0;
+            state.bgmStartTiming = project.data.bgmStartTiming || 'intro';
+            state.bgmStartDelaySec = project.data.bgmStartDelaySec !== undefined ? Number(project.data.bgmStartDelaySec) : 3.5;
+            state.bgmResumeMode = project.data.bgmResumeMode || 'continue';
+            state.bgmFadeInSec = project.data.bgmFadeInSec !== undefined ? Number(project.data.bgmFadeInSec) : 1.5;
+            state.bgmFadeOutMode = project.data.bgmFadeOutMode || 'outro-full';
+            if (elements.bgmAudioOffsetSlider) elements.bgmAudioOffsetSlider.value = String(Math.min(240, state.bgmAudioOffsetSec));
+            if (elements.bgmAudioOffsetInput) elements.bgmAudioOffsetInput.value = String(state.bgmAudioOffsetSec);
+            if (elements.bgmStartTimingSelect) elements.bgmStartTimingSelect.value = state.bgmStartTiming;
+            if (elements.bgmStartDelayRow) {
+                elements.bgmStartDelayRow.classList.toggle('hidden', state.bgmStartTiming !== 'custom-sec');
+                elements.bgmStartDelayRow.classList.toggle('flex', state.bgmStartTiming === 'custom-sec');
+            }
+            if (elements.bgmStartDelayInput) elements.bgmStartDelayInput.value = String(state.bgmStartDelaySec);
+            if (elements.bgmResumeModeSelect) elements.bgmResumeModeSelect.value = state.bgmResumeMode;
+            if (elements.bgmFadeInSelect) elements.bgmFadeInSelect.value = String(state.bgmFadeInSec);
+            if (elements.bgmFadeOutSelect) elements.bgmFadeOutSelect.value = String(state.bgmFadeOutMode);
             state.videoAudioMode = project.data.videoAudioMode || 'ducking';
             state.videoVolume = project.data.videoVolume !== undefined ? project.data.videoVolume : 1.0;
             state.duckingBgmRatio = project.data.duckingBgmRatio !== undefined ? project.data.duckingBgmRatio : 0.18;
@@ -4350,16 +4547,164 @@
             });
         }
 
+        // 영상 내 배경음이 시작되는 기준 시각(초) 계산
+        function getBgmStartVideoTime() {
+            const timing = state.bgmStartTiming || 'intro';
+            if (timing === 'first-slide') {
+                return Math.max(0, Number(state.intro.duration) || 3.5);
+            }
+            if (timing === 'custom-sec') {
+                return Math.max(0, Number(state.bgmStartDelaySec) || 0);
+            }
+            return 0;
+        }
+
+        // 특정 영상 시각(timeInSeconds)에서 배경음 상태(재생 여부, 누적 재생 시간, 음원 내 목표 currentTime, 재개 후 경과 시간)를 계산
+        function computeBgmTimelineState(timeInSeconds) {
+            const t = Math.max(0, Math.min(timeInSeconds, state.totalDuration || 0));
+            const startThreshold = getBgmStartVideoTime();
+            const offsetSec = Math.max(0, Number(state.bgmAudioOffsetSec) || 0);
+            const resumeMode = state.bgmResumeMode || 'continue';
+
+            // 전체 타임라인 세그먼트 구성 (intro -> slides -> outro)
+            const segments = [];
+            const introDur = Math.max(0.1, Number(state.intro.duration) || 3.5);
+            segments.push({ type: 'intro', index: null, start: 0, end: introDur, paused: false });
+            let cursor = introDur;
+            for (let i = 0; i < state.images.length; i++) {
+                const sDur = Math.max(0.1, Number(state.images[i].duration) || 4);
+                segments.push({
+                    type: 'slide',
+                    index: i,
+                    start: cursor,
+                    end: cursor + sDur,
+                    paused: Boolean(state.images[i].bgmPaused)
+                });
+                cursor += sDur;
+            }
+            const outroDur = Math.max(0.1, Number(state.outro.duration) || 4);
+            segments.push({ type: 'outro', index: null, start: cursor, end: cursor + outroDur, paused: false });
+
+            if (t < startThreshold) {
+                return {
+                    isMutedBySchedule: true,
+                    trackTimeSec: offsetSec,
+                    elapsedSinceActiveStart: 0,
+                    wasJustResumed: false
+                };
+            }
+
+            let activeAccumulated = 0;
+            let elapsedInCurrentActiveRun = 0;
+            let hadPausedSegmentSinceStart = false;
+            let isCurrentlyPaused = false;
+
+            for (const seg of segments) {
+                if (seg.end <= startThreshold) continue;
+                const effStart = Math.max(seg.start, startThreshold);
+                if (t < effStart) break;
+                const effEnd = Math.min(seg.end, t);
+                const span = Math.max(0, effEnd - effStart);
+
+                if (seg.paused) {
+                    hadPausedSegmentSinceStart = true;
+                    elapsedInCurrentActiveRun = 0;
+                    if (resumeMode === 'restart') {
+                        activeAccumulated = 0;
+                    }
+                    if (t >= effStart && t < seg.end) {
+                        isCurrentlyPaused = true;
+                        break;
+                    }
+                } else {
+                    activeAccumulated += span;
+                    elapsedInCurrentActiveRun += span;
+                    if (t >= effStart && t < seg.end) {
+                        isCurrentlyPaused = false;
+                        break;
+                    }
+                }
+            }
+
+            const audioDur = (elements.bgmAudio && elements.bgmAudio.duration && isFinite(elements.bgmAudio.duration) && elements.bgmAudio.duration > 0)
+                ? elements.bgmAudio.duration
+                : null;
+            let targetTrackTime = offsetSec + activeAccumulated;
+            if (audioDur && audioDur > 0.5) {
+                if (offsetSec < audioDur) {
+                    const playableSpan = Math.max(0.5, audioDur - offsetSec);
+                    targetTrackTime = offsetSec + (activeAccumulated % playableSpan);
+                } else {
+                    targetTrackTime = targetTrackTime % audioDur;
+                }
+            }
+
+            return {
+                isMutedBySchedule: isCurrentlyPaused,
+                trackTimeSec: targetTrackTime,
+                elapsedSinceActiveStart: elapsedInCurrentActiveRun,
+                wasJustResumed: hadPausedSegmentSinceStart && !isCurrentlyPaused
+            };
+        }
+
+        function syncBgmAudioElementToTime(timeInSeconds, forceSeek = false) {
+            if (!elements.bgmAudio || !elements.bgmAudio.src || isProceduralBgm(elements.bgmSelect.value) || elements.bgmSelect.value === '') {
+                return;
+            }
+            const bgmState = computeBgmTimelineState(timeInSeconds);
+            if (bgmState.isMutedBySchedule) {
+                if (!elements.bgmAudio.paused) {
+                    elements.bgmAudio.pause();
+                }
+                return;
+            }
+            const targetT = bgmState.trackTimeSec;
+            const drift = Math.abs((elements.bgmAudio.currentTime || 0) - targetT);
+            if (forceSeek || drift > 0.45) {
+                try {
+                    elements.bgmAudio.currentTime = targetT;
+                } catch (e) {}
+            }
+            if ((state.isPlaying || state.isRecording) && elements.bgmAudio.paused) {
+                elements.bgmAudio.play().catch(() => {});
+            }
+        }
+
         function updateMasterAudioEnvelope(timeInSeconds) {
             if (!audioCtx || !masterGainNode || state.totalDuration <= 0) return;
-            const fadeInDur = 1.5;
-            const fadeOutDur = 2.5;
-            let env = 1.0;
-            if (timeInSeconds < fadeInDur) {
-                env = Math.max(0.05, timeInSeconds / fadeInDur);
-            } else if (state.totalDuration - timeInSeconds < fadeOutDur) {
-                env = Math.max(0.001, (state.totalDuration - timeInSeconds) / fadeOutDur);
+            const bgmState = computeBgmTimelineState(timeInSeconds);
+            const startThreshold = getBgmStartVideoTime();
+            const fadeInDur = state.bgmFadeInSec !== undefined ? Math.max(0, Number(state.bgmFadeInSec)) : 1.5;
+
+            let fadeOutDur = 2.5;
+            const fadeOutMode = String(state.bgmFadeOutMode !== undefined ? state.bgmFadeOutMode : 'outro-full');
+            if (fadeOutMode === 'outro-full') {
+                fadeOutDur = Math.max(0.5, Number(state.outro.duration) || 4);
+            } else {
+                fadeOutDur = Math.max(0, parseFloat(fadeOutMode) || 0);
             }
+
+            let env = 1.0;
+            const timeSinceBgmStart = timeInSeconds - startThreshold;
+            if (timeSinceBgmStart < 0 || bgmState.isMutedBySchedule) {
+                env = 0.0001;
+            } else {
+                if (fadeInDur > 0 && timeSinceBgmStart < fadeInDur) {
+                    env = Math.min(env, Math.max(0.03, timeSinceBgmStart / fadeInDur));
+                }
+                if (bgmState.wasJustResumed && bgmState.elapsedSinceActiveStart < 0.45) {
+                    env = Math.min(env, Math.max(0.05, bgmState.elapsedSinceActiveStart / 0.45));
+                }
+                const remainingTotal = Math.max(0, state.totalDuration - timeInSeconds);
+                if (fadeOutDur > 0 && remainingTotal < fadeOutDur) {
+                    const ratio = Math.max(0, Math.min(1, remainingTotal / fadeOutDur));
+                    // 부드러운 여운을 남기며 서서히 작아지는 곡선 적용
+                    env = Math.min(env, Math.max(0.0005, Math.pow(ratio, 1.35)));
+                }
+            }
+
+            // 외부/업로드 오디오 파일의 재생 위치 및 일시정지/재개 동기화
+            syncBgmAudioElementToTime(timeInSeconds, false);
 
             const scene = getSceneContext(timeInSeconds);
             const mode = state.videoAudioMode || 'ducking';
@@ -4373,9 +4718,9 @@
                 state.videoVolume > 0.001
             );
 
-            // 1. BGM 볼륨 계산 (스마트 오토 더킹 / 동영상 소리만 / 전체 동영상 소리만 등 반영)
+            // 1. BGM 볼륨 계산 (구간 멈춤 / 시작 타이밍 / 페이드 / 스마트 오토 더킹 반영)
             let targetBgmGain = env * state.bgmVolume;
-            if (mode === 'only-video-global') {
+            if (bgmState.isMutedBySchedule || mode === 'only-video-global') {
                 targetBgmGain = 0.0001;
             } else if (isVideoAudioActiveNow) {
                 if (mode === 'video-only') {
@@ -4384,11 +4729,16 @@
                     targetBgmGain = env * state.bgmVolume * state.duckingBgmRatio;
                 }
             }
-            masterGainNode.gain.setTargetAtTime(Math.max(0.0001, targetBgmGain), audioCtx.currentTime, 0.12);
+            masterGainNode.gain.setTargetAtTime(Math.max(0.0001, targetBgmGain), audioCtx.currentTime, 0.09);
 
             // 2. 각 동영상 클립의 원본 오디오 볼륨 제어
             if (videoMasterGainNode) {
-                const masterVidVol = mode === 'bgm-only' ? 0.0001 : (env * state.videoVolume);
+                let vidEnv = 1.0;
+                const remainingTotal = Math.max(0, state.totalDuration - timeInSeconds);
+                if (fadeOutDur > 0 && remainingTotal < Math.min(2.0, fadeOutDur)) {
+                    vidEnv = Math.max(0.001, remainingTotal / Math.min(2.0, fadeOutDur));
+                }
+                const masterVidVol = mode === 'bgm-only' ? 0.0001 : (vidEnv * state.videoVolume);
                 videoMasterGainNode.gain.setTargetAtTime(Math.max(0.0001, masterVidVol), audioCtx.currentTime, 0.08);
             }
 
@@ -5078,7 +5428,18 @@
                 const vid = mediaObj.mediaElement;
                 const vidDur = vid.duration || mediaObj.duration || 4;
                 if (!state.isPlaying && !state.isRecording) {
-                    vid.currentTime = elapsed % vidDur;
+                    const targetVidT = elapsed % vidDur;
+                    if (Math.abs((vid.currentTime || 0) - targetVidT) > 0.03) {
+                        if (!vid._hasScrubSeekListener) {
+                            vid._hasScrubSeekListener = true;
+                            vid.addEventListener('seeked', () => {
+                                if (!state.isPlaying && !state.isRecording && state.images.length > 0) {
+                                    drawStyledArtFrame(elements.ctx, mediaObj, elements.canvas.width, elements.canvas.height);
+                                }
+                            });
+                        }
+                        try { vid.currentTime = targetVidT; } catch (e) {}
+                    }
                     if (!vid.paused) vid.pause();
                 } else {
                     if (vid.paused) vid.play().catch(() => {});
@@ -6300,8 +6661,130 @@
             }, 'image/png');
         }
 
+        function getSceneLabelForTime(timeInSeconds) {
+            if (state.images.length === 0) return '대기 중';
+            const sc = getSceneContext(timeInSeconds);
+            if (sc.type === 'intro') return '인트로';
+            if (sc.type === 'outro') return '아웃트로';
+            const slideItem = state.images[sc.index];
+            const pauseMark = (slideItem && slideItem.bgmPaused) ? ' · ⏸️BGM멈춤' : '';
+            return `#${String(sc.index + 1).padStart(2, '0')} 장면${pauseMark}`;
+        }
+
+        function updateTimelineProgressUI(timeInSeconds = state.currentTime) {
+            const total = Math.max(0.001, state.totalDuration || 0);
+            const clamped = Math.max(0, Math.min(timeInSeconds, state.totalDuration || 0));
+            const pct = state.totalDuration > 0 ? Math.max(0, Math.min(100, (clamped / total) * 100)) : 0;
+            if (elements.progressBar) elements.progressBar.style.width = `${pct}%`;
+            if (elements.progressThumb) elements.progressThumb.style.left = `${pct}%`;
+            if (elements.currentTimeDisplay) elements.currentTimeDisplay.textContent = formatTimePrecise(clamped);
+            if (elements.totalTimeDisplay) elements.totalTimeDisplay.textContent = formatTimePrecise(state.totalDuration || 0);
+            if (elements.currentSceneBadge) {
+                elements.currentSceneBadge.textContent = getSceneLabelForTime(clamped);
+            }
+        }
+
+        function renderTimelineSceneMarkers() {
+            if (!elements.progressSceneMarkers) return;
+            elements.progressSceneMarkers.innerHTML = '';
+            if (state.images.length === 0 || state.totalDuration <= 0) return;
+
+            const total = state.totalDuration;
+            // 1) 배경음이 멈추는 구간(인트로 대기 구간 또는 슬라이드별 bgmPaused 구간)을 타임라인 위에 시각적으로 표시
+            const startThreshold = getBgmStartVideoTime();
+            if (startThreshold > 0.05) {
+                const waitWidthPct = Math.min(100, (startThreshold / total) * 100);
+                const waitBar = document.createElement('div');
+                waitBar.className = 'absolute top-0 bottom-0 bg-amber-300/55 pointer-events-none';
+                waitBar.style.left = '0%';
+                waitBar.style.width = `${waitWidthPct}%`;
+                elements.progressSceneMarkers.appendChild(waitBar);
+            }
+
+            let acc = state.intro.duration;
+            // 인트로 종료 경계선
+            const introTick = document.createElement('div');
+            introTick.className = 'absolute top-0 bottom-0 w-[1.5px] bg-white/90 shadow-sm';
+            introTick.style.left = `${(acc / total) * 100}%`;
+            elements.progressSceneMarkers.appendChild(introTick);
+
+            state.images.forEach((img) => {
+                const startPct = (acc / total) * 100;
+                const widthPct = (img.duration / total) * 100;
+                if (img.bgmPaused) {
+                    const pausedZone = document.createElement('div');
+                    pausedZone.className = 'absolute top-0 bottom-0 bg-amber-400/65 pointer-events-none';
+                    pausedZone.style.left = `${startPct}%`;
+                    pausedZone.style.width = `${widthPct}%`;
+                    elements.progressSceneMarkers.appendChild(pausedZone);
+                }
+                acc += img.duration;
+                const tick = document.createElement('div');
+                tick.className = 'absolute top-0 bottom-0 w-[1.5px] bg-white/90 shadow-sm';
+                tick.style.left = `${(acc / total) * 100}%`;
+                elements.progressSceneMarkers.appendChild(tick);
+            });
+        }
+
+        function seekToExactTime(targetSeconds) {
+            if (state.images.length === 0) return;
+            if (state.bgmPreviewStopTimer) {
+                clearTimeout(state.bgmPreviewStopTimer);
+                state.bgmPreviewStopTimer = null;
+            }
+            state.currentTime = Math.max(0, Math.min(targetSeconds, state.totalDuration));
+            syncBgmAudioElementToTime(state.currentTime, true);
+            drawFrame(state.currentTime);
+            updateTimelineProgressUI(state.currentTime);
+        }
+
+        function stepTimelineByDelta(deltaSeconds) {
+            if (state.images.length === 0) return;
+            const nextT = Math.round((state.currentTime + deltaSeconds) * 100) / 100;
+            seekToExactTime(nextT);
+        }
+
+        function jumpToAdjacentScene(direction) {
+            if (state.images.length === 0) return;
+            const boundaries = [0, state.intro.duration];
+            let acc = state.intro.duration;
+            for (let i = 0; i < state.images.length; i++) {
+                acc += state.images[i].duration;
+                boundaries.push(acc);
+            }
+            const cur = state.currentTime;
+            if (direction < 0) {
+                // 현재 장면 시작점에서 0.25초 이상 지났으면 현재 장면의 시작점으로, 아니면 이전 장면 시작점으로 이동
+                let target = 0;
+                for (let i = boundaries.length - 1; i >= 0; i--) {
+                    if (boundaries[i] < cur - 0.25) {
+                        target = boundaries[i];
+                        break;
+                    }
+                }
+                seekToExactTime(target + 0.02);
+            } else {
+                let target = state.totalDuration;
+                for (let i = 0; i < boundaries.length; i++) {
+                    if (boundaries[i] > cur + 0.15) {
+                        target = boundaries[i];
+                        break;
+                    }
+                }
+                if (target >= state.totalDuration) {
+                    seekToExactTime(Math.max(0, state.totalDuration - 0.1));
+                } else {
+                    seekToExactTime(target + 0.02);
+                }
+            }
+        }
+
         function togglePlay() {
             if (state.images.length === 0) return;
+            if (state.bgmPreviewStopTimer) {
+                clearTimeout(state.bgmPreviewStopTimer);
+                state.bgmPreviewStopTimer = null;
+            }
             setupAudioRouting();
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             
@@ -6318,14 +6801,14 @@
                 state.lastTimestamp = performance.now();
                 if (state.currentTime >= state.totalDuration) state.currentTime = 0;
                 if (masterGainNode && audioCtx) {
-                    masterGainNode.gain.setValueAtTime(0.08 * state.bgmVolume, audioCtx.currentTime);
+                    masterGainNode.gain.setValueAtTime(0.04 * state.bgmVolume, audioCtx.currentTime);
                 }
                 if (isProceduralBgm(elements.bgmSelect.value)) {
                     startProceduralAmbient(elements.bgmSelect.value);
                 } else if (elements.bgmAudio.src && elements.bgmSelect.value !== '') {
-                    elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-                    elements.bgmAudio.play().catch(() => {});
+                    syncBgmAudioElementToTime(state.currentTime, true);
                 }
+                updateMasterAudioEnvelope(state.currentTime);
                 cancelAnimationFrame(state.animationFrameId);
                 state.animationFrameId = requestAnimationFrame(animationLoop);
             }
@@ -6338,16 +6821,19 @@
         function stopPlayback() {
             state.isPlaying = false;
             cancelAnimationFrame(state.animationFrameId);
+            if (state.bgmPreviewStopTimer) {
+                clearTimeout(state.bgmPreviewStopTimer);
+                state.bgmPreviewStopTimer = null;
+            }
             state.currentTime = 0;
             elements.bgmAudio.pause();
-            elements.bgmAudio.currentTime = 0;
+            elements.bgmAudio.currentTime = Math.max(0, Number(state.bgmAudioOffsetSec) || 0);
             stopProceduralAmbient();
             state.images.forEach(img => {
                 if (img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause();
             });
             drawFrame(0);
-            elements.progressBar.style.width = '0%';
-            elements.currentTimeDisplay.textContent = "00:00";
+            updateTimelineProgressUI(0);
             elements.playBtn.innerHTML = '<i data-lucide="play" class="w-5 h-5 ml-0.5"></i>';
             lucide.createIcons();
         }
@@ -6363,21 +6849,16 @@
                 return;
             }
             drawFrame(state.currentTime);
-            elements.progressBar.style.width = `${(state.currentTime / state.totalDuration) * 100}%`;
-            elements.currentTimeDisplay.textContent = formatTime(state.currentTime);
+            updateTimelineProgressUI(state.currentTime);
             state.animationFrameId = requestAnimationFrame(animationLoop);
         }
         
         function seekTime(e) {
             if (state.images.length === 0) return;
             const rect = elements.progressContainer.getBoundingClientRect();
-            state.currentTime = Math.max(0, Math.min(((e.clientX - rect.left) / rect.width) * state.totalDuration, state.totalDuration));
-            if (elements.bgmAudio.src && !isProceduralBgm(elements.bgmSelect.value) && elements.bgmSelect.value !== '') {
-                elements.bgmAudio.currentTime = state.currentTime % (elements.bgmAudio.duration || state.totalDuration || 1);
-            }
-            drawFrame(state.currentTime);
-            elements.progressBar.style.width = `${(state.currentTime / state.totalDuration) * 100}%`;
-            elements.currentTimeDisplay.textContent = formatTime(state.currentTime);
+            const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+            const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+            seekToExactTime(ratio * state.totalDuration);
         }
 
         async function exportVideo() {
@@ -6457,8 +6938,13 @@
             if (isProceduralBgm(elements.bgmSelect.value)) {
                 startProceduralAmbient(elements.bgmSelect.value);
             } else if (elements.bgmAudio.src && elements.bgmSelect.value !== '') {
-                elements.bgmAudio.currentTime = 0;
-                try { await elements.bgmAudio.play(); } catch (e) {}
+                const initBgmState = computeBgmTimelineState(0);
+                elements.bgmAudio.currentTime = initBgmState.trackTimeSec;
+                if (!initBgmState.isMutedBySchedule) {
+                    try { await elements.bgmAudio.play(); } catch (e) {}
+                } else {
+                    elements.bgmAudio.pause();
+                }
             }
             
             recorder.start();
@@ -6653,10 +7139,7 @@
                 const slidesTotal = state.images.reduce((s, img) => s + img.duration, 0);
                 targetTime = state.intro.duration + slidesTotal + Math.min(1.5, state.outro.duration * 0.5);
             }
-            state.currentTime = Math.max(0, Math.min(targetTime, state.totalDuration));
-            drawFrame(state.currentTime);
-            elements.progressBar.style.width = `${(state.currentTime / state.totalDuration) * 100}%`;
-            elements.currentTimeDisplay.textContent = formatTime(state.currentTime);
+            seekToExactTime(targetTime);
         }
 
         function moveSlide(index, direction) {
@@ -6855,6 +7338,31 @@
                     quickBtnGroup.appendChild(setBgBtn);
                 }
 
+                const isBgmPausedOnSlide = Boolean(data.bgmPaused);
+                const bgmPauseBtn = document.createElement('button');
+                bgmPauseBtn.type = 'button';
+                bgmPauseBtn.className = isBgmPausedOnSlide
+                    ? 'px-2 py-0.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-extrabold flex items-center gap-1 transition whitespace-nowrap shadow-sm'
+                    : 'px-2 py-0.5 rounded-md bg-white hover:bg-stone-200 text-zinc-800 border border-stone-300 text-[11px] font-extrabold flex items-center gap-1 transition whitespace-nowrap';
+                bgmPauseBtn.title = '이 장면에서 배경음(BGM)을 잠시 멈추거나 다시 재생합니다';
+                bgmPauseBtn.innerHTML = isBgmPausedOnSlide
+                    ? '<i data-lucide="pause-circle" class="w-3 h-3"></i><span>⏸️ 이 장면 배경음 멈춤</span>'
+                    : '<i data-lucide="music" class="w-3 h-3 text-emerald-800"></i><span>배경음 켜짐</span>';
+                bgmPauseBtn.addEventListener('click', () => {
+                    data.bgmPaused = !Boolean(data.bgmPaused);
+                    markUnsavedChanges();
+                    renderStoryboard();
+                    renderTimelineSceneMarkers();
+                    updateTimelineProgressUI(state.currentTime);
+                    if (state.isPlaying) {
+                        updateMasterAudioEnvelope(state.currentTime);
+                    }
+                    showToast(data.bgmPaused
+                        ? `#${index + 1}번 장면에서는 배경음이 일시정지됩니다. (다음 장면에서 설정한 방식으로 자동 재개)`
+                        : `#${index + 1}번 장면에서 배경음이 정상 재생됩니다.`);
+                });
+                quickBtnGroup.appendChild(bgmPauseBtn);
+
                 metaRow.appendChild(quickBtnGroup);
                 contentWrap.appendChild(metaRow);
 
@@ -6981,8 +7489,10 @@
 
         function updateDurations() {
             state.totalDuration = state.intro.duration + state.outro.duration + state.images.reduce((sum, img) => sum + img.duration, 0);
-            elements.totalTimeDisplay.textContent = formatTime(state.totalDuration);
+            elements.totalTimeDisplay.textContent = formatTimePrecise(state.totalDuration);
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
+            renderTimelineSceneMarkers();
+            updateTimelineProgressUI(state.currentTime);
         }
 
         function updateUI() {
@@ -6990,6 +7500,17 @@
             elements.emptyState.style.display = hasImages ? 'none' : 'flex';
             elements.playBtn.disabled = elements.stopBtn.disabled = elements.exportBtn.disabled = !hasImages;
             if (elements.capturePhotoBtn) elements.capturePhotoBtn.disabled = !hasImages;
+            [
+                elements.prevSceneBtn,
+                elements.nextSceneBtn,
+                elements.seekBack1sBtn,
+                elements.seekBack01sBtn,
+                elements.seekFwd01sBtn,
+                elements.seekFwd1sBtn
+            ].forEach(btn => {
+                if (btn) btn.disabled = !hasImages;
+            });
+            updateTimelineProgressUI(state.currentTime);
         }
 
         function updateState(type, index, key, value) {
@@ -8089,11 +8610,210 @@
                 });
             }
 
+            // 배경음 세부 구간·페이드 연출 컨트롤 이벤트
+            const syncBgmOffsetInputs = (newVal, showMsg = false) => {
+                const parsed = Math.max(0, Math.min(1200, Math.round((parseFloat(newVal) || 0) * 10) / 10));
+                state.bgmAudioOffsetSec = parsed;
+                if (elements.bgmAudioOffsetSlider) elements.bgmAudioOffsetSlider.value = String(Math.min(240, parsed));
+                if (elements.bgmAudioOffsetInput) elements.bgmAudioOffsetInput.value = String(parsed);
+                markUnsavedChanges();
+                if (state.isPlaying) {
+                    syncBgmAudioElementToTime(state.currentTime, true);
+                }
+                if (showMsg) {
+                    showToast(`음원 시작 지점이 ${parsed}초로 설정되었습니다.`);
+                }
+            };
+            if (elements.bgmAudioOffsetSlider) {
+                elements.bgmAudioOffsetSlider.addEventListener('input', (e) => syncBgmOffsetInputs(e.target.value, false));
+                elements.bgmAudioOffsetSlider.addEventListener('change', (e) => syncBgmOffsetInputs(e.target.value, true));
+            }
+            if (elements.bgmAudioOffsetInput) {
+                elements.bgmAudioOffsetInput.addEventListener('change', (e) => syncBgmOffsetInputs(e.target.value, true));
+            }
+            if (elements.bgmPreviewOffsetBtn) {
+                elements.bgmPreviewOffsetBtn.addEventListener('click', () => {
+                    const bgmVal = elements.bgmSelect.value;
+                    if (bgmVal === '') {
+                        showToast("현재 '소리 없음'으로 설정되어 있습니다. 먼저 배경음을 선택해 주세요.", "error");
+                        return;
+                    }
+                    if (isProceduralBgm(bgmVal)) {
+                        showToast("내장 자연 합성음은 실시간 생성 사운드입니다. 외부 스트리밍 또는 내 음원 업로드 시 시작 위치를 미리 들을 수 있습니다.");
+                        return;
+                    }
+                    if (!elements.bgmAudio.src) {
+                        showToast("미리 들을 음원 파일이 없습니다.", "error");
+                        return;
+                    }
+                    setupAudioRouting();
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    if (masterGainNode && audioCtx) {
+                        masterGainNode.gain.setTargetAtTime(state.bgmVolume, audioCtx.currentTime, 0.05);
+                    }
+                    const startSec = Math.max(0, Number(state.bgmAudioOffsetSec) || 0);
+                    try {
+                        elements.bgmAudio.currentTime = startSec;
+                    } catch (e) {}
+                    elements.bgmAudio.play().then(() => {
+                        showToast(`🎧 음원의 ${startSec}초 지점부터 4초간 미리 듣습니다...`);
+                        if (state.bgmPreviewStopTimer) clearTimeout(state.bgmPreviewStopTimer);
+                        state.bgmPreviewStopTimer = setTimeout(() => {
+                            if (!state.isPlaying && !state.isRecording) {
+                                elements.bgmAudio.pause();
+                            }
+                            state.bgmPreviewStopTimer = null;
+                        }, 4000);
+                    }).catch(() => {
+                        showToast("음원을 불러오는 중이거나 재생할 수 없습니다.", "error");
+                    });
+                });
+            }
+            if (elements.bgmStartTimingSelect) {
+                elements.bgmStartTimingSelect.addEventListener('change', (e) => {
+                    state.bgmStartTiming = e.target.value;
+                    if (elements.bgmStartDelayRow) {
+                        elements.bgmStartDelayRow.classList.toggle('hidden', state.bgmStartTiming !== 'custom-sec');
+                        elements.bgmStartDelayRow.classList.toggle('flex', state.bgmStartTiming === 'custom-sec');
+                    }
+                    markUnsavedChanges();
+                    renderTimelineSceneMarkers();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                    const msgMap = {
+                        'intro': "영상 시작(인트로)부터 배경음이 바로 재생됩니다.",
+                        'first-slide': "인트로가 끝난 뒤 첫 번째 사진부터 배경음이 시작됩니다.",
+                        'custom-sec': `영상 시작 후 ${state.bgmStartDelaySec}초 뒤부터 배경음이 시작됩니다.`
+                    };
+                    showToast(msgMap[state.bgmStartTiming] || "배경음 시작 시점이 변경되었습니다.");
+                });
+            }
+            if (elements.bgmStartDelayInput) {
+                elements.bgmStartDelayInput.addEventListener('change', (e) => {
+                    const val = Math.max(0, Math.min(300, parseFloat(e.target.value) || 0));
+                    state.bgmStartDelaySec = val;
+                    e.target.value = String(val);
+                    markUnsavedChanges();
+                    renderTimelineSceneMarkers();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                    showToast(`영상 시작 후 ${val}초 뒤부터 배경음이 켜지도록 설정되었습니다.`);
+                });
+            }
+            if (elements.bgmResumeModeSelect) {
+                elements.bgmResumeModeSelect.addEventListener('change', (e) => {
+                    state.bgmResumeMode = e.target.value;
+                    markUnsavedChanges();
+                    if (state.isPlaying) syncBgmAudioElementToTime(state.currentTime, true);
+                    showToast(state.bgmResumeMode === 'continue'
+                        ? "중간에 멈춘 배경음이 다시 켜질 때 멈췄던 지점부터 자연스럽게 이어서 재생됩니다."
+                        : "중간에 멈춘 배경음이 다시 켜질 때 음원 시작 위치부터 새로 시작됩니다.");
+                });
+            }
+            if (elements.bgmFadeInSelect) {
+                elements.bgmFadeInSelect.addEventListener('change', (e) => {
+                    state.bgmFadeInSec = Math.max(0, parseFloat(e.target.value) || 0);
+                    markUnsavedChanges();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                    showToast(state.bgmFadeInSec > 0
+                        ? `배경음 시작 시 ${state.bgmFadeInSec}초 동안 부드럽게 소리가 커집니다.`
+                        : "배경음 시작 시 페이드인 없이 원래 볼륨으로 바로 재생됩니다.");
+                });
+            }
+            if (elements.bgmFadeOutSelect) {
+                elements.bgmFadeOutSelect.addEventListener('change', (e) => {
+                    state.bgmFadeOutMode = e.target.value;
+                    markUnsavedChanges();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                    showToast(state.bgmFadeOutMode === 'outro-full'
+                        ? "아웃트로 시작부터 끝까지 배경음이 서서히 작아지며 여운을 남깁니다."
+                        : (state.bgmFadeOutMode === '0'
+                            ? "아웃트로에서 배경음이 작아지지 않고 끝까지 유지됩니다."
+                            : `영상 마지막 ${state.bgmFadeOutMode}초 동안 배경음이 서서히 작아집니다.`));
+                });
+            }
+
             elements.playBtn.addEventListener('click', togglePlay);
             elements.stopBtn.addEventListener('click', stopPlayback);
             elements.capturePhotoBtn.addEventListener('click', captureCurrentPhotocard);
             elements.exportBtn.addEventListener('click', exportVideo);
-            elements.progressContainer.addEventListener('click', seekTime);
+
+            // 정밀 타임라인 마우스·터치 드래그 스크러빙 및 호버 툴팁
+            const updateScrubTooltip = (clientX) => {
+                if (!elements.progressHoverTooltip || state.images.length === 0 || state.totalDuration <= 0) return;
+                const rect = elements.progressContainer.getBoundingClientRect();
+                const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+                const hoverTime = ratio * state.totalDuration;
+                elements.progressHoverTooltip.style.left = `${ratio * 100}%`;
+                elements.progressHoverTooltip.textContent = `${getSceneLabelForTime(hoverTime)} · ${formatTimePrecise(hoverTime)}`;
+            };
+
+            elements.progressContainer.addEventListener('pointerdown', (e) => {
+                if (state.images.length === 0 || state.isRecording) return;
+                state.isScrubbingTimeline = true;
+                state.wasPlayingBeforeScrub = state.isPlaying;
+                if (state.isPlaying) {
+                    togglePlay(); // 드래그 중에는 일시정지 상태로 프레임을 정확히 확인
+                }
+                elements.progressContainer.setPointerCapture(e.pointerId);
+                if (elements.progressHoverTooltip) elements.progressHoverTooltip.classList.remove('hidden');
+                updateScrubTooltip(e.clientX);
+                seekTime(e);
+            });
+
+            elements.progressContainer.addEventListener('pointermove', (e) => {
+                if (state.images.length === 0) return;
+                updateScrubTooltip(e.clientX);
+                if (elements.progressHoverTooltip && !state.isScrubbingTimeline) {
+                    elements.progressHoverTooltip.classList.remove('hidden');
+                }
+                if (state.isScrubbingTimeline) {
+                    seekTime(e);
+                }
+            });
+
+            const finishTimelineScrub = (e) => {
+                if (!state.isScrubbingTimeline) return;
+                state.isScrubbingTimeline = false;
+                try { elements.progressContainer.releasePointerCapture(e.pointerId); } catch (err) {}
+                if (elements.progressHoverTooltip) elements.progressHoverTooltip.classList.add('hidden');
+                if (state.wasPlayingBeforeScrub && !state.isPlaying) {
+                    state.wasPlayingBeforeScrub = false;
+                    togglePlay();
+                }
+            };
+            elements.progressContainer.addEventListener('pointerup', finishTimelineScrub);
+            elements.progressContainer.addEventListener('pointercancel', finishTimelineScrub);
+            elements.progressContainer.addEventListener('pointerleave', () => {
+                if (!state.isScrubbingTimeline && elements.progressHoverTooltip) {
+                    elements.progressHoverTooltip.classList.add('hidden');
+                }
+            });
+
+            // 0.1초 / 1.0초 미세 이동 버튼 및 이전·다음 장면 점프 버튼
+            if (elements.prevSceneBtn) elements.prevSceneBtn.addEventListener('click', () => jumpToAdjacentScene(-1));
+            if (elements.nextSceneBtn) elements.nextSceneBtn.addEventListener('click', () => jumpToAdjacentScene(1));
+            if (elements.seekBack1sBtn) elements.seekBack1sBtn.addEventListener('click', () => stepTimelineByDelta(-1.0));
+            if (elements.seekBack01sBtn) elements.seekBack01sBtn.addEventListener('click', () => stepTimelineByDelta(-0.1));
+            if (elements.seekFwd01sBtn) elements.seekFwd01sBtn.addEventListener('click', () => stepTimelineByDelta(0.1));
+            if (elements.seekFwd1sBtn) elements.seekFwd1sBtn.addEventListener('click', () => stepTimelineByDelta(1.0));
+
+            // 키보드 좌우 방향키(0.1초 / Shift+방향키 1.0초) 및 스페이스바(재생/일시정지) 지원
+            document.addEventListener('keydown', (e) => {
+                if (state.images.length === 0 || state.isRecording) return;
+                const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+                if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    stepTimelineByDelta(e.shiftKey ? -1.0 : -0.1);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    stepTimelineByDelta(e.shiftKey ? 1.0 : 0.1);
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    togglePlay();
+                }
+            });
             
             renderStoryboard();
             updateDurations();
