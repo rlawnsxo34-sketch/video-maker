@@ -754,15 +754,31 @@
                                     <i data-lucide="plus" class="w-4 h-4"></i> 자막 추가
                                 </button>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2 bg-white p-2.5 rounded-xl border border-stone-300">
-                                <span class="text-xs font-extrabold text-zinc-800 shrink-0">추가할 표시 구간:</span>
-                                <select id="new-overlay-scope-select" class="bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 cursor-pointer">
-                                    <option value="current">📍 현재 보고 있는 장면에만</option>
-                                    <option value="custom-scenes">🎯 원하는 컷 직접 지정 (예: 1, 3컷)</option>
-                                    <option value="slides-only">🖼️ 모든 사진·영상 컷 (인트로·아웃트로 제외)</option>
-                                    <option value="all">🌟 영상 처음부터 끝까지 항상</option>
-                                </select>
-                                <input id="new-overlay-custom-cuts-input" type="text" placeholder="예: 1, 3 또는 1~3, 5, 인트로" class="hidden flex-1 min-w-[150px] bg-emerald-50/60 border border-emerald-400 rounded-lg px-2.5 py-1 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-emerald-700">
+                            <div class="flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-stone-300">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-xs font-extrabold text-zinc-800 shrink-0">추가할 표시 구간:</span>
+                                    <select id="new-overlay-scope-select" class="bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 cursor-pointer">
+                                        <option value="current">📍 현재 보고 있는 장면에만</option>
+                                        <option value="custom-scenes">🎯 원하는 컷 직접 지정 (예: 1~6, 1, 3컷)</option>
+                                        <option value="slides-only">🖼️ 모든 사진·영상 컷 (인트로·아웃트로 제외)</option>
+                                        <option value="all">🌟 영상 처음부터 끝까지 항상</option>
+                                    </select>
+                                    <input id="new-overlay-custom-cuts-input" type="text" placeholder="예: 1~6 또는 1, 3, 인트로" class="hidden flex-1 min-w-[150px] bg-emerald-50/60 border border-emerald-400 rounded-lg px-2.5 py-1 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-emerald-700">
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 pt-1.5 border-t border-stone-200">
+                                    <span class="text-xs font-extrabold text-zinc-800 shrink-0">장면 내 표시 시간:</span>
+                                    <select id="new-overlay-time-mode-select" class="bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1 text-xs font-extrabold text-zinc-950 cursor-pointer">
+                                        <option value="full" selected>🕒 지정 장면 전체 시간 동안 표시 (기본)</option>
+                                        <option value="range">⏱️ 이 장면 시작 후 특정 시간에만 표시 (예: 0~3초)</option>
+                                    </select>
+                                    <div id="new-overlay-time-range-row" class="hidden items-center gap-1.5 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-300">
+                                        <span class="text-[11px] font-extrabold text-emerald-950">시작 후</span>
+                                        <input id="new-overlay-start-sec-input" type="number" min="0" max="100" step="0.5" value="0" class="w-12 bg-white border border-emerald-400 rounded px-1.5 py-0.5 text-center font-mono text-xs font-extrabold text-zinc-950">
+                                        <span class="text-[11px] font-extrabold text-emerald-950">초 ~</span>
+                                        <input id="new-overlay-end-sec-input" type="number" min="0.5" max="100" step="0.5" value="3" class="w-12 bg-white border border-emerald-400 rounded px-1.5 py-0.5 text-center font-mono text-xs font-extrabold text-zinc-950">
+                                        <span class="text-[11px] font-extrabold text-emerald-950">초만 표시</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -928,10 +944,36 @@
                                     </div>
                                     <div class="space-y-1">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-[11px] font-bold text-zinc-600">아래 버튼을 눌러 표시할 컷을 여러 개 켜거나 끌 수 있습니다:</span>
+                                            <span class="text-[11px] font-bold text-zinc-600">아래 컷 버튼을 눌러 연결할 사진을 켜거나 끌 수 있습니다 (사진 순서가 바뀌어도 연결 유지):</span>
                                             <button id="overlay-select-current-cut-btn" type="button" class="text-[11px] font-extrabold text-emerald-800 hover:underline whitespace-nowrap">현재 컷만 선택</button>
                                         </div>
                                         <div id="overlay-scene-chips-container" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto py-0.5"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 장면 내 표시 시간 선택 (기본: 장면 전체 표시 / 선택: 장면 시작 후 0~3초 등) -->
+                                <div class="space-y-2 bg-stone-50 p-2.5 rounded-xl border border-stone-300 mt-2">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <span class="text-xs font-extrabold text-zinc-800 flex items-center gap-1">
+                                            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-800"></i> 장면 내 표시 시간
+                                        </span>
+                                        <select id="overlay-time-mode-select" class="bg-white border border-stone-300 rounded-lg px-2.5 py-1 text-xs font-extrabold text-zinc-950 cursor-pointer">
+                                            <option value="full">🕒 지정 장면 전체 표시 (기본)</option>
+                                            <option value="range">⏱️ 이 장면 시작 후 특정 시간만 표시 (예: 0~3초)</option>
+                                        </select>
+                                    </div>
+                                    <div id="overlay-time-range-row" class="hidden flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-200">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[11px] font-extrabold text-zinc-800">이 장면 시작 후</span>
+                                            <input id="overlay-start-sec-input" type="number" min="0" max="100" step="0.5" value="0" class="w-14 bg-white border-2 border-stone-300 rounded-lg px-1.5 py-0.5 text-center font-mono text-xs font-extrabold text-zinc-950">
+                                            <span class="text-[11px] font-extrabold text-zinc-800">초 ~</span>
+                                            <input id="overlay-end-sec-input" type="number" min="0.5" max="100" step="0.5" value="3" class="w-14 bg-white border-2 border-stone-300 rounded-lg px-1.5 py-0.5 text-center font-mono text-xs font-extrabold text-zinc-950">
+                                            <span class="text-[11px] font-extrabold text-zinc-800">초까지 표시</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <button id="overlay-preset-0-3s-btn" type="button" class="px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 text-[11px] font-extrabold transition">0~3초</button>
+                                            <button id="overlay-preset-0-2s-btn" type="button" class="px-2 py-0.5 rounded bg-stone-200 hover:bg-stone-300 text-zinc-900 text-[11px] font-extrabold transition">0~2초</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1140,6 +1182,35 @@
                                 <i data-lucide="arrow-down-0-1" class="w-3.5 h-3.5 text-emerald-800 shrink-0"></i> 파일명 번호순 정렬
                             </button>
                         </div>
+                    </section>
+
+                    <!-- 회기형 교육 영상 관리 (회기별 날짜 · 표시 이름 · 주제 · 포함 사진 · 회기별 재생 시간) -->
+                    <section data-panel-section="media" id="session-manager-section" class="p-4 sm:p-5 bg-stone-50 rounded-2xl border-2 border-emerald-600/80 space-y-3.5 shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h2 class="text-base sm:text-lg lg:text-[19px] font-extrabold text-zinc-950 flex items-center gap-2">
+                                    <i data-lucide="calendar-range" class="w-5 h-5 text-emerald-800 shrink-0"></i> 회기형 교육 영상 구성 (회기별 배지 · 주제)
+                                </h2>
+                                <p class="text-xs font-bold text-zinc-700 mt-0.5">회기 표시 이름(예: 첫 번째 만남)·날짜는 해당 회기 사진 전체에, 회기 주제는 첫 사진의 처음 3초에만 사진 위에 겹쳐 표시됩니다 (영상 길이 증가 없음).</p>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button id="add-session-btn" type="button" class="px-3 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1 shadow-sm whitespace-nowrap">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i> 회기 추가
+                                </button>
+                                <button id="apply-all-sessions-btn" type="button" class="px-3 py-2 bg-zinc-900 hover:bg-black text-white rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1 shadow-sm whitespace-nowrap" title="모든 회기의 배지(전체 시간)와 주제(첫 사진 0~3초) 자막을 한 번에 생성·갱신합니다">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i> 전체 회기 자막 일괄적용
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 회기별 재생 시간 및 전체 재생 시간 실시간 요약 바 -->
+                        <div id="session-duration-summary-bar" class="bg-white rounded-xl p-3 border border-stone-300 flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold text-zinc-800">
+                            <span id="session-summary-text" class="text-zinc-700">등록된 회기가 없습니다. [회기 추가]를 눌러 첫 번째 만남(예: 1~6컷)을 구성해 보세요.</span>
+                            <span id="session-total-time-pill" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-950 border border-emerald-300 font-mono whitespace-nowrap">전체 영상 00:00.0</span>
+                        </div>
+
+                        <!-- 회기 카드 리스트 컨테이너 -->
+                        <div id="session-list-container" class="space-y-3"></div>
                     </section>
 
                     <!-- 스토리보드 및 테마별 자막 스토리 일괄 자동완성 -->
@@ -2119,6 +2190,7 @@
             activePanelTab: 'media',
             syncSubtitlePosAcrossSlides: true,
             globalSubtitlePos: null,
+            sessions: [],
             overlays: [],
             selectedOverlayId: null,
             lastMainSubtitleBounds: null,
@@ -2278,6 +2350,22 @@
             addTextOverlayBtn: document.getElementById('add-text-overlay-btn'),
             newOverlayScopeSelect: document.getElementById('new-overlay-scope-select'),
             newOverlayCustomCutsInput: document.getElementById('new-overlay-custom-cuts-input'),
+            newOverlayTimeModeSelect: document.getElementById('new-overlay-time-mode-select'),
+            newOverlayTimeRangeRow: document.getElementById('new-overlay-time-range-row'),
+            newOverlayStartSecInput: document.getElementById('new-overlay-start-sec-input'),
+            newOverlayEndSecInput: document.getElementById('new-overlay-end-sec-input'),
+            overlayTimeModeSelect: document.getElementById('overlay-time-mode-select'),
+            overlayTimeRangeRow: document.getElementById('overlay-time-range-row'),
+            overlayStartSecInput: document.getElementById('overlay-start-sec-input'),
+            overlayEndSecInput: document.getElementById('overlay-end-sec-input'),
+            overlayPreset03sBtn: document.getElementById('overlay-preset-0-3s-btn'),
+            overlayPreset02sBtn: document.getElementById('overlay-preset-0-2s-btn'),
+            addSessionBtn: document.getElementById('add-session-btn'),
+            applyAllSessionsBtn: document.getElementById('apply-all-sessions-btn'),
+            sessionDurationSummaryBar: document.getElementById('session-duration-summary-bar'),
+            sessionSummaryText: document.getElementById('session-summary-text'),
+            sessionTotalTimePill: document.getElementById('session-total-time-pill'),
+            sessionListContainer: document.getElementById('session-list-container'),
             uploadCustomStickerBtn: document.getElementById('upload-custom-sticker-btn'),
             customStickerInput: document.getElementById('custom-sticker-input'),
             overlayInspector: document.getElementById('overlay-inspector'),
@@ -2606,6 +2694,16 @@
                         fileName: cf.fileName,
                         driveFileId: cf.driveFileId || null
                     })),
+                    sessions: (state.sessions || []).map(sess => ({
+                        id: sess.id,
+                        displayName: sess.displayName || '',
+                        date: sess.date || '',
+                        topic: sess.topic || '',
+                        slideIds: Array.isArray(sess.slideIds) ? sess.slideIds.map(sid => String(sid)) : [],
+                        topicDurationSec: Number(sess.topicDurationSec) || 3.0,
+                        badgeOverlayId: sess.badgeOverlayId || null,
+                        topicOverlayId: sess.topicOverlayId || null
+                    })),
                     overlays: state.overlays.map(ov => ({
                         id: ov.id,
                         type: ov.type,
@@ -2621,6 +2719,11 @@
                         scope: ov.scope || 'current',
                         targetSceneKey: ov.targetSceneKey || 'slide_0',
                         targetScenes: Array.isArray(ov.targetScenes) ? [...ov.targetScenes] : (ov.targetSceneKey ? [ov.targetSceneKey] : ['slide_0']),
+                        timeMode: ov.timeMode || 'full',
+                        startOffsetSec: ov.startOffsetSec !== undefined ? Number(ov.startOffsetSec) : 0,
+                        endOffsetSec: ov.endOffsetSec !== undefined ? Number(ov.endOffsetSec) : 3.0,
+                        linkedSessionId: ov.linkedSessionId || null,
+                        sessionRole: ov.sessionRole || null,
                         bgStyle: ov.bgStyle || 'pill',
                         fontFamily: ov.fontFamily || 'default'
                     })),
@@ -2751,6 +2854,16 @@
                         subtitle: d.outro?.subtitle || '',
                         duration: Number(d.outro?.duration) || 4
                     },
+                    sessions: (d.sessions || state.sessions || []).map(sess => ({
+                        id: String(sess.id || ''),
+                        displayName: String(sess.displayName || ''),
+                        date: String(sess.date || ''),
+                        topic: String(sess.topic || ''),
+                        slideIds: Array.isArray(sess.slideIds) ? sess.slideIds.map(sid => String(sid)) : [],
+                        topicDurationSec: Number(sess.topicDurationSec) || 3.0,
+                        badgeOverlayId: sess.badgeOverlayId || null,
+                        topicOverlayId: sess.topicOverlayId || null
+                    })),
                     overlays: (d.overlays || []).map(ov => ({
                         id: ov.id,
                         type: ov.type,
@@ -2764,6 +2877,11 @@
                         scope: ov.scope || 'current',
                         targetSceneKey: ov.targetSceneKey || 'slide_0',
                         targetScenes: Array.isArray(ov.targetScenes) ? [...ov.targetScenes] : (ov.targetSceneKey ? [ov.targetSceneKey] : ['slide_0']),
+                        timeMode: ov.timeMode || 'full',
+                        startOffsetSec: ov.startOffsetSec !== undefined ? Number(ov.startOffsetSec) : 0,
+                        endOffsetSec: ov.endOffsetSec !== undefined ? Number(ov.endOffsetSec) : 3.0,
+                        linkedSessionId: ov.linkedSessionId || null,
+                        sessionRole: ov.sessionRole || null,
                         bgStyle: ov.bgStyle || 'pill',
                         fontFamily: ov.fontFamily || 'default'
                     }))
@@ -3539,6 +3657,7 @@
                     customBgmDriveFileId: s.customBgmDriveFileId || existingLocal?.data?.customBgmDriveFileId || null,
                     customBgmFileName: s.customBgmFileName || existingLocal?.data?.customBgmFileName || null,
                     customFontsMeta: s.customFontsMeta || existingLocal?.data?.customFontsMeta || [],
+                    sessions: Array.isArray(s.sessions) ? s.sessions : (Array.isArray(existingLocal?.data?.sessions) ? existingLocal.data.sessions : []),
                     images: mergedImages
                 }
             };
@@ -4051,10 +4170,15 @@
             }));
 
             const loadedMedia = await Promise.all(loadPromises);
-            state.images = loadedMedia.filter(item => item !== null);
+            state.images = loadedMedia.filter(item => item !== null).map((item, idx) => ({
+                ...item,
+                id: String(item.id !== undefined && item.id !== null ? item.id : `img_restored_${idx}_${Date.now()}`)
+            }));
             if (state.images.length !== (project.data.images || []).length) {
                 showToast("일부 미디어 파일이 만료되어 제외되었습니다.", "error");
             }
+            // 기존 프로젝트의 순번 기반(slide_0 등) 자막 연결을 현재 사진 배열의 고유 ID 기반으로 안전하게 변환 및 회기 정보 복원
+            migrateAndNormalizeProjectOverlaysAndSessions(project.data);
 
             elements.renderProgress.classList.remove('animate-pulse');
             elements.loadingOverlay.style.display = 'none';
@@ -4075,6 +4199,8 @@
                 refreshActiveProjectSessionLease(false);
             }
             updateDurations();
+            renderSessionManagerUI();
+            renderOverlayListUI();
             renderStoryboard();
             updateUI();
             drawFrame(0);
@@ -5934,20 +6060,71 @@
             });
         }
 
+        // 사진 고유 ID 기반 장면 키 생성 ('id:<고유ID>')
+        function toSlideSceneKey(slideId) {
+            return `id:${String(slideId)}`;
+        }
+
+        // 장면 키('id:<고유ID>' 또는 기존 프로젝트의 'slide_N')로부터 현재 state.images 배열에서의 0-based 인덱스를 반환
+        function resolveSceneKeyToSlideIndex(sceneKey, imagesList = state.images) {
+            if (!sceneKey || sceneKey === 'intro' || sceneKey === 'outro' || sceneKey === '__deleted__') return -1;
+            const strKey = String(sceneKey);
+            if (strKey.startsWith('id:')) {
+                const targetId = strKey.slice(3);
+                return imagesList.findIndex(img => img && String(img.id) === targetId);
+            }
+            if (strKey.startsWith('slide_')) {
+                const idx = parseInt(strKey.replace('slide_', ''), 10);
+                return (!isNaN(idx) && idx >= 0 && idx < imagesList.length) ? idx : -1;
+            }
+            return imagesList.findIndex(img => img && String(img.id) === strKey);
+        }
+
+        // 레거시 'slide_0' 형식이나 raw ID를 현재 사진 배열 기준의 고유 ID 키('id:<고유ID>')로 안전하게 정규화
+        function normalizeSceneKeyToSlideId(sceneKey, imagesList = state.images) {
+            if (!sceneKey) return '__deleted__';
+            if (sceneKey === 'intro' || sceneKey === 'outro' || sceneKey === '__deleted__') return sceneKey;
+            const strKey = String(sceneKey);
+            if (strKey.startsWith('id:')) {
+                const rawId = strKey.slice(3);
+                const exists = imagesList.some(img => img && String(img.id) === rawId);
+                return exists ? strKey : '__deleted__';
+            }
+            const idx = resolveSceneKeyToSlideIndex(strKey, imagesList);
+            if (idx >= 0 && imagesList[idx] && imagesList[idx].id !== undefined) {
+                return toSlideSceneKey(imagesList[idx].id);
+            }
+            return '__deleted__';
+        }
+
         function getCurrentSceneKey(sceneInput) {
             const sc = sceneInput || getSceneContext(state.currentTime);
             if (sc.type === 'intro') return 'intro';
             if (sc.type === 'outro') return 'outro';
-            return `slide_${sc.index || 0}`;
+            const idx = sc.index || 0;
+            const slideObj = state.images[idx];
+            if (slideObj && slideObj.id !== undefined) {
+                return toSlideSceneKey(slideObj.id);
+            }
+            return `slide_${idx}`;
         }
 
-        // '1, 3' 또는 '1~3, 5, 인트로, 아웃트로' 형태의 문자열을 ['slide_0', 'slide_2', ...] 배열로 파싱
-        function parseCustomSceneKeysInput(rawStr) {
+        // 사용자 화면의 '1~6' 또는 '1, 3, 인트로, 아웃트로' 입력을 현재 해당 순번에 위치한 사진들의 고유 ID 키('id:<고유ID>') 배열로 파싱
+        function parseCustomSceneKeysInput(rawStr, imagesList = state.images) {
             const text = String(rawStr || '').trim();
             if (!text) return [];
             const keys = new Set();
-            const maxSlides = Math.max(1, state.images.length || 50);
+            const maxSlides = imagesList.length;
             const tokens = text.split(/[,/]+/).map(t => t.trim()).filter(Boolean);
+
+            const addCutNumber = (cutNum) => {
+                if (isNaN(cutNum) || cutNum < 1) return;
+                if (maxSlides > 0 && cutNum <= maxSlides && imagesList[cutNum - 1]) {
+                    keys.add(toSlideSceneKey(imagesList[cutNum - 1].id));
+                } else if (maxSlides === 0 && cutNum <= 50) {
+                    keys.add(`slide_${cutNum - 1}`);
+                }
+            };
 
             tokens.forEach(tok => {
                 const lower = tok.toLowerCase();
@@ -5965,36 +6142,53 @@
                     const eNum = parseInt(rangeMatch[2], 10);
                     if (!isNaN(sNum) && !isNaN(eNum)) {
                         const lo = Math.max(1, Math.min(sNum, eNum));
-                        const hi = Math.min(maxSlides, Math.max(sNum, eNum));
-                        for (let n = lo; n <= hi; n++) keys.add(`slide_${n - 1}`);
+                        const hi = Math.max(sNum, eNum);
+                        for (let n = lo; n <= hi; n++) addCutNumber(n);
                     }
                     return;
                 }
                 const numMatches = tok.match(/\d+/g);
                 if (numMatches) {
-                    numMatches.forEach(numStr => {
-                        const n = parseInt(numStr, 10);
-                        if (!isNaN(n) && n >= 1 && n <= maxSlides) {
-                            keys.add(`slide_${n - 1}`);
-                        }
-                    });
+                    numMatches.forEach(numStr => addCutNumber(parseInt(numStr, 10)));
                 }
             });
             return Array.from(keys);
         }
 
-        // ['slide_0', 'slide_2'] 배열을 '1, 3컷' 형태의 읽기 쉬운 텍스트로 변환
-        function formatSceneKeysToHumanString(sceneKeysArray, includeCutSuffix = true) {
+        // 연속된 숫자 배열 [1, 2, 3, 4, 6]을 '1~4, 6' 형태로 보기 좋게 압축 포맷팅
+        function compressCutNumbersToRangeText(sortedNums) {
+            if (!Array.isArray(sortedNums) || sortedNums.length === 0) return '';
+            const ranges = [];
+            let start = sortedNums[0];
+            let prev = sortedNums[0];
+            for (let i = 1; i < sortedNums.length; i++) {
+                const cur = sortedNums[i];
+                if (cur === prev + 1) {
+                    prev = cur;
+                } else {
+                    ranges.push(start === prev ? `${start}` : (prev === start + 1 ? `${start}, ${prev}` : `${start}~${prev}`));
+                    start = cur;
+                    prev = cur;
+                }
+            }
+            ranges.push(start === prev ? `${start}` : (prev === start + 1 ? `${start}, ${prev}` : `${start}~${prev}`));
+            return ranges.join(', ');
+        }
+
+        // 고유 ID 기반 장면 키 배열(['id:...', ...])을 현재 사진 순서 기준의 '1~4, 6컷' 텍스트로 변환
+        function formatSceneKeysToHumanString(sceneKeysArray, includeCutSuffix = true, useRangeCompression = false) {
             if (!Array.isArray(sceneKeysArray) || sceneKeysArray.length === 0) return '';
             const parts = [];
             if (sceneKeysArray.includes('intro')) parts.push('인트로');
-            const slideNums = sceneKeysArray
-                .filter(k => typeof k === 'string' && k.startsWith('slide_'))
-                .map(k => parseInt(k.replace('slide_', ''), 10) + 1)
-                .filter(n => !isNaN(n))
-                .sort((a, b) => a - b);
+            const slideNumsSet = new Set();
+            sceneKeysArray.forEach(k => {
+                const idx = resolveSceneKeyToSlideIndex(k, state.images);
+                if (idx >= 0) slideNumsSet.add(idx + 1);
+            });
+            const slideNums = Array.from(slideNumsSet).sort((a, b) => a - b);
             if (slideNums.length > 0) {
-                parts.push(slideNums.join(', ') + (includeCutSuffix ? '컷' : ''));
+                const numText = useRangeCompression ? compressCutNumbersToRangeText(slideNums) : slideNums.join(', ');
+                parts.push(numText + (includeCutSuffix ? '컷' : ''));
             }
             if (sceneKeysArray.includes('outro')) parts.push('아웃트로');
             return parts.join(', ');
@@ -6003,37 +6197,59 @@
         function formatSingleSceneKeyLabel(sceneKey) {
             if (sceneKey === 'intro') return '인트로';
             if (sceneKey === 'outro') return '아웃트로';
-            if (typeof sceneKey === 'string' && sceneKey.startsWith('slide_')) {
-                const n = parseInt(sceneKey.replace('slide_', ''), 10) + 1;
-                return `${n}컷`;
-            }
-            return '현재컷';
+            if (sceneKey === '__deleted__') return '연결된 사진 삭제됨';
+            const idx = resolveSceneKeyToSlideIndex(sceneKey, state.images);
+            if (idx >= 0) return `${idx + 1}컷`;
+            return '미지정';
         }
 
         function formatOverlayScopeBadge(ov) {
             if (!ov) return '📍현재컷';
-            if (ov.scope === 'all') return '🌟전체';
-            if (ov.scope === 'slides-only') return '🖼️모든컷';
+            const timeSuffix = ov.timeMode === 'range'
+                ? ` · ${Number(ov.startOffsetSec) || 0}~${Number(ov.endOffsetSec ?? 3)}초`
+                : '';
+            if (ov.scope === 'all') return `🌟전체${timeSuffix}`;
+            if (ov.scope === 'slides-only') return `🖼️모든컷${timeSuffix}`;
             if (ov.scope === 'custom-scenes') {
                 const arr = Array.isArray(ov.targetScenes) && ov.targetScenes.length > 0
                     ? ov.targetScenes
                     : (ov.targetSceneKey ? [ov.targetSceneKey] : []);
-                const txt = formatSceneKeysToHumanString(arr, true);
-                return txt ? `🎯${txt}` : '🎯선택컷';
+                const txt = formatSceneKeysToHumanString(arr, true, true);
+                return (txt ? `🎯${txt}` : '🎯연결사진없음') + timeSuffix;
             }
-            return `📍${formatSingleSceneKeyLabel(ov.targetSceneKey || 'slide_0')}`;
+            return `📍${formatSingleSceneKeyLabel(ov.targetSceneKey || 'slide_0')}${timeSuffix}`;
         }
 
-        function getActiveOverlaysForScene(sceneInput) {
-            const key = getCurrentSceneKey(sceneInput);
+        // 현재 장면(sceneInput)과 장면 내 경과 시간(scene.elapsed)을 모두 확인하여 표시할 오버레이 목록 반환
+        function getActiveOverlaysForScene(sceneInput, options = {}) {
+            const sc = sceneInput || getSceneContext(state.currentTime);
+            const key = getCurrentSceneKey(sc);
+            const isSlideScene = sc.type === 'slide';
+            const elapsed = sc.elapsed !== undefined ? Number(sc.elapsed) : 0;
+
             return state.overlays.filter(ov => {
-                if (ov.scope === 'all') return true;
-                if (ov.scope === 'slides-only') return key.startsWith('slide_');
-                if (ov.scope === 'custom-scenes') {
+                let sceneMatched = false;
+                if (ov.scope === 'all') {
+                    sceneMatched = true;
+                } else if (ov.scope === 'slides-only') {
+                    sceneMatched = isSlideScene;
+                } else if (ov.scope === 'custom-scenes') {
                     const list = Array.isArray(ov.targetScenes) ? ov.targetScenes : (ov.targetSceneKey ? [ov.targetSceneKey] : []);
-                    return list.includes(key);
+                    sceneMatched = list.some(k => normalizeSceneKeyToSlideId(k) === key);
+                } else {
+                    sceneMatched = normalizeSceneKeyToSlideId(ov.targetSceneKey) === key;
                 }
-                return ov.targetSceneKey === key;
+                if (!sceneMatched) return false;
+
+                // 장면 내 표시 시간 제한(timeMode === 'range', 예: 0~3초) 검사
+                if (!options.ignoreTimeWindow && ov.timeMode === 'range') {
+                    const startSec = Math.max(0, Number(ov.startOffsetSec) || 0);
+                    const endSec = Math.max(startSec + 0.1, Number(ov.endOffsetSec !== undefined ? ov.endOffsetSec : 3.0));
+                    if (elapsed < startSec || elapsed > endSec) {
+                        return false;
+                    }
+                }
+                return true;
             });
         }
 
@@ -6056,7 +6272,10 @@
                 rotation: 0,
                 scope: 'current',
                 targetSceneKey: sceneKey,
-                targetScenes: [sceneKey]
+                targetScenes: [sceneKey],
+                timeMode: 'full',
+                startOffsetSec: 0,
+                endOffsetSec: 3.0
             };
             state.overlays.push(newOv);
             state.selectedOverlayId = newOv.id;
@@ -6087,6 +6306,10 @@
                 }
             }
 
+            const initialTimeMode = elements.newOverlayTimeModeSelect ? elements.newOverlayTimeModeSelect.value : 'full';
+            const initialStartSec = elements.newOverlayStartSecInput ? Math.max(0, parseFloat(elements.newOverlayStartSecInput.value) || 0) : 0;
+            const initialEndSec = elements.newOverlayEndSecInput ? Math.max(initialStartSec + 0.5, parseFloat(elements.newOverlayEndSecInput.value) || 3.0) : 3.0;
+
             const newOv = {
                 id: 'ov_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
                 type: 'text',
@@ -6099,6 +6322,9 @@
                 scope: initialScope,
                 targetSceneKey: primarySceneKey,
                 targetScenes: targetScenes,
+                timeMode: initialTimeMode,
+                startOffsetSec: initialStartSec,
+                endOffsetSec: initialEndSec,
                 bgStyle: 'pill',
                 fontFamily: 'default'
             };
@@ -6110,7 +6336,7 @@
             updateOverlayInspectorUI();
             if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
             const scopeDesc = formatOverlayScopeBadge(newOv);
-            showToast(`서브 자막이 추가되었습니다 (${scopeDesc})! 미리보기 화면에서 크기·기울기·위치를 직접 조절해 보세요.`);
+            showToast(`서브 자막이 추가되었습니다 (${scopeDesc})! 사진 순서가 바뀌어도 연결된 사진에 그대로 유지됩니다.`);
         }
 
         function duplicateOverlayById(ovId) {
@@ -6120,9 +6346,14 @@
             const cloned = {
                 ...orig,
                 id: newId,
+                linkedSessionId: null,
+                sessionRole: null,
                 x: Math.max(0.12, Math.min(0.88, (orig.x !== undefined ? orig.x : 0.5) + 0.04)),
                 y: Math.max(0.12, Math.min(0.85, (orig.y !== undefined ? orig.y : 0.35) + 0.04)),
-                targetScenes: Array.isArray(orig.targetScenes) ? [...orig.targetScenes] : (orig.targetSceneKey ? [orig.targetSceneKey] : ['slide_0'])
+                targetScenes: Array.isArray(orig.targetScenes) ? [...orig.targetScenes] : (orig.targetSceneKey ? [orig.targetSceneKey] : [getCurrentSceneKey()]),
+                timeMode: orig.timeMode || 'full',
+                startOffsetSec: orig.startOffsetSec !== undefined ? Number(orig.startOffsetSec) : 0,
+                endOffsetSec: orig.endOffsetSec !== undefined ? Number(orig.endOffsetSec) : 3.0
             };
             state.overlays.push(cloned);
             state.selectedOverlayId = cloned.id;
@@ -6136,6 +6367,10 @@
 
         function removeOverlayById(ovId) {
             state.overlays = state.overlays.filter(o => o.id !== ovId);
+            (state.sessions || []).forEach(s => {
+                if (s.badgeOverlayId === ovId) s.badgeOverlayId = null;
+                if (s.topicOverlayId === ovId) s.topicOverlayId = null;
+            });
             if (state.selectedOverlayId === ovId) state.selectedOverlayId = null;
             markUnsavedChanges();
             renderOverlayListUI();
@@ -6159,20 +6394,25 @@
             if (!elements.overlaySceneChipsContainer || !sel) return;
             elements.overlaySceneChipsContainer.innerHTML = '';
 
-            const selectedSet = new Set(
-                Array.isArray(sel.targetScenes) && sel.targetScenes.length > 0
-                    ? sel.targetScenes
-                    : (sel.targetSceneKey ? [sel.targetSceneKey] : [getCurrentSceneKey()])
-            );
+            const normalizedTargets = (Array.isArray(sel.targetScenes) && sel.targetScenes.length > 0
+                ? sel.targetScenes
+                : (sel.targetSceneKey ? [sel.targetSceneKey] : [getCurrentSceneKey()])
+            ).map(k => normalizeSceneKeyToSlideId(k)).filter(k => k !== '__deleted__');
+            const selectedSet = new Set(normalizedTargets);
+            const normalizedPrimary = normalizeSceneKeyToSlideId(sel.targetSceneKey);
 
             const allCandidates = [{ key: 'intro', label: '인트로' }];
             for (let i = 0; i < state.images.length; i++) {
-                allCandidates.push({ key: `slide_${i}`, label: `${i + 1}컷` });
+                allCandidates.push({ key: toSlideSceneKey(state.images[i].id), label: `${i + 1}컷` });
             }
             allCandidates.push({ key: 'outro', label: '아웃트로' });
 
             allCandidates.forEach(item => {
-                const active = (sel.scope === 'all') || (sel.scope === 'slides-only' && item.key.startsWith('slide_')) || (sel.scope === 'custom-scenes' && selectedSet.has(item.key)) || (sel.scope === 'current' && sel.targetSceneKey === item.key);
+                const isSlideCand = item.key !== 'intro' && item.key !== 'outro';
+                const active = (sel.scope === 'all')
+                    || (sel.scope === 'slides-only' && isSlideCand)
+                    || (sel.scope === 'custom-scenes' && selectedSet.has(item.key))
+                    || (sel.scope === 'current' && normalizedPrimary === item.key);
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = active
@@ -6182,8 +6422,8 @@
                 btn.addEventListener('click', () => {
                     let nextSet = new Set(
                         sel.scope === 'custom-scenes' && Array.isArray(sel.targetScenes)
-                            ? sel.targetScenes
-                            : (sel.targetSceneKey ? [sel.targetSceneKey] : [])
+                            ? sel.targetScenes.map(k => normalizeSceneKeyToSlideId(k)).filter(k => k !== '__deleted__')
+                            : (normalizedPrimary && normalizedPrimary !== '__deleted__' ? [normalizedPrimary] : [])
                     );
                     if (sel.scope !== 'custom-scenes') {
                         sel.scope = 'custom-scenes';
@@ -6196,9 +6436,9 @@
                         nextSet.add(item.key);
                     }
                     sel.targetScenes = Array.from(nextSet);
-                    sel.targetSceneKey = sel.targetScenes[0] || 'slide_0';
+                    sel.targetSceneKey = sel.targetScenes[0] || getCurrentSceneKey();
                     if (elements.overlayCustomCutsInput) {
-                        elements.overlayCustomCutsInput.value = formatSceneKeysToHumanString(sel.targetScenes, false);
+                        elements.overlayCustomCutsInput.value = formatSceneKeysToHumanString(sel.targetScenes, false, true);
                     }
                     markUnsavedChanges();
                     renderOverlaySceneChipsUI(sel);
@@ -6240,8 +6480,16 @@
             }
             elements.overlayScopeSelect.value = sel.scope || 'current';
             if (elements.overlayCustomCutsInput) {
-                elements.overlayCustomCutsInput.value = formatSceneKeysToHumanString(sel.targetScenes, false);
+                elements.overlayCustomCutsInput.value = formatSceneKeysToHumanString(sel.targetScenes, false, true);
             }
+            const tMode = sel.timeMode || 'full';
+            if (elements.overlayTimeModeSelect) elements.overlayTimeModeSelect.value = tMode;
+            if (elements.overlayTimeRangeRow) {
+                elements.overlayTimeRangeRow.classList.toggle('hidden', tMode !== 'range');
+                elements.overlayTimeRangeRow.classList.toggle('flex', tMode === 'range');
+            }
+            if (elements.overlayStartSecInput) elements.overlayStartSecInput.value = String(sel.startOffsetSec !== undefined ? sel.startOffsetSec : 0);
+            if (elements.overlayEndSecInput) elements.overlayEndSecInput.value = String(sel.endOffsetSec !== undefined ? sel.endOffsetSec : 3);
             renderOverlaySceneChipsUI(sel);
             lucide.createIcons();
         }
@@ -6294,6 +6542,32 @@
                 chip.appendChild(delBtn);
                 chip.addEventListener('click', () => {
                     state.selectedOverlayId = ov.id;
+                    // 만약 현재 재생 위치에서 이 오버레이가 보이지 않는 장면/시간대라면 해당 오버레이가 표시되는 첫 장면·시간대로 자동 이동하여 바로 편집할 수 있게 지원
+                    if (!state.isPlaying && !state.isRecording && state.images.length > 0) {
+                        const currentlyVisible = getActiveOverlaysForScene(getSceneContext(state.currentTime)).some(a => a.id === ov.id);
+                        if (!currentlyVisible) {
+                            const firstKey = (ov.scope === 'custom-scenes' && Array.isArray(ov.targetScenes) && ov.targetScenes.length > 0)
+                                ? ov.targetScenes[0]
+                                : ov.targetSceneKey;
+                            const targetOffset = ov.timeMode === 'range'
+                                ? Math.max(0.15, (Number(ov.startOffsetSec) || 0) + 0.4)
+                                : 0.8;
+                            if (firstKey === 'intro') {
+                                seekToExactTime(Math.min(targetOffset, Math.max(0.1, state.intro.duration - 0.2)));
+                            } else if (firstKey === 'outro') {
+                                const slidesSum = state.images.reduce((s, img) => s + img.duration, 0);
+                                seekToExactTime(state.intro.duration + slidesSum + Math.min(targetOffset, Math.max(0.1, state.outro.duration - 0.2)));
+                            } else {
+                                const sIdx = resolveSceneKeyToSlideIndex(firstKey, state.images);
+                                if (sIdx >= 0) {
+                                    let acc = state.intro.duration;
+                                    for (let i = 0; i < sIdx; i++) acc += state.images[i].duration;
+                                    const sDur = state.images[sIdx].duration || 4;
+                                    seekToExactTime(acc + Math.min(targetOffset, Math.max(0.1, sDur - 0.15)));
+                                }
+                            }
+                        }
+                    }
                     renderOverlayListUI();
                     updateOverlayInspectorUI();
                     if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
@@ -6305,13 +6579,25 @@
 
         function drawCustomOverlays(ctx, width, height, isVertical, scene) {
             const activeList = getActiveOverlaysForScene(scene);
+            const elapsed = scene && scene.elapsed !== undefined ? Number(scene.elapsed) : 0;
             activeList.forEach(ov => {
                 const cx = (ov.x !== undefined ? ov.x : 0.5) * width;
                 const cy = (ov.y !== undefined ? ov.y : 0.35) * height;
                 const s = (ov.scale || 1.0) * (isVertical ? 1.0 : 0.9);
                 const rotRad = ((ov.rotation || 0) * Math.PI) / 180;
 
+                // 장면 내 표시 시간 제한(예: 0~3초)이 설정된 경우 시작·종료 구간에서 부드러운 페이드인·페이드아웃을 Canvas에 직접 반영
+                let timeWindowAlpha = 1.0;
+                if (ov.timeMode === 'range') {
+                    const startSec = Math.max(0, Number(ov.startOffsetSec) || 0);
+                    const endSec = Math.max(startSec + 0.1, Number(ov.endOffsetSec !== undefined ? ov.endOffsetSec : 3.0));
+                    const inAlpha = Math.min(1.0, Math.max(0.05, (elapsed - startSec) / 0.22));
+                    const outAlpha = Math.min(1.0, Math.max(0.0, (endSec - elapsed) / 0.28));
+                    timeWindowAlpha = Math.max(0.0, Math.min(1.0, inAlpha, outAlpha));
+                }
+
                 ctx.save();
+                ctx.globalAlpha = timeWindowAlpha;
                 ctx.translate(cx, cy);
                 ctx.rotate(rotRad);
                 ctx.scale(s, s);
@@ -7261,8 +7547,10 @@
             if (sc.type === 'intro') return '인트로';
             if (sc.type === 'outro') return '아웃트로';
             const slideItem = state.images[sc.index];
+            const sess = slideItem ? getSessionForSlideId(slideItem.id) : null;
+            const sessMark = sess && sess.displayName ? ` · ${sess.displayName}` : '';
             const pauseMark = (slideItem && slideItem.bgmPaused) ? ' · ⏸️BGM멈춤' : '';
-            return `#${String(sc.index + 1).padStart(2, '0')} 장면${pauseMark}`;
+            return `#${String(sc.index + 1).padStart(2, '0')} 장면${sessMark}${pauseMark}`;
         }
 
         let _lastRenderedTimeStr = '';
@@ -7639,7 +7927,7 @@
                         video.onloadedmetadata = () => {
                             clearTimeout(fallbackTimer);
                             resolve({
-                                id: Date.now() + Math.random(),
+                                id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                                 type: 'video',
                                 fileName: file.name,
                                 mediaElement: video,
@@ -7662,7 +7950,7 @@
                             .then(({ img, dataUrl, rawFile }) => {
                                 clearTimeout(fallbackTimer);
                                 resolve({
-                                    id: Date.now() + Math.random(),
+                                    id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                                     type: 'image',
                                     fileName: file.name,
                                     mediaElement: img,
@@ -7691,6 +7979,7 @@
                 markUnsavedChanges();
                 
                 updateDurations();
+                renderSessionManagerUI();
                 renderStoryboard();
                 updateUI();
                 if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
@@ -7710,6 +7999,565 @@
             }
         }
 
+        const KOREAN_ORDINAL_SESSION_NAMES = [
+            '첫 번째 만남', '두 번째 만남', '세 번째 만남', '네 번째 만남', '다섯 번째 만남',
+            '여섯 번째 만남', '일곱 번째 만남', '여덟 번째 만남', '아홉 번째 만남', '열 번째 만남'
+        ];
+
+        function getDefaultSessionDisplayName(index) {
+            return KOREAN_ORDINAL_SESSION_NAMES[index] || `${index + 1}회기 만남`;
+        }
+
+        // 기존 프로젝트(순번 기반 slide_0 등)의 오버레이와 회기 정보를 현재 사진들의 고유 ID 기반으로 안전하게 변환·정규화
+        function migrateAndNormalizeProjectOverlaysAndSessions(projectData = null) {
+            state.images.forEach((img, idx) => {
+                if (!img.id) img.id = `img_${Date.now()}_${idx}`;
+                else img.id = String(img.id);
+            });
+
+            state.overlays.forEach(ov => {
+                ov.timeMode = ov.timeMode || 'full';
+                ov.startOffsetSec = ov.startOffsetSec !== undefined ? Number(ov.startOffsetSec) : 0;
+                ov.endOffsetSec = ov.endOffsetSec !== undefined ? Number(ov.endOffsetSec) : 3.0;
+                ov.targetSceneKey = normalizeSceneKeyToSlideId(ov.targetSceneKey || 'slide_0', state.images);
+                const rawList = Array.isArray(ov.targetScenes) && ov.targetScenes.length > 0
+                    ? ov.targetScenes
+                    : (ov.targetSceneKey ? [ov.targetSceneKey] : []);
+                ov.targetScenes = Array.from(new Set(
+                    rawList.map(k => normalizeSceneKeyToSlideId(k, state.images)).filter(k => k !== '__deleted__')
+                ));
+                if (ov.targetSceneKey === '__deleted__' && ov.targetScenes.length > 0) {
+                    ov.targetSceneKey = ov.targetScenes[0];
+                }
+            });
+
+            const rawSessions = (projectData && Array.isArray(projectData.sessions)) ? projectData.sessions : (Array.isArray(state.sessions) ? state.sessions : []);
+            state.sessions = rawSessions.map((sess, idx) => {
+                const rawSlideIds = Array.isArray(sess.slideIds) ? sess.slideIds : [];
+                const normalizedSlideIds = [];
+                rawSlideIds.forEach(sid => {
+                    const strSid = String(sid);
+                    const directMatch = state.images.find(im => String(im.id) === strSid);
+                    if (directMatch) {
+                        if (!normalizedSlideIds.includes(String(directMatch.id))) {
+                            normalizedSlideIds.push(String(directMatch.id));
+                        }
+                    } else {
+                        const resolvedIdx = resolveSceneKeyToSlideIndex(strSid, state.images);
+                        if (resolvedIdx >= 0 && state.images[resolvedIdx]) {
+                            const resolvedId = String(state.images[resolvedIdx].id);
+                            if (!normalizedSlideIds.includes(resolvedId)) {
+                                normalizedSlideIds.push(resolvedId);
+                            }
+                        }
+                    }
+                });
+                return {
+                    id: String(sess.id || `sess_${Date.now()}_${idx}`),
+                    displayName: sess.displayName !== undefined ? String(sess.displayName) : getDefaultSessionDisplayName(idx),
+                    date: sess.date !== undefined ? String(sess.date) : '',
+                    topic: sess.topic !== undefined ? String(sess.topic) : '',
+                    slideIds: normalizedSlideIds,
+                    topicDurationSec: Number(sess.topicDurationSec) || 3.0,
+                    badgeOverlayId: sess.badgeOverlayId || null,
+                    topicOverlayId: sess.topicOverlayId || null
+                };
+            });
+
+            sortSessionSlideIdsByCurrentImageOrder();
+        }
+
+        function sortSessionSlideIdsByCurrentImageOrder() {
+            const orderMap = new Map();
+            state.images.forEach((img, idx) => orderMap.set(String(img.id), idx));
+            (state.sessions || []).forEach(sess => {
+                if (!Array.isArray(sess.slideIds)) sess.slideIds = [];
+                sess.slideIds = sess.slideIds
+                    .map(sid => String(sid))
+                    .filter(sid => orderMap.has(sid))
+                    .sort((a, b) => orderMap.get(a) - orderMap.get(b));
+            });
+        }
+
+        function getSessionForSlideId(slideId) {
+            const target = String(slideId);
+            return (state.sessions || []).find(s => Array.isArray(s.slideIds) && s.slideIds.includes(target)) || null;
+        }
+
+        function computeSessionDurationSeconds(sess) {
+            if (!sess || !Array.isArray(sess.slideIds)) return 0;
+            const idSet = new Set(sess.slideIds.map(sid => String(sid)));
+            return state.images.reduce((sum, img) => idSet.has(String(img.id)) ? sum + (Number(img.duration) || 0) : sum, 0);
+        }
+
+        // 특정 회기의 배지(회기 표시 이름 + 날짜: 회기 사진 전체 표시)와 회기 주제(첫 사진 0~3초 표시)를 서브 자막(state.overlays)에 생성 또는 갱신
+        function applySessionOverlaysToCanvas(sessionId, showFeedback = true) {
+            const sessIdx = (state.sessions || []).findIndex(s => s.id === sessionId);
+            if (sessIdx < 0) return false;
+            const sess = state.sessions[sessIdx];
+            sortSessionSlideIdsByCurrentImageOrder();
+
+            const sessionSceneKeys = (sess.slideIds || []).map(sid => toSlideSceneKey(sid));
+            if (sessionSceneKeys.length === 0) {
+                if (showFeedback) showToast(`'${sess.displayName || '회기'}'에 포함된 사진이 없습니다. 먼저 포함할 사진(컷)을 선택해 주세요.`, "error");
+                return false;
+            }
+
+            // 1) 회기 배지 (회기 표시 이름 + 날짜 -> 해당 회기의 모든 사진에 내내 표시)
+            const badgeParts = [String(sess.displayName || '').trim(), String(sess.date || '').trim()].filter(Boolean);
+            const badgeText = badgeParts.join(' · ') || getDefaultSessionDisplayName(sessIdx);
+
+            let badgeOv = state.overlays.find(o =>
+                (sess.badgeOverlayId && o.id === sess.badgeOverlayId) ||
+                (o.linkedSessionId === sess.id && o.sessionRole === 'badge')
+            );
+            if (badgeOv) {
+                badgeOv.content = badgeText;
+                badgeOv.label = `[회기배지] ${badgeText}`;
+                badgeOv.scope = 'custom-scenes';
+                badgeOv.targetScenes = [...sessionSceneKeys];
+                badgeOv.targetSceneKey = sessionSceneKeys[0];
+                badgeOv.timeMode = 'full';
+                badgeOv.linkedSessionId = sess.id;
+                badgeOv.sessionRole = 'badge';
+            } else {
+                badgeOv = {
+                    id: `ov_sess_badge_${sess.id}_${Date.now()}`,
+                    type: 'text',
+                    content: badgeText,
+                    label: `[회기배지] ${badgeText}`,
+                    x: 0.5,
+                    y: 0.13,
+                    scale: 0.92,
+                    rotation: 0,
+                    scope: 'custom-scenes',
+                    targetSceneKey: sessionSceneKeys[0],
+                    targetScenes: [...sessionSceneKeys],
+                    timeMode: 'full',
+                    startOffsetSec: 0,
+                    endOffsetSec: 3.0,
+                    linkedSessionId: sess.id,
+                    sessionRole: 'badge',
+                    bgStyle: 'emerald-tag',
+                    fontFamily: 'default'
+                };
+                state.overlays.push(badgeOv);
+            }
+            sess.badgeOverlayId = badgeOv.id;
+
+            // 2) 회기 주제 (해당 회기의 첫 번째 사진 시작 후 0~3초 동안만 표시)
+            const topicRaw = String(sess.topic || '').trim();
+            const firstPhotoKey = sessionSceneKeys[0];
+            const topicDur = Math.max(0.5, Number(sess.topicDurationSec) || 3.0);
+
+            let topicOv = state.overlays.find(o =>
+                (sess.topicOverlayId && o.id === sess.topicOverlayId) ||
+                (o.linkedSessionId === sess.id && o.sessionRole === 'topic')
+            );
+            if (topicRaw) {
+                if (topicOv) {
+                    topicOv.content = topicRaw;
+                    topicOv.label = `[회기주제] ${topicRaw}`;
+                    topicOv.scope = 'custom-scenes';
+                    topicOv.targetScenes = [firstPhotoKey];
+                    topicOv.targetSceneKey = firstPhotoKey;
+                    topicOv.timeMode = 'range';
+                    topicOv.startOffsetSec = 0;
+                    topicOv.endOffsetSec = topicDur;
+                    topicOv.linkedSessionId = sess.id;
+                    topicOv.sessionRole = 'topic';
+                } else {
+                    topicOv = {
+                        id: `ov_sess_topic_${sess.id}_${Date.now()}`,
+                        type: 'text',
+                        content: topicRaw,
+                        label: `[회기주제] ${topicRaw}`,
+                        x: 0.5,
+                        y: 0.22,
+                        scale: 0.96,
+                        rotation: 0,
+                        scope: 'custom-scenes',
+                        targetSceneKey: firstPhotoKey,
+                        targetScenes: [firstPhotoKey],
+                        timeMode: 'range',
+                        startOffsetSec: 0,
+                        endOffsetSec: topicDur,
+                        linkedSessionId: sess.id,
+                        sessionRole: 'topic',
+                        bgStyle: 'gold-tag',
+                        fontFamily: 'default'
+                    };
+                    state.overlays.push(topicOv);
+                }
+                sess.topicOverlayId = topicOv.id;
+            } else if (topicOv) {
+                state.overlays = state.overlays.filter(o => o.id !== topicOv.id);
+                sess.topicOverlayId = null;
+            }
+
+            markUnsavedChanges();
+            renderOverlayListUI();
+            updateOverlayInspectorUI();
+            renderSessionManagerUI();
+            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            if (showFeedback) {
+                const cutRangeStr = formatSceneKeysToHumanString(sessionSceneKeys, true, true);
+                showToast(`'${sess.displayName}' 배지가 [${cutRangeStr}] 전체에, 주제가 첫 사진의 처음 0~${topicDur}초에 적용되었습니다!`);
+            }
+            return true;
+        }
+
+        // 이미 생성된 회기 연동 오버레이가 있을 때 사진 순서 변경이나 삭제 후 자동으로 대상 키를 최신화
+        function syncLinkedSessionOverlaysAfterSlideChange() {
+            sortSessionSlideIdsByCurrentImageOrder();
+            (state.sessions || []).forEach(sess => {
+                const sessionSceneKeys = (sess.slideIds || []).map(sid => toSlideSceneKey(sid));
+                const badgeOv = state.overlays.find(o =>
+                    (sess.badgeOverlayId && o.id === sess.badgeOverlayId) ||
+                    (o.linkedSessionId === sess.id && o.sessionRole === 'badge')
+                );
+                if (badgeOv) {
+                    badgeOv.targetScenes = [...sessionSceneKeys];
+                    badgeOv.targetSceneKey = sessionSceneKeys[0] || '__deleted__';
+                }
+                const topicOv = state.overlays.find(o =>
+                    (sess.topicOverlayId && o.id === sess.topicOverlayId) ||
+                    (o.linkedSessionId === sess.id && o.sessionRole === 'topic')
+                );
+                if (topicOv) {
+                    topicOv.targetScenes = sessionSceneKeys.length > 0 ? [sessionSceneKeys[0]] : [];
+                    topicOv.targetSceneKey = sessionSceneKeys[0] || '__deleted__';
+                }
+            });
+        }
+
+        function applyAllSessionsOverlays() {
+            if (!state.sessions || state.sessions.length === 0) {
+                showToast("먼저 [회기 추가] 버튼으로 회기를 추가해 주세요.", "error");
+                return;
+            }
+            let appliedCount = 0;
+            state.sessions.forEach(sess => {
+                if (sess.slideIds && sess.slideIds.length > 0) {
+                    if (applySessionOverlaysToCanvas(sess.id, false)) appliedCount++;
+                }
+            });
+            if (appliedCount === 0) {
+                showToast("각 회기에 포함할 사진(컷)을 1장 이상 지정해 주세요.", "error");
+            } else {
+                showToast(`총 ${appliedCount}개 회기의 배지(회기 전체 표시)와 주제(첫 사진 0~3초 표시)가 영상에 일괄 적용되었습니다!`);
+            }
+        }
+
+        function addNewSessionCard() {
+            const nextIdx = (state.sessions || []).length;
+            const defaultName = getDefaultSessionDisplayName(nextIdx);
+            const assignedIds = new Set();
+            (state.sessions || []).forEach(s => (s.slideIds || []).forEach(id => assignedIds.add(String(id))));
+            const unassignedSlides = state.images.filter(img => !assignedIds.has(String(img.id)));
+            const initialSlideIds = unassignedSlides.slice(0, Math.min(6, unassignedSlides.length)).map(img => String(img.id));
+
+            const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '. ');
+            const newSess = {
+                id: `sess_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+                displayName: defaultName,
+                date: todayStr,
+                topic: nextIdx === 0 ? '숲에서 찾는 나의 미래 · 오감 생태 탐색' : `${defaultName} 숲체험 이야기`,
+                slideIds: initialSlideIds,
+                topicDurationSec: 3.0,
+                badgeOverlayId: null,
+                topicOverlayId: null
+            };
+            state.sessions.push(newSess);
+            markUnsavedChanges();
+            renderSessionManagerUI();
+            renderStoryboard();
+            updateDurations();
+            showToast(`'${defaultName}' 회기가 추가되었습니다. 포함할 사진과 주제를 확인하고 [배지·주제 적용]을 눌러보세요!`);
+        }
+
+        function removeSessionById(sessionId) {
+            const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
+            if (idx < 0) return;
+            const target = state.sessions[idx];
+            state.overlays = state.overlays.filter(o =>
+                o.linkedSessionId !== target.id &&
+                o.id !== target.badgeOverlayId &&
+                o.id !== target.topicOverlayId
+            );
+            state.sessions.splice(idx, 1);
+            markUnsavedChanges();
+            renderSessionManagerUI();
+            renderOverlayListUI();
+            updateOverlayInspectorUI();
+            renderStoryboard();
+            updateDurations();
+            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+            showToast(`'${target.displayName || '회기'}' 정보와 연결된 회기 배지가 삭제되었습니다.`);
+        }
+
+        function updateSessionDurationSummaryUI() {
+            if (!elements.sessionSummaryText || !elements.sessionTotalTimePill) return;
+            elements.sessionTotalTimePill.textContent = `전체 영상 ${formatTimePrecise(state.totalDuration || 0)} (인트로 ${(state.intro.duration || 0).toFixed(1)}s · 아웃트로 ${(state.outro.duration || 0).toFixed(1)}s)`;
+            if (!state.sessions || state.sessions.length === 0) {
+                elements.sessionSummaryText.innerHTML = '등록된 회기가 없습니다. <b>[회기 추가]</b>를 눌러 회기별 날짜·표시 이름·주제와 포함 사진을 지정해 보세요.';
+                return;
+            }
+            const parts = state.sessions.map((sess, idx) => {
+                const dur = computeSessionDurationSeconds(sess);
+                const sceneKeys = (sess.slideIds || []).map(sid => toSlideSceneKey(sid));
+                const cutStr = formatSceneKeysToHumanString(sceneKeys, true, true) || '사진 미지정';
+                const name = sess.displayName || getDefaultSessionDisplayName(idx);
+                return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-950 font-extrabold">${name}: ${cutStr} (${(sess.slideIds || []).length}장 · ${dur.toFixed(1)}초)</span>`;
+            });
+            elements.sessionSummaryText.innerHTML = `<div class="flex flex-wrap items-center gap-1.5">${parts.join('')}</div>`;
+        }
+
+        function renderSessionManagerUI() {
+            if (!elements.sessionListContainer) return;
+            sortSessionSlideIdsByCurrentImageOrder();
+            updateSessionDurationSummaryUI();
+            elements.sessionListContainer.innerHTML = '';
+
+            if (!state.sessions || state.sessions.length === 0) {
+                return;
+            }
+
+            state.sessions.forEach((sess, sIdx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl p-3.5 border-2 border-stone-300 space-y-2.5 shadow-sm';
+
+                const durSec = computeSessionDurationSeconds(sess);
+                const sceneKeys = (sess.slideIds || []).map(sid => toSlideSceneKey(sid));
+                const cutRangeLabel = formatSceneKeysToHumanString(sceneKeys, true, true) || '미지정';
+
+                // 상단 헤더: 회기 번호 + 회기별 재생 시간 배지 + 배지 적용 버튼 + 삭제 버튼
+                const headerRow = document.createElement('div');
+                headerRow.className = 'flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-stone-200';
+
+                const leftTitle = document.createElement('div');
+                leftTitle.className = 'flex items-center gap-2 flex-wrap';
+                leftTitle.innerHTML = `
+                    <span class="px-2 py-0.5 rounded-md bg-emerald-800 text-white text-xs font-extrabold">${sIdx + 1}회기</span>
+                    <span class="text-xs sm:text-sm font-extrabold text-zinc-950">${sess.displayName || getDefaultSessionDisplayName(sIdx)}</span>
+                    <span class="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300 text-[11px] font-mono font-extrabold text-emerald-900">포함 ${(sess.slideIds || []).length}장 (${cutRangeLabel}) · ${durSec.toFixed(1)}초</span>
+                `;
+
+                const rightBtns = document.createElement('div');
+                rightBtns.className = 'flex items-center gap-1.5';
+
+                const applyBtn = document.createElement('button');
+                applyBtn.type = 'button';
+                applyBtn.className = 'px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold transition flex items-center gap-1 shadow-sm whitespace-nowrap';
+                applyBtn.innerHTML = '<i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i><span>이 회기 배지·주제 적용</span>';
+                applyBtn.title = '이 회기의 사진들에 회기 이름·날짜 배지(전체 시간)와 회기 주제(첫 사진 0~3초)를 한 번에 적용합니다';
+                applyBtn.addEventListener('click', () => applySessionOverlaysToCanvas(sess.id, true));
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'p-1 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50 transition';
+                delBtn.title = '이 회기 삭제';
+                delBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
+                delBtn.addEventListener('click', () => removeSessionById(sess.id));
+
+                rightBtns.appendChild(applyBtn);
+                rightBtns.appendChild(delBtn);
+                headerRow.appendChild(leftTitle);
+                headerRow.appendChild(rightBtns);
+                card.appendChild(headerRow);
+
+                // 입력 그리드: 표시 이름 (예: 첫 번째 만남) + 날짜 + 주제 + 주제 표시 시간(기본 3초)
+                const fieldsGrid = document.createElement('div');
+                fieldsGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2';
+
+                const nameBox = document.createElement('div');
+                nameBox.className = 'space-y-1';
+                nameBox.innerHTML = '<label class="text-[11px] font-extrabold text-zinc-700 block">회기 표시 이름 (자유 수정)</label>';
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = sess.displayName || '';
+                nameInput.placeholder = '예: 첫 번째 만남';
+                nameInput.className = 'w-full bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-zinc-900';
+                nameInput.addEventListener('input', (e) => {
+                    sess.displayName = e.target.value;
+                    markUnsavedChanges();
+                    updateSessionDurationSummaryUI();
+                });
+                nameInput.addEventListener('change', () => {
+                    if (sess.badgeOverlayId) applySessionOverlaysToCanvas(sess.id, false);
+                    renderSessionManagerUI();
+                    renderStoryboard();
+                });
+                nameBox.appendChild(nameInput);
+
+                const dateBox = document.createElement('div');
+                dateBox.className = 'space-y-1';
+                dateBox.innerHTML = '<label class="text-[11px] font-extrabold text-zinc-700 block">회기 날짜 (회기 내내 표시)</label>';
+                const dateInput = document.createElement('input');
+                dateInput.type = 'text';
+                dateInput.value = sess.date || '';
+                dateInput.placeholder = '예: 2026. 04. 15';
+                dateInput.className = 'w-full bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-zinc-900';
+                dateInput.addEventListener('input', (e) => {
+                    sess.date = e.target.value;
+                    markUnsavedChanges();
+                });
+                dateInput.addEventListener('change', () => {
+                    if (sess.badgeOverlayId) applySessionOverlaysToCanvas(sess.id, false);
+                });
+                dateBox.appendChild(dateInput);
+
+                const topicBox = document.createElement('div');
+                topicBox.className = 'space-y-1 sm:col-span-2';
+                topicBox.innerHTML = '<div class="flex items-center justify-between"><label class="text-[11px] font-extrabold text-zinc-700">회기 주제 (첫 사진의 처음 0~3초에만 표시)</label><span class="text-[10px] font-extrabold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">첫 사진 0~3초 자동 제한</span></div>';
+                const topicRow = document.createElement('div');
+                topicRow.className = 'flex items-center gap-1.5';
+                const topicInput = document.createElement('input');
+                topicInput.type = 'text';
+                topicInput.value = sess.topic || '';
+                topicInput.placeholder = '예: 숲에서 찾는 나의 미래 · 오감 산책';
+                topicInput.className = 'flex-1 bg-stone-50 border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-zinc-950 focus:outline-none focus:border-zinc-900';
+                topicInput.addEventListener('input', (e) => {
+                    sess.topic = e.target.value;
+                    markUnsavedChanges();
+                });
+                topicInput.addEventListener('change', () => {
+                    if (sess.topicOverlayId || sess.badgeOverlayId) applySessionOverlaysToCanvas(sess.id, false);
+                });
+
+                const topicSecInput = document.createElement('input');
+                topicSecInput.type = 'number';
+                topicSecInput.min = '1';
+                topicSecInput.max = '15';
+                topicSecInput.step = '0.5';
+                topicSecInput.value = String(sess.topicDurationSec || 3);
+                topicSecInput.title = '첫 사진에서 회기 주제를 몇 초 동안 표시할지 설정합니다 (기본 3초)';
+                topicSecInput.className = 'w-14 bg-stone-50 border border-stone-300 rounded-lg px-1.5 py-1.5 text-center font-mono text-xs font-extrabold text-zinc-950';
+                topicSecInput.addEventListener('change', (e) => {
+                    sess.topicDurationSec = Math.max(0.5, parseFloat(e.target.value) || 3.0);
+                    markUnsavedChanges();
+                    if (sess.topicOverlayId) applySessionOverlaysToCanvas(sess.id, false);
+                });
+                const secLabel = document.createElement('span');
+                secLabel.className = 'text-[11px] font-extrabold text-zinc-700 shrink-0';
+                secLabel.textContent = '초 표시';
+
+                topicRow.appendChild(topicInput);
+                topicRow.appendChild(topicSecInput);
+                topicRow.appendChild(secLabel);
+                topicBox.appendChild(topicRow);
+
+                fieldsGrid.appendChild(nameBox);
+                fieldsGrid.appendChild(dateBox);
+                fieldsGrid.appendChild(topicBox);
+                card.appendChild(fieldsGrid);
+
+                // 포함 사진 지정 영역 (1~6컷 텍스트 입력 + 개별 사진 칩 토글)
+                const cutsBox = document.createElement('div');
+                cutsBox.className = 'bg-stone-50 rounded-xl p-2.5 border border-stone-200 space-y-2';
+
+                const cutsInputRow = document.createElement('div');
+                cutsInputRow.className = 'flex items-center gap-1.5';
+                const cutsLabel = document.createElement('span');
+                cutsLabel.className = 'text-[11px] font-extrabold text-zinc-800 shrink-0';
+                cutsLabel.textContent = '포함 컷 번호:';
+                const cutsInput = document.createElement('input');
+                cutsInput.type = 'text';
+                cutsInput.placeholder = '예: 1~6 또는 1, 2, 3';
+                cutsInput.value = formatSceneKeysToHumanString(sceneKeys, false, true);
+                cutsInput.className = 'flex-1 bg-white border border-stone-300 rounded-lg px-2 py-1 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-zinc-900';
+
+                const applyCutsBtn = document.createElement('button');
+                applyCutsBtn.type = 'button';
+                applyCutsBtn.className = 'px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-black text-white text-[11px] font-extrabold whitespace-nowrap transition';
+                applyCutsBtn.textContent = '컷 지정';
+                const handleApplySessionCuts = () => {
+                    const parsedKeys = parseCustomSceneKeysInput(cutsInput.value, state.images);
+                    const slideIds = parsedKeys
+                        .filter(k => k.startsWith('id:'))
+                        .map(k => k.slice(3));
+                    // 다른 회기에 중복 배정된 사진이 있으면 이 회기로 이동
+                    (state.sessions || []).forEach(other => {
+                        if (other.id !== sess.id && Array.isArray(other.slideIds)) {
+                            other.slideIds = other.slideIds.filter(sid => !slideIds.includes(String(sid)));
+                        }
+                    });
+                    sess.slideIds = slideIds;
+                    markUnsavedChanges();
+                    syncLinkedSessionOverlaysAfterSlideChange();
+                    renderSessionManagerUI();
+                    renderStoryboard();
+                    renderOverlayListUI();
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                };
+                applyCutsBtn.addEventListener('click', handleApplySessionCuts);
+                cutsInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleApplySessionCuts();
+                    }
+                });
+
+                cutsInputRow.appendChild(cutsLabel);
+                cutsInputRow.appendChild(cutsInput);
+                cutsInputRow.appendChild(applyCutsBtn);
+                cutsBox.appendChild(cutsInputRow);
+
+                const chipsWrap = document.createElement('div');
+                chipsWrap.className = 'flex flex-wrap gap-1 max-h-24 overflow-y-auto';
+                if (state.images.length === 0) {
+                    chipsWrap.innerHTML = '<span class="text-[11px] font-semibold text-zinc-500">사진을 추가하면 이곳에서 1컷, 2컷... 버튼을 눌러 회기에 배정할 수 있습니다.</span>';
+                } else {
+                    const currentSet = new Set((sess.slideIds || []).map(sid => String(sid)));
+                    state.images.forEach((img, idx) => {
+                        const sid = String(img.id);
+                        const isIncluded = currentSet.has(sid);
+                        const chipBtn = document.createElement('button');
+                        chipBtn.type = 'button';
+                        chipBtn.className = isIncluded
+                            ? 'px-2 py-0.5 rounded-md bg-emerald-800 text-white border border-emerald-900 text-[11px] font-extrabold transition'
+                            : 'px-2 py-0.5 rounded-md bg-white hover:bg-stone-200 text-zinc-800 border border-stone-300 text-[11px] font-extrabold transition';
+                        chipBtn.textContent = isIncluded ? `✓ ${idx + 1}컷` : `${idx + 1}컷`;
+                        chipBtn.addEventListener('click', () => {
+                            if (isIncluded) {
+                                sess.slideIds = (sess.slideIds || []).filter(x => String(x) !== sid);
+                            } else {
+                                (state.sessions || []).forEach(other => {
+                                    if (other.id !== sess.id && Array.isArray(other.slideIds)) {
+                                        other.slideIds = other.slideIds.filter(x => String(x) !== sid);
+                                    }
+                                });
+                                sess.slideIds = [...(sess.slideIds || []), sid];
+                            }
+                            markUnsavedChanges();
+                            syncLinkedSessionOverlaysAfterSlideChange();
+                            renderSessionManagerUI();
+                            renderStoryboard();
+                            renderOverlayListUI();
+                            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                        });
+                        chipsWrap.appendChild(chipBtn);
+                    });
+                }
+                cutsBox.appendChild(chipsWrap);
+                card.appendChild(cutsBox);
+
+                elements.sessionListContainer.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function handleSlidesOrderChanged() {
+            markUnsavedChanges();
+            syncLinkedSessionOverlaysAfterSlideChange();
+            updateDurations();
+            renderSessionManagerUI();
+            renderStoryboard();
+            renderOverlayListUI();
+            updateOverlayInspectorUI();
+            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+        }
+
         function sortExistingSlidesByFilename() {
             if (state.images.length < 2) {
                 showToast("정렬할 사진이 2장 이상 필요합니다.", "error");
@@ -7720,10 +8568,8 @@
                 const nameB = b.fileName || (b.rawFile && b.rawFile.name) || '';
                 return compareFileNamesNaturally(nameA, nameB);
             });
-            updateDurations();
-            renderStoryboard();
-            if (!state.isPlaying) drawFrame(state.currentTime);
-            showToast("모든 슬라이드가 파일 이름의 번호순(1, 2, 10...)으로 정렬되었습니다!");
+            handleSlidesOrderChanged();
+            showToast("모든 슬라이드가 파일 이름의 번호순(1, 2, 10...)으로 정렬되었습니다! (자막·회기 연결 유지됨)");
         }
 
         function copyPrevPhraseToSlide(index) {
@@ -7756,9 +8602,7 @@
             const temp = state.images[index];
             state.images[index] = state.images[targetIndex];
             state.images[targetIndex] = temp;
-            updateDurations();
-            renderStoryboard();
-            if (!state.isPlaying) drawFrame(state.currentTime);
+            handleSlidesOrderChanged();
         }
 
         function renderStoryboard() {
@@ -7791,9 +8635,7 @@
                     e.preventDefault();
                     if (state.draggedItemIndex === null || state.draggedItemIndex === index) return;
                     state.images.splice(index, 0, state.images.splice(state.draggedItemIndex, 1)[0]);
-                    updateDurations();
-                    renderStoryboard();
-                    if (!state.isPlaying) drawFrame(state.currentTime);
+                    handleSlidesOrderChanged();
                 });
 
                 thumbWrap.className = 'w-20 lg:w-24 h-28 lg:h-32 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner border border-stone-300';
@@ -7883,6 +8725,13 @@
                 nameSpan.title = dispName;
                 fileBadge.appendChild(numSpan);
                 fileBadge.appendChild(nameSpan);
+                const belongedSess = getSessionForSlideId(data.id);
+                if (belongedSess) {
+                    const sessTag = document.createElement('span');
+                    sessTag.className = 'px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-950 border border-emerald-300 text-[10px] font-extrabold shrink-0';
+                    sessTag.textContent = `📅 ${belongedSess.displayName || '회기'}`;
+                    fileBadge.appendChild(sessTag);
+                }
                 if (data.driveFileId && !data.isPlaceholder) {
                     const syncedTag = document.createElement('span');
                     syncedTag.className = 'px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-extrabold shrink-0';
@@ -8121,6 +8970,7 @@
             elements.totalTimeDisplay.textContent = formatTimePrecise(state.totalDuration);
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
             updateEstimatedFileSizeDisplay();
+            updateSessionDurationSummaryUI();
             renderTimelineSceneMarkers();
             updateTimelineProgressUI(state.currentTime);
             if (state.selectedOverlayId && state.selectedOverlayId !== '__main_subtitle__') {
@@ -8181,6 +9031,9 @@
         function removeImage(index) {
             const target = state.images[index];
             if (!target) return;
+            const removedIdStr = String(target.id);
+            const removedSceneKey = toSlideSceneKey(removedIdStr);
+
             if (target.type === 'video' && target.mediaElement && !target.mediaElement.paused) {
                 target.mediaElement.pause();
             }
@@ -8188,8 +9041,37 @@
                 URL.revokeObjectURL(target.src);
             }
             state.images.splice(index, 1);
+
+            // 삭제된 사진의 연결만 정확히 제거하고 다른 사진으로 옮겨 붙지 않도록 처리
+            state.overlays.forEach(ov => {
+                if (Array.isArray(ov.targetScenes)) {
+                    ov.targetScenes = ov.targetScenes
+                        .map(k => (k === removedSceneKey ? '__deleted__' : normalizeSceneKeyToSlideId(k, state.images)))
+                        .filter(k => k !== '__deleted__');
+                }
+                if (ov.targetSceneKey === removedSceneKey) {
+                    ov.targetSceneKey = (Array.isArray(ov.targetScenes) && ov.targetScenes.length > 0)
+                        ? ov.targetScenes[0]
+                        : '__deleted__';
+                } else if (ov.targetSceneKey && ov.targetSceneKey !== 'intro' && ov.targetSceneKey !== 'outro') {
+                    ov.targetSceneKey = normalizeSceneKeyToSlideId(ov.targetSceneKey, state.images);
+                }
+            });
+
+            // 회기 목록에서도 삭제된 사진 ID만 제거 후 연동된 회기 오버레이 갱신
+            (state.sessions || []).forEach(sess => {
+                if (Array.isArray(sess.slideIds)) {
+                    sess.slideIds = sess.slideIds.filter(sid => String(sid) !== removedIdStr);
+                }
+            });
+            syncLinkedSessionOverlaysAfterSlideChange();
+
+            markUnsavedChanges();
             updateDurations();
+            renderSessionManagerUI();
             renderStoryboard();
+            renderOverlayListUI();
+            updateOverlayInspectorUI();
             updateUI();
             if (!state.isPlaying) {
                 state.currentTime = Math.min(state.currentTime, state.totalDuration);
@@ -9084,7 +9966,15 @@
                 });
             }
 
-            // 새 서브 자막 추가 시 표시 구간('custom-scenes' -> '1, 3컷' 입력창) 토글
+            // 회기 관리 버튼 이벤트
+            if (elements.addSessionBtn) {
+                elements.addSessionBtn.addEventListener('click', addNewSessionCard);
+            }
+            if (elements.applyAllSessionsBtn) {
+                elements.applyAllSessionsBtn.addEventListener('click', applyAllSessionsOverlays);
+            }
+
+            // 새 서브 자막 추가 시 표시 구간('custom-scenes' -> '1, 3컷' 입력창) 및 표시 시간('range' -> 0~3초 입력창) 토글
             if (elements.newOverlayScopeSelect && elements.newOverlayCustomCutsInput) {
                 elements.newOverlayScopeSelect.addEventListener('change', (e) => {
                     const isCustom = e.target.value === 'custom-scenes';
@@ -9092,6 +9982,13 @@
                     if (isCustom && !elements.newOverlayCustomCutsInput.value.trim()) {
                         elements.newOverlayCustomCutsInput.value = '1, 3';
                     }
+                });
+            }
+            if (elements.newOverlayTimeModeSelect && elements.newOverlayTimeRangeRow) {
+                elements.newOverlayTimeModeSelect.addEventListener('change', (e) => {
+                    const isRange = e.target.value === 'range';
+                    elements.newOverlayTimeRangeRow.classList.toggle('hidden', !isRange);
+                    elements.newOverlayTimeRangeRow.classList.toggle('flex', isRange);
                 });
             }
 
@@ -9248,7 +10145,7 @@
                     sel.targetScenes = [curKey];
                     if (elements.overlayScopeSelect) elements.overlayScopeSelect.value = 'current';
                     if (elements.overlayCustomCutsInput) {
-                        elements.overlayCustomCutsInput.value = formatSceneKeysToHumanString(sel.targetScenes, false);
+                        elements.overlayCustomCutsInput.value = formatSceneKeysToHumanString(sel.targetScenes, false, true);
                     }
                     markUnsavedChanges();
                     renderOverlaySceneChipsUI(sel);
@@ -9256,6 +10153,61 @@
                     if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
                     showToast(`현재 보고 있는 장면(${formatSingleSceneKeyLabel(curKey)})에만 표시되도록 설정했습니다.`);
                 });
+            }
+
+            // 선택된 오버레이의 장면 내 표시 시간(전체 표시 vs 0~3초 구간 제한) 이벤트
+            if (elements.overlayTimeModeSelect) {
+                elements.overlayTimeModeSelect.addEventListener('change', (e) => {
+                    const sel = state.overlays.find(o => o.id === state.selectedOverlayId);
+                    if (!sel) return;
+                    sel.timeMode = e.target.value;
+                    if (sel.startOffsetSec === undefined) sel.startOffsetSec = 0;
+                    if (sel.endOffsetSec === undefined) sel.endOffsetSec = 3.0;
+                    if (elements.overlayTimeRangeRow) {
+                        elements.overlayTimeRangeRow.classList.toggle('hidden', sel.timeMode !== 'range');
+                        elements.overlayTimeRangeRow.classList.toggle('flex', sel.timeMode === 'range');
+                    }
+                    markUnsavedChanges();
+                    renderOverlayListUI();
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                    showToast(sel.timeMode === 'range'
+                        ? `이 장면 시작 후 ${sel.startOffsetSec}~${sel.endOffsetSec}초 동안만 표시됩니다.`
+                        : "지정한 장면이 나오는 동안 계속 표시됩니다.");
+                });
+            }
+            const syncSelectedOverlayTimeRange = (startVal, endVal, notify = false) => {
+                const sel = state.overlays.find(o => o.id === state.selectedOverlayId);
+                if (!sel) return;
+                const sSec = Math.max(0, Math.round((parseFloat(startVal) || 0) * 10) / 10);
+                const eSec = Math.max(sSec + 0.5, Math.round((parseFloat(endVal) || 3.0) * 10) / 10);
+                sel.timeMode = 'range';
+                sel.startOffsetSec = sSec;
+                sel.endOffsetSec = eSec;
+                if (elements.overlayTimeModeSelect) elements.overlayTimeModeSelect.value = 'range';
+                if (elements.overlayTimeRangeRow) {
+                    elements.overlayTimeRangeRow.classList.remove('hidden');
+                    elements.overlayTimeRangeRow.classList.add('flex');
+                }
+                if (elements.overlayStartSecInput) elements.overlayStartSecInput.value = String(sSec);
+                if (elements.overlayEndSecInput) elements.overlayEndSecInput.value = String(eSec);
+                markUnsavedChanges();
+                renderOverlayListUI();
+                if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                if (notify) showToast(`장면 시작 후 ${sSec}초 ~ ${eSec}초 동안만 표시되도록 설정했습니다.`);
+            };
+            if (elements.overlayStartSecInput && elements.overlayEndSecInput) {
+                elements.overlayStartSecInput.addEventListener('change', () => {
+                    syncSelectedOverlayTimeRange(elements.overlayStartSecInput.value, elements.overlayEndSecInput.value, true);
+                });
+                elements.overlayEndSecInput.addEventListener('change', () => {
+                    syncSelectedOverlayTimeRange(elements.overlayStartSecInput.value, elements.overlayEndSecInput.value, true);
+                });
+            }
+            if (elements.overlayPreset03sBtn) {
+                elements.overlayPreset03sBtn.addEventListener('click', () => syncSelectedOverlayTimeRange(0, 3, true));
+            }
+            if (elements.overlayPreset02sBtn) {
+                elements.overlayPreset02sBtn.addEventListener('click', () => syncSelectedOverlayTimeRange(0, 2, true));
             }
 
             // 기본 하단 자막 위치 초기화 및 연동 체크박스
@@ -9807,6 +10759,7 @@
                 }
             });
             
+            renderSessionManagerUI();
             renderStoryboard();
             updateDurations();
             updateUI();
