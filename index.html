@@ -2719,24 +2719,264 @@
 
         let currentTab = 'draft', audioCtx, audioDest, masterGainNode, videoMasterGainNode, windNode, windGain, chimeInterval, windModTimeout;
         let padOscNodes = [];
-        const DB_NAME = 'ForestVideoDB', STORE_NAME = 'projects';
+        const DB_NAME = 'ForestVideoDB', STORE_NAME = 'projects', MEDIA_STORE_NAME = 'media_assets';
+        const DB_VERSION = 2;
 
         function isProceduralBgm(val) {
             return Boolean(val && val.startsWith('procedural'));
         }
 
+        function isPlayableVideoElement(el) {
+            return Boolean(el && el.tagName === 'VIDEO' && typeof el.pause === 'function' && typeof el.play === 'function');
+        }
+
+        let cachedDbInstance = null;
         function initDB() {
+            if (cachedDbInstance) return Promise.resolve(cachedDbInstance);
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
                         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
                     }
+                    if (!db.objectStoreNames.contains(MEDIA_STORE_NAME)) {
+                        db.createObjectStore(MEDIA_STORE_NAME, { keyPath: 'key' });
+                    }
                 };
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject('DB 에러');
+                request.onsuccess = () => {
+                    cachedDbInstance = request.result;
+                    cachedDbInstance.onclose = () => { cachedDbInstance = null; };
+                    cachedDbInstance.onversionchange = () => {
+                        cachedDbInstance.close();
+                        cachedDbInstance = null;
+                    };
+                    resolve(cachedDbInstance);
+                };
+                request.onerror = () => reject(request.error || 'DB 에러');
             });
+        }
+
+        // 대용량 동영상·사진이 포함된 경우에도 IndexedDB getAll() IPC 용량 제한(64~128MB)에 걸리지 않도록 커서(openCursor)로 1건씩 안전하게 조회
+        async function readAllProjectsViaCursor(filterFn = null) {
+            try {
+                const db = await initDB();
+                return await new Promise((resolve) => {
+                    const results = [];
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const cursorReq = store.openCursor();
+                    cursorReq.onsuccess = (e) => {
+                        const cursor = e.target.result;
+                        if (cursor) {
+                            try {
+                                const val = cursor.value;
+                                if (!filterFn || filterFn(val)) {
+                                    results.push(val);
+                                }
+                            } catch (itemErr) {
+                                console.warn('Cursor item skip:', itemErr);
+                            }
+                            cursor.continue();
+                        } else {
+                            resolve(results);
+                        }
+                    };
+                    cursorReq.onerror = (err) => {
+                        console.warn('Cursor read warning, returning partial:', err);
+                        resolve(results);
+                    };
+                });
+            } catch (e) {
+                console.warn('readAllProjectsViaCursor error:', e);
+                return [];
+            }
+        }
+
+        // 대용량 미디어(특히 동영상/원본 사진/음원)를 별도 media_assets 스토어에 분리 저장하고 projects 스토어는 가볍게 유지
+        const savedMediaAssetCache = new Map();
+        async function saveProjectWithSeparatedMediaToIDB(projectData) {
+            const db = await initDB();
+            const projId = projectData.id;
+            const mediaEntriesToPut = [];
+
+            // प्रोजेक्ट 복사본(경량화 대상) 생성
+            const lightProject = {
+                ...projectData,
+                data: {
+                    ...projectData.data
+                }
+            };
+
+            if (db.objectStoreNames.contains(MEDIA_STORE_NAME)) {
+                // 1) 커스텀 배경음 분리
+                if (projectData.data.customBgmFile instanceof Blob) {
+                    const bgmKey = `${projId}__customBgm`;
+                    const sig = `${projectData.data.customBgmFile.size}_${projectData.data.customBgmFile.name || ''}`;
+                    if (savedMediaAssetCache.get(bgmKey) !== sig) {
+                        mediaEntriesToPut.push({
+                            key: bgmKey,
+                            projectId: projId,
+                            blob: projectData.data.customBgmFile,
+                            name: projectData.data.customBgmFileName || projectData.data.customBgmFile.name || 'custom_bgm.mp3',
+                            type: projectData.data.customBgmFile.type || 'audio/mpeg'
+                        });
+                        savedMediaAssetCache.set(bgmKey, sig);
+                    }
+                    lightProject.data.customBgmAssetKey = bgmKey;
+                    lightProject.data.customBgmFile = null;
+                }
+
+                // 2) 커스텀 배경 이미지 분리
+                if (projectData.data.customBgFile instanceof Blob) {
+                    const bgKey = `${projId}__customBg`;
+                    const sig = `${projectData.data.customBgFile.size}_${projectData.data.customBgFile.name || ''}`;
+                    if (savedMediaAssetCache.get(bgKey) !== sig) {
+                        mediaEntriesToPut.push({
+                            key: bgKey,
+                            projectId: projId,
+                            blob: projectData.data.customBgFile,
+                            name: projectData.data.customBgFileName || projectData.data.customBgFile.name || 'custom_bg.jpg',
+                            type: projectData.data.customBgFile.type || 'image/jpeg'
+                        });
+                        savedMediaAssetCache.set(bgKey, sig);
+                    }
+                    lightProject.data.customBgAssetKey = bgKey;
+                    lightProject.data.customBgFile = null;
+                }
+
+                // 3) 슬라이드별 미디어(동영상/사진) 분리
+                if (Array.isArray(projectData.data.images)) {
+                    lightProject.data.images = projectData.data.images.map((img, idx) => {
+                        const slideCopy = { ...img };
+                        const slideId = String(img.id || `slide_${idx}`);
+                        const assetKey = `${projId}__slide__${slideId}`;
+                        const blobObj = (img.rawFile instanceof Blob) ? img.rawFile : null;
+
+                        if (blobObj) {
+                            const sig = `${blobObj.size}_${blobObj.type}_${img.fileName || ''}`;
+                            if (savedMediaAssetCache.get(assetKey) !== sig) {
+                                mediaEntriesToPut.push({
+                                    key: assetKey,
+                                    projectId: projId,
+                                    blob: blobObj,
+                                    name: img.fileName || blobObj.name || `slide_${idx + 1}`,
+                                    type: blobObj.type || (img.type === 'video' ? 'video/mp4' : 'image/jpeg')
+                                });
+                                savedMediaAssetCache.set(assetKey, sig);
+                            }
+                            slideCopy.mediaAssetKey = assetKey;
+                            slideCopy.hasLocalAsset = true;
+                            // projects 스토어에는 수십 MB의 rawFile이나 중복 Base64 src를 넣지 않고 첫 장 썸네일만 남김
+                            slideCopy.rawFile = null;
+                            if (idx > 0 && typeof slideCopy.src === 'string' && slideCopy.src.startsWith('data:')) {
+                                slideCopy.src = null;
+                            }
+                        } else if (typeof img.src === 'string' && img.src.startsWith('data:') && idx > 0) {
+                            const strSig = `dataurl_${img.src.length}`;
+                            if (savedMediaAssetCache.get(assetKey) !== strSig) {
+                                mediaEntriesToPut.push({
+                                    key: assetKey,
+                                    projectId: projId,
+                                    dataUrl: img.src,
+                                    name: img.fileName || `slide_${idx + 1}.jpg`,
+                                    type: 'image/jpeg'
+                                });
+                                savedMediaAssetCache.set(assetKey, strSig);
+                            }
+                            slideCopy.mediaAssetKey = assetKey;
+                            slideCopy.hasLocalAsset = true;
+                            slideCopy.src = null;
+                        }
+                        return slideCopy;
+                    });
+                }
+
+                // 변경된 미디어 에셋만 media_assets 스토어에 개별 저장
+                for (const entry of mediaEntriesToPut) {
+                    try {
+                        await new Promise((resolve, reject) => {
+                            const mtx = db.transaction(MEDIA_STORE_NAME, 'readwrite');
+                            mtx.objectStore(MEDIA_STORE_NAME).put(entry);
+                            mtx.oncomplete = () => resolve();
+                            mtx.onerror = (e) => reject(e);
+                        });
+                    } catch (mErr) {
+                        console.warn('Media asset put fallback to inline:', entry.key, mErr);
+                    }
+                }
+            }
+
+            // 경량화된 프로젝트 메타데이터를 projects 스토어에 저장
+            await new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put(lightProject);
+                tx.oncomplete = () => resolve();
+                tx.onerror = (e) => reject(e);
+            });
+            return lightProject;
+        }
+
+        // 프로젝트를 불러올 때 media_assets 스토어에 분리 저장된 동영상·사진·음원 Blob을 원래 프로젝트 객체로 재결합
+        async function rehydrateProjectMediaFromIDB(project) {
+            if (!project || !project.data) return project;
+            try {
+                const db = await initDB();
+                if (!db.objectStoreNames.contains(MEDIA_STORE_NAME)) return project;
+
+                const getAsset = (key) => new Promise((resolve) => {
+                    if (!key) return resolve(null);
+                    try {
+                        const tx = db.transaction(MEDIA_STORE_NAME, 'readonly');
+                        const req = tx.objectStore(MEDIA_STORE_NAME).get(key);
+                        req.onsuccess = () => resolve(req.result || null);
+                        req.onerror = () => resolve(null);
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+
+                const d = { ...project.data };
+
+                if (!d.customBgmFile && d.customBgmAssetKey) {
+                    const bgmAsset = await getAsset(d.customBgmAssetKey);
+                    if (bgmAsset && bgmAsset.blob) {
+                        d.customBgmFile = bgmAsset.blob;
+                    }
+                }
+                if (!d.customBgFile && d.customBgAssetKey) {
+                    const bgAsset = await getAsset(d.customBgAssetKey);
+                    if (bgAsset && bgAsset.blob) {
+                        d.customBgFile = bgAsset.blob;
+                    }
+                }
+
+                if (Array.isArray(d.images)) {
+                    const rehydratedSlides = [];
+                    for (let i = 0; i < d.images.length; i++) {
+                        const slide = { ...d.images[i] };
+                        const slideId = String(slide.id || `slide_${i}`);
+                        const assetKey = slide.mediaAssetKey || `${project.id}__slide__${slideId}`;
+                        if (!slide.rawFile && (!slide.src || slide.type === 'video')) {
+                            const asset = await getAsset(assetKey);
+                            if (asset) {
+                                if (asset.blob) {
+                                    slide.rawFile = asset.blob;
+                                } else if (asset.dataUrl) {
+                                    slide.src = asset.dataUrl;
+                                }
+                            }
+                        }
+                        rehydratedSlides.push(slide);
+                    }
+                    d.images = rehydratedSlides;
+                }
+
+                return { ...project, data: d };
+            } catch (err) {
+                console.warn('rehydrateProjectMediaFromIDB warning:', err);
+                return project;
+            }
         }
 
         function getActiveOwnerKey() {
@@ -3268,13 +3508,7 @@
                 state.projectId = "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
             }
             const projectData = buildCurrentProjectObject(type, state.projectVersion || 1);
-            const db = await initDB();
-            await new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                tx.objectStore(STORE_NAME).put(projectData);
-                tx.oncomplete = () => resolve();
-                tx.onerror = (e) => reject(e);
-            });
+            await saveProjectWithSeparatedMediaToIDB(projectData);
             return projectData;
         }
 
@@ -3323,39 +3557,46 @@
             const useResumable = size > 4 * 1024 * 1024 && !existingFileId;
 
             if (useResumable) {
-                const metadata = {
-                    name: fileName,
-                    mimeType: safeMime,
-                    ...(folderId ? { parents: [folderId] } : {})
-                };
-                const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name', {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${state.googleAccessToken}`,
-                        'Content-Type': 'application/json; charset=UTF-8',
-                        'X-Upload-Content-Type': safeMime,
-                        'X-Upload-Content-Length': String(size)
-                    },
-                    body: JSON.stringify(metadata)
-                });
-                if (initRes.status === 401 || initRes.status === 403) {
-                    const authErr = new Error('DRIVE_AUTH_EXPIRED');
-                    authErr.code = 'DRIVE_AUTH_EXPIRED';
-                    throw authErr;
+                try {
+                    const metadata = {
+                        name: fileName,
+                        mimeType: safeMime,
+                        ...(folderId ? { parents: [folderId] } : {})
+                    };
+                    const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${state.googleAccessToken}`,
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            'X-Upload-Content-Type': safeMime
+                        },
+                        body: JSON.stringify(metadata)
+                    });
+                    if (initRes.status === 401 || initRes.status === 403) {
+                        const authErr = new Error('DRIVE_AUTH_EXPIRED');
+                        authErr.code = 'DRIVE_AUTH_EXPIRED';
+                        throw authErr;
+                    }
+                    if (initRes.ok) {
+                        const uploadUrl = initRes.headers.get('Location');
+                        if (uploadUrl) {
+                            const putRes = await fetch(uploadUrl, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': safeMime },
+                                body: fileOrBlob
+                            });
+                            if (putRes.ok) {
+                                const uploaded = await putRes.json();
+                                if (uploaded && uploaded.id) return uploaded.id;
+                            }
+                        }
+                    }
+                } catch (resumableErr) {
+                    if (resumableErr && resumableErr.code === 'DRIVE_AUTH_EXPIRED') throw resumableErr;
+                    console.warn('Resumable upload CORS fallback to multipart:', resumableErr);
                 }
-                if (!initRes.ok) throw new Error(`Resumable init failed (${initRes.status})`);
-                const uploadUrl = initRes.headers.get('Location');
-                if (!uploadUrl) throw new Error('Missing resumable Location header');
-
-                const putRes = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': safeMime },
-                    body: fileOrBlob
-                });
-                if (!putRes.ok) throw new Error(`Resumable upload failed (${putRes.status})`);
-                const uploaded = await putRes.json();
-                return uploaded.id;
-            } else {
+            }
+            {
                 const metadata = existingFileId
                     ? { name: fileName, mimeType: safeMime }
                     : { name: fileName, mimeType: safeMime, ...(folderId ? { parents: [folderId] } : {}) };
@@ -3654,14 +3895,8 @@
 
                 const projectData = buildCurrentProjectObject(type, state.projectVersion || 1);
 
-                // 2) 기기 내 IndexedDB에 최신 상태(driveFileId 포함) 저장
-                const db = await initDB();
-                await new Promise((resolve, reject) => {
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    tx.objectStore(STORE_NAME).put(projectData);
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = (e) => reject(e);
-                });
+                // 2) 기기 내 IndexedDB에 최신 상태(대용량 동영상·사진은 media_assets 스토어로 분리) 저장
+                await saveProjectWithSeparatedMediaToIDB(projectData);
                 if (capturedEpoch !== authSessionEpoch) return;
 
                 // 3) Google 로그인 상태라면 Firestore에 편집 정보(메타데이터 + 각 미디어의 driveFileId) 저장
@@ -3691,8 +3926,7 @@
                             }
                         }
 
-                        const tx2 = db.transaction(STORE_NAME, 'readwrite');
-                        tx2.objectStore(STORE_NAME).put(projectData);
+                        await saveProjectWithSeparatedMediaToIDB(projectData);
 
                         const summary = getProjectMediaSyncSummary();
                         if (driveSyncResult.expired) {
@@ -3814,18 +4048,10 @@
 
         // Firestore 문서와 로컬 IndexedDB 프로젝트를 병합하여 목록으로 반환
         async function loadProjectsFromDB(typeFilter, customOwnerKey = null) {
-            const db = await initDB();
             const targetOwner = customOwnerKey || getActiveOwnerKey();
-            const localList = await new Promise((resolve) => {
-                const tx = db.transaction(STORE_NAME, 'readonly');
-                const req = tx.objectStore(STORE_NAME).getAll();
-                req.onsuccess = () => {
-                    const filtered = req.result
-                        .filter(p => getProjectOwnerKey(p) === targetOwner && p.type === typeFilter);
-                    resolve(filtered);
-                };
-                req.onerror = () => resolve([]);
-            });
+            const localList = await readAllProjectsViaCursor(
+                (p) => p && getProjectOwnerKey(p) === targetOwner && p.type === typeFilter
+            );
 
             // 비로그인 모드이거나 다른 오너 조회 시 로컬 목록만 반환
             if (!currentUser || !currentUser.uid || targetOwner !== currentUser.uid || !firestoreDb) {
@@ -3879,6 +4105,9 @@
                     driveFileId: meta.driveFileId || (matchedLocal ? matchedLocal.driveFileId : null) || null,
                     src: matchedLocal ? matchedLocal.src : null,
                     rawFile: matchedLocal ? matchedLocal.rawFile : null,
+                    mediaAssetKey: matchedLocal ? (matchedLocal.mediaAssetKey || `${cloudDoc.id}__slide__${meta.id || `slide_${idx}`}`) : `${cloudDoc.id}__slide__${meta.id || `slide_${idx}`}`,
+                    hasLocalAsset: Boolean(matchedLocal && (matchedLocal.hasLocalAsset || matchedLocal.rawFile || matchedLocal.src)),
+                    thumbDataUrl: matchedLocal ? (matchedLocal.thumbDataUrl || null) : null,
                     effect: meta.effect || 'zoom-in',
                     phrase: meta.phrase !== undefined ? meta.phrase : '',
                     duration: Number(meta.duration) || 4,
@@ -3890,7 +4119,7 @@
                 };
             });
 
-            const hasAllLocalBlobs = mergedImages.length > 0 && mergedImages.every(m => Boolean(m.rawFile || m.src));
+            const hasAllLocalBlobs = mergedImages.length > 0 && mergedImages.every(m => Boolean(m.rawFile || m.src || m.hasLocalAsset));
 
             return {
                 id: cloudDoc.id,
@@ -3914,6 +4143,8 @@
                     ...(existingLocal ? existingLocal.data : {}),
                     ...s,
                     customBgFile: existingLocal?.data?.customBgFile || null,
+                    customBgAssetKey: existingLocal?.data?.customBgAssetKey || (existingLocal ? `${cloudDoc.id}__customBg` : null),
+                    customBgmAssetKey: existingLocal?.data?.customBgmAssetKey || (existingLocal ? `${cloudDoc.id}__customBgm` : null),
                     customBgSrc: existingLocal?.data?.customBgSrc || null,
                     customBgDriveFileId: s.customBgDriveFileId || existingLocal?.data?.customBgDriveFileId || null,
                     customBgFileName: s.customBgFileName || existingLocal?.data?.customBgFileName || null,
@@ -3967,18 +4198,10 @@
         }
 
         async function getLocalDeviceProjectsList() {
-            const db = await initDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction(STORE_NAME, 'readonly');
-                const req = tx.objectStore(STORE_NAME).getAll();
-                req.onsuccess = () => {
-                    const list = req.result
-                        .filter(p => getProjectOwnerKey(p) === LOCAL_DEVICE_OWNER_KEY)
-                        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-                    resolve(list);
-                };
-                req.onerror = () => resolve([]);
-            });
+            const list = await readAllProjectsViaCursor(
+                (p) => p && getProjectOwnerKey(p) === LOCAL_DEVICE_OWNER_KEY
+            );
+            return list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
         }
 
         async function getLocalDeviceProjectsCount() {
@@ -4095,14 +4318,18 @@
             });
         }
 
-        async function applyProjectObjectToState(project) {
-            if (!project || !project.data) return;
+        async function applyProjectObjectToState(rawProject) {
+            if (!rawProject || !rawProject.data) return;
             elements.workspaceModal.style.display = 'none';
             elements.transferModal.style.display = 'none';
             elements.loadingOverlay.style.display = 'flex';
             elements.loadingTitle.textContent = "프로젝트 불러오는 중...";
+            elements.loadingSubtitle.textContent = "저장된 사진·동영상과 자막 설정을 복원하고 있습니다.";
             elements.renderProgress.style.width = "100%";
             elements.renderProgress.classList.add('animate-pulse');
+
+            try {
+            const project = await rehydrateProjectMediaFromIDB(rawProject);
             
             stopPlayback();
             state.images.forEach(img => {
@@ -4372,70 +4599,95 @@
                 }
             }
 
-            const loadPromises = rawSlides.map((imgData, idx) => new Promise((resolve) => {
-                const fallbackTimer = setTimeout(() => resolve(null), 15000);
-                const restoredBlob = serializedToFile(imgData.rawFile);
-                let mediaSrc = imgData.src;
-                if (restoredBlob) mediaSrc = URL.createObjectURL(restoredBlob);
-                if (!mediaSrc) {
-                    clearTimeout(fallbackTimer);
-                    placeholderCount++;
-                    createMissingMediaPlaceholderImage(imgData, idx).then(({ img, dataUrl }) => {
-                        resolve({
-                            ...imgData,
-                            isPlaceholder: true,
-                            uploadStatus: imgData.driveFileId ? 'synced' : 'pending',
-                            rawFile: null,
-                            src: dataUrl,
-                            mediaElement: img,
-                            blurredBgCanvas: createPreBlurredCanvas(img)
-                        });
+            const resolveWithPlaceholderFallback = (imgData, idx, resolve) => {
+                placeholderCount++;
+                createMissingMediaPlaceholderImage(imgData, idx).then(({ img, dataUrl }) => {
+                    resolve({
+                        ...imgData,
+                        isPlaceholder: true,
+                        uploadStatus: imgData.driveFileId ? 'synced' : 'pending',
+                        rawFile: null,
+                        src: dataUrl,
+                        mediaElement: img,
+                        blurredBgCanvas: createPreBlurredCanvas(img)
                     });
-                    return;
-                }
+                });
+            };
 
-                if (imgData.type === 'video') {
-                    const video = document.createElement('video');
-                    video.src = mediaSrc;
-                    video.muted = true;
-                    video.playsInline = true;
-                    video.preload = "auto";
-                    video.onloadedmetadata = () => {
+            const loadedMedia = [];
+            for (let idx = 0; idx < rawSlides.length; idx++) {
+                const imgData = rawSlides[idx];
+                const itemResult = await new Promise((resolve) => {
+                    let settled = false;
+                    const finish = (val) => {
+                        if (settled) return;
+                        settled = true;
                         clearTimeout(fallbackTimer);
-                        resolve({
-                            ...imgData,
-                            rawFile: restoredBlob || imgData.rawFile,
-                            src: mediaSrc,
-                            mediaElement: video
-                        });
+                        resolve(val);
                     };
-                    video.onerror = () => {
-                        clearTimeout(fallbackTimer);
-                        resolve(null);
-                    };
-                    video.load();
-                } else {
-                    const img = new Image();
-                    img.onload = () => {
-                        clearTimeout(fallbackTimer);
-                        resolve({
-                            ...imgData,
-                            rawFile: restoredBlob || imgData.rawFile,
-                            src: mediaSrc,
-                            mediaElement: img,
-                            blurredBgCanvas: createPreBlurredCanvas(img)
-                        });
-                    };
-                    img.onerror = () => {
-                        clearTimeout(fallbackTimer);
-                        resolve(null);
-                    };
-                    img.src = mediaSrc;
-                }
-            }));
+                    const fallbackTimer = setTimeout(() => {
+                        console.warn(`Slide #${idx + 1} load timed out, using placeholder fallback`);
+                        resolveWithPlaceholderFallback(imgData, idx, finish);
+                    }, 8000);
 
-            const loadedMedia = await Promise.all(loadPromises);
-            state.images = loadedMedia.filter(item => item !== null).map((item, idx) => ({
+                    const restoredBlob = serializedToFile(imgData.rawFile);
+                    let mediaSrc = (typeof imgData.src === 'string' && !imgData.src.startsWith('blob:')) ? imgData.src : null;
+                    if (restoredBlob) {
+                        try {
+                            mediaSrc = URL.createObjectURL(restoredBlob);
+                        } catch (uErr) {
+                            console.warn('createObjectURL failed:', uErr);
+                        }
+                    }
+                    if (!mediaSrc) {
+                        resolveWithPlaceholderFallback(imgData, idx, finish);
+                        return;
+                    }
+
+                    if (imgData.type === 'video') {
+                        const video = document.createElement('video');
+                        video.muted = true;
+                        video.playsInline = true;
+                        video.preload = 'metadata';
+                        const onReady = () => {
+                            finish({
+                                ...imgData,
+                                isPlaceholder: false,
+                                rawFile: restoredBlob || imgData.rawFile,
+                                src: mediaSrc,
+                                mediaElement: video
+                            });
+                        };
+                        video.addEventListener('loadedmetadata', onReady, { once: true });
+                        video.addEventListener('loadeddata', onReady, { once: true });
+                        video.addEventListener('error', () => {
+                            console.warn(`Video slide #${idx + 1} decode error, falling back to placeholder`);
+                            resolveWithPlaceholderFallback(imgData, idx, finish);
+                        }, { once: true });
+                        video.src = mediaSrc;
+                        video.load();
+                    } else {
+                        const img = new Image();
+                        img.onload = () => {
+                            finish({
+                                ...imgData,
+                                isPlaceholder: false,
+                                rawFile: restoredBlob || imgData.rawFile,
+                                src: mediaSrc,
+                                mediaElement: img,
+                                blurredBgCanvas: createPreBlurredCanvas(img)
+                            });
+                        };
+                        img.onerror = () => {
+                            resolveWithPlaceholderFallback(imgData, idx, finish);
+                        };
+                        img.src = mediaSrc;
+                    }
+                });
+                if (itemResult) loadedMedia.push(itemResult);
+            }
+
+                        state.images = loadedMedia.filter(item => item !== null).map((item, idx) => ({
                 ...item,
                 id: String(item.id !== undefined && item.id !== null ? item.id : `img_restored_${idx}_${Date.now()}`)
             }));
@@ -4450,9 +4702,7 @@
             if (downloadedFromDriveCount > 0) {
                 try {
                     const cachedObj = buildCurrentProjectObject(project.type || 'draft', state.projectVersion);
-                    const db = await initDB();
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    tx.objectStore(STORE_NAME).put(cachedObj);
+                    await saveProjectWithSeparatedMediaToIDB(cachedObj);
                 } catch (cErr) {
                     console.warn("Local cache update after Drive download skipped:", cErr);
                 }
@@ -4493,21 +4743,63 @@
                 updateSyncStatusDisplay('local_saved');
                 showToast(`'${state.projectTitle}' 작업물을 불러왔습니다.`);
             }
+            } catch (err) {
+                console.error("applyProjectObjectToState error:", err);
+                showToast("작업물 복원 중 일부 항목에서 오류가 발생했습니다.", "error");
+            } finally {
+                elements.renderProgress.classList.remove('animate-pulse');
+                elements.loadingOverlay.style.display = 'none';
+            }
         }
 
         let cachedWorkspaceProjects = [];
         async function restoreProject(id) {
-            const found = cachedWorkspaceProjects.find(p => p.id === id);
-            if (found) {
-                await applyProjectObjectToState(found);
-                return;
+            try {
+                let targetProj = cachedWorkspaceProjects.find(p => p.id === id) || null;
+                const db = await initDB();
+                const localRecord = await new Promise((resolve) => {
+                    try {
+                        const tx = db.transaction(STORE_NAME, 'readonly');
+                        const req = tx.objectStore(STORE_NAME).get(id);
+                        req.onsuccess = () => resolve(req.result || null);
+                        req.onerror = () => resolve(null);
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+
+                if (!targetProj && localRecord) {
+                    targetProj = localRecord;
+                } else if (targetProj && localRecord && localRecord.data && Array.isArray(localRecord.data.images)) {
+                    // 캐시된 프로젝트에 로컬 파일 참조가 비어 있다면 localRecord의 미디어 참조를 병합
+                    const localImgs = localRecord.data.images;
+                    if (targetProj.data && Array.isArray(targetProj.data.images)) {
+                        targetProj.data.images = targetProj.data.images.map((item, idx) => {
+                            const m = localImgs.find(li => String(li.id) === String(item.id)) || localImgs[idx];
+                            if (!m) return item;
+                            return {
+                                ...item,
+                                src: item.src || m.src || null,
+                                rawFile: item.rawFile || m.rawFile || null,
+                                mediaAssetKey: item.mediaAssetKey || m.mediaAssetKey || `${id}__slide__${item.id || `slide_${idx}`}`,
+                                thumbDataUrl: item.thumbDataUrl || m.thumbDataUrl || null
+                            };
+                        });
+                    }
+                }
+
+                if (!targetProj) {
+                    showToast('불러올 작업물을 찾지 못했습니다.', 'error');
+                    return;
+                }
+
+                const rehydrated = await rehydrateProjectMediaFromIDB(targetProj);
+                await applyProjectObjectToState(rehydrated);
+            } catch (err) {
+                console.error('restoreProject error:', err);
+                elements.loadingOverlay.style.display = 'none';
+                showToast('작업물을 불러오는 중 오류가 발생했습니다.', 'error');
             }
-            const db = await initDB();
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const req = tx.objectStore(STORE_NAME).get(id);
-            req.onsuccess = async () => {
-                if (req.result) await applyProjectObjectToState(req.result);
-            };
         }
 
         function clearWorkspaceThumbUrls() {
@@ -4708,7 +5000,8 @@
             lucide.createIcons();
         }
 
-        async function serializeProjectForExport(project) {
+        async function serializeProjectForExport(rawProject) {
+            const project = await rehydrateProjectMediaFromIDB(rawProject);
             const serializedCustomBgm = await fileToSerialized(project.data?.customBgmFile);
             const serializedCustomBg = await fileToSerialized(project.data?.customBgFile);
             const serializedImages = await Promise.all((project.data?.images || []).map(async (img) => ({
@@ -4777,19 +5070,16 @@
         }
 
         async function exportProjectsToFile() {
-            const db = await initDB();
-            const tx = db.transaction(STORE_NAME, 'readonly');
-            const req = tx.objectStore(STORE_NAME).getAll();
-            req.onsuccess = () => {
-                const userProjects = req.result.filter(p => getProjectOwnerKey(p) === getActiveOwnerKey());
-                if (userProjects.length === 0) {
-                    showToast("백업할 데이터가 없습니다.", "error");
-                    return;
-                }
-                showConfirm("모든 프로젝트 백업 파일을 기기에 저장하시겠습니까?", () => {
-                    shareOrDownloadProjectList(userProjects, "포이무비_전체백업", false);
-                });
-            };
+            const userProjects = await readAllProjectsViaCursor(
+                (p) => p && getProjectOwnerKey(p) === getActiveOwnerKey()
+            );
+            if (userProjects.length === 0) {
+                showToast("백업할 데이터가 없습니다.", "error");
+                return;
+            }
+            showConfirm("모든 프로젝트 백업 파일을 기기에 저장하시겠습니까?", () => {
+                shareOrDownloadProjectList(userProjects, "포이무비_전체백업", false);
+            });
         }
 
         function loadProjectFileAndRestore(file, openImmediately = true) {
@@ -4807,9 +5097,8 @@
                     if (importedProjects.length === 0 || !importedProjects[0].data) {
                         throw new Error("Invalid project format");
                     }
-                    const db = await initDB();
-                    const tx = db.transaction(STORE_NAME, 'readwrite');
-                    const normalizedProjects = importedProjects.map(p => {
+                    const normalizedProjects = [];
+                    for (const p of importedProjects) {
                         const activeOwner = getActiveOwnerKey();
                         p.ownerUid = activeOwner;
                         p.ownerMode = currentUser ? 'google' : 'local';
@@ -4824,19 +5113,17 @@
                                 }));
                             }
                         }
-                        tx.objectStore(STORE_NAME).put(p);
-                        return p;
-                    });
-                    tx.oncomplete = async () => {
-                        elements.renderProgress.classList.remove('animate-pulse');
-                        elements.loadingOverlay.style.display = 'none';
-                        if (openImmediately && normalizedProjects.length > 0) {
-                            await applyProjectObjectToState(normalizedProjects[0]);
-                        } else {
-                            showToast(`${normalizedProjects.length}개의 프로젝트가 보관소에 복원되었습니다.`);
-                            renderWorkspaceTab(currentTab);
-                        }
-                    };
+                        await saveProjectWithSeparatedMediaToIDB(p);
+                        normalizedProjects.push(p);
+                    }
+                    elements.renderProgress.classList.remove('animate-pulse');
+                    elements.loadingOverlay.style.display = 'none';
+                    if (openImmediately && normalizedProjects.length > 0) {
+                        await applyProjectObjectToState(normalizedProjects[0]);
+                    } else {
+                        showToast(`${normalizedProjects.length}개의 프로젝트가 보관소에 복원되었습니다.`);
+                        renderWorkspaceTab(currentTab);
+                    }
                 } catch (err) {
                     console.error(err);
                     elements.renderProgress.classList.remove('animate-pulse');
@@ -5163,7 +5450,7 @@
         function ensureAllVideosAudioRouted() {
             if (!audioCtx) return;
             state.images.forEach(item => {
-                if (item.type === 'video') ensureVideoAudioRouted(item);
+                if (item.type === 'video' && isPlayableVideoElement(item.mediaElement)) ensureVideoAudioRouted(item);
             });
         }
 
@@ -6060,7 +6347,7 @@
                 ctx.globalAlpha = prevAlpha;
                 return;
             }
-            if (mediaObj.type === 'video') {
+            if (mediaObj.type === 'video' && isPlayableVideoElement(mediaObj.mediaElement)) {
                 drawCoverImage(videoBlurCtx, mediaObj.mediaElement, videoBlurCanvas.width, videoBlurCanvas.height);
                 videoBlurCtx.fillStyle = blurStyle === 'deep' ? 'rgba(14, 12, 10, 0.52)' : 'rgba(18, 15, 12, 0.36)';
                 videoBlurCtx.fillRect(0, 0, videoBlurCanvas.width, videoBlurCanvas.height);
@@ -6114,7 +6401,7 @@
             ctx.save();
             ctx.globalAlpha = alpha;
             
-            if (mediaObj.type === 'video') {
+            if (mediaObj.type === 'video' && isPlayableVideoElement(mediaObj.mediaElement)) {
                 const vid = mediaObj.mediaElement;
                 const vidDur = vid.duration || mediaObj.duration || 4;
                 if (!state.isPlaying && !state.isRecording) {
@@ -8132,7 +8419,7 @@
             }
 
             state.images.forEach((item, idx) => {
-                if (item.type === 'video' && !activeVideoIndices.has(idx) && item.mediaElement && !item.mediaElement.paused) {
+                if (item.type === 'video' && !activeVideoIndices.has(idx) && isPlayableVideoElement(item.mediaElement) && !item.mediaElement.paused) {
                     item.mediaElement.pause();
                 }
             });
@@ -8459,7 +8746,7 @@
                 elements.bgmAudio.pause();
                 stopProceduralAmbient();
                 state.images.forEach(img => {
-                    if (img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause();
+                    if (img.type === 'video' && isPlayableVideoElement(img.mediaElement) && !img.mediaElement.paused) img.mediaElement.pause();
                 });
             } else {
                 state.isPlaying = true;
@@ -8495,7 +8782,7 @@
             elements.bgmAudio.currentTime = Math.max(0, Number(state.bgmAudioOffsetSec) || 0);
             stopProceduralAmbient();
             state.images.forEach(img => {
-                if (img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause();
+                if (img.type === 'video' && isPlayableVideoElement(img.mediaElement) && !img.mediaElement.paused) img.mediaElement.pause();
             });
             drawFrame(0);
             updateTimelineProgressUI(0);
@@ -8580,7 +8867,7 @@
                 }
                 stopProceduralAmbient();
                 state.images.forEach(img => {
-                    if (img.type === 'video' && !img.mediaElement.paused) img.mediaElement.pause();
+                    if (img.type === 'video' && isPlayableVideoElement(img.mediaElement) && !img.mediaElement.paused) img.mediaElement.pause();
                 });
                 const videoBlob = new Blob(chunks, { type: options.mimeType });
                 const dlUrl = URL.createObjectURL(videoBlob);
@@ -8694,16 +8981,30 @@
                         video.playsInline = true;
                         video.preload = "auto";
                         
-                        video.onloadedmetadata = () => {
+                        video.onloadedmetadata = async () => {
                             clearTimeout(fallbackTimer);
                             const fullDur = Number(Math.min(300, Math.max(1.5, Number(video.duration || 4))).toFixed(1));
+                            let safeBlob = file;
+                            try {
+                                if (file.size <= 250 * 1024 * 1024) {
+                                    const ab = await file.arrayBuffer();
+                                    safeBlob = new File([ab], file.name || 'video.mp4', { type: file.type || 'video/mp4' });
+                                }
+                            } catch (bufErr) {
+                                console.warn('Video buffer clone skipped, using original File:', bufErr);
+                            }
+                            const safeUrl = URL.createObjectURL(safeBlob);
+                            if (dataUrl !== safeUrl) {
+                                URL.revokeObjectURL(dataUrl);
+                                video.src = safeUrl;
+                            }
                             resolve({
                                 id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                                 type: 'video',
                                 fileName: file.name,
                                 mediaElement: video,
-                                src: dataUrl,
-                                rawFile: file,
+                                src: safeUrl,
+                                rawFile: safeBlob,
                                 effect: 'none',
                                 fitMode: state.defaultVideoFitMode || 'auto',
                                 timedSubtitles: [],
@@ -9473,7 +9774,7 @@
                 });
 
                 thumbWrap.className = isGrid ? 'w-full h-32 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner border border-stone-300' : 'w-full sm:w-20 lg:w-24 h-36 sm:h-28 lg:h-32 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner border border-stone-300';
-                if (data.type === 'video') {
+                if (data.type === 'video' && !data.isPlaceholder) {
                     const vid = document.createElement('video');
                     vid.src = `${data.src}#t=0.5`;
                     vid.className = 'w-full h-full object-cover';
@@ -9924,7 +10225,7 @@
             const removedIdStr = String(target.id);
             const removedSceneKey = toSlideSceneKey(removedIdStr);
 
-            if (target.type === 'video' && target.mediaElement && !target.mediaElement.paused) {
+            if (target.type === 'video' && isPlayableVideoElement(target.mediaElement) && !target.mediaElement.paused) {
                 target.mediaElement.pause();
             }
             if (target.src && target.src.startsWith('blob:')) {
