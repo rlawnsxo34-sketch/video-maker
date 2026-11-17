@@ -478,18 +478,31 @@
                         </div>
                     </section>
 
-                    <!-- 화면 비율 설정 (컴팩트 인라인 바) -->
-                    <section data-panel-section="media" class="flex items-center justify-between gap-3 bg-stone-50 px-3.5 py-2.5 rounded-2xl border border-stone-200">
-                        <h2 class="text-xs sm:text-sm font-extrabold text-zinc-900 flex items-center gap-1.5 whitespace-nowrap">
-                            <i data-lucide="ratio" class="w-4 h-4 text-emerald-800 shrink-0"></i> 화면 비율
-                        </h2>
-                        <div class="grid grid-cols-2 gap-2 flex-1 max-w-[320px]">
-                            <button id="ratio-vertical" class="py-2 px-3 border-2 border-zinc-900 bg-zinc-900 text-white rounded-xl font-extrabold flex justify-center items-center gap-1.5 transition-all text-xs sm:text-sm shadow-sm whitespace-nowrap">
-                                <i data-lucide="smartphone" class="w-4 h-4 shrink-0"></i> 세로형 (9:16)
-                            </button>
-                            <button id="ratio-horizontal" class="py-2 px-3 border-2 border-stone-300 bg-white text-zinc-900 rounded-xl font-extrabold flex justify-center items-center gap-1.5 transition-all hover:bg-stone-100 text-xs sm:text-sm whitespace-nowrap">
-                                <i data-lucide="monitor" class="w-4 h-4 shrink-0"></i> 가로형 (16:9)
-                            </button>
+                    <!-- 화면 비율 설정 + 가로형 작업 중 세로 동영상 짤림 방지·자동 세로형 전환 옵션 -->
+                    <section data-panel-section="media" class="bg-stone-50 px-3.5 py-2.5 rounded-2xl border border-stone-200 space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h2 class="text-xs sm:text-sm font-extrabold text-zinc-900 flex items-center gap-1.5 whitespace-nowrap">
+                                <i data-lucide="ratio" class="w-4 h-4 text-emerald-800 shrink-0"></i> 화면 비율
+                            </h2>
+                            <div class="grid grid-cols-2 gap-2 flex-1 max-w-[320px]">
+                                <button id="ratio-vertical" class="py-2 px-3 border-2 border-zinc-900 bg-zinc-900 text-white rounded-xl font-extrabold flex justify-center items-center gap-1.5 transition-all text-xs sm:text-sm shadow-sm whitespace-nowrap">
+                                    <i data-lucide="smartphone" class="w-4 h-4 shrink-0"></i> 세로형 (9:16)
+                                </button>
+                                <button id="ratio-horizontal" class="py-2 px-3 border-2 border-stone-300 bg-white text-zinc-900 rounded-xl font-extrabold flex justify-center items-center gap-1.5 transition-all hover:bg-stone-100 text-xs sm:text-sm whitespace-nowrap">
+                                    <i data-lucide="monitor" class="w-4 h-4 shrink-0"></i> 가로형 (16:9)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-stone-200/80 text-xs">
+                            <label for="auto-vertical-on-video-checkbox" class="flex items-center gap-1.5 font-extrabold text-emerald-950 cursor-pointer select-none" title="가로형(16:9)으로 작업하다가 세로형 동영상이 나오는 구간에서는 화면이 잘리지 않도록 세로형(9:16) 상태로 자동 전환하여 보여줍니다">
+                                <input id="auto-vertical-on-video-checkbox" type="checkbox" checked class="w-3.5 h-3.5 accent-emerald-800 rounded cursor-pointer">
+                                <span>📱 세로 동영상 재생 시 세로형 화면으로 자동 전환 (영상 짤림 원천 방지)</span>
+                            </label>
+                            <select id="default-video-fit-select" class="bg-white border border-stone-300 rounded-lg px-2 py-0.5 text-[11px] font-extrabold text-zinc-900 cursor-pointer" title="가로 화면 속 세로 영상(또는 비율이 다른 영상)의 기본 표시 방식">
+                                <option value="auto" selected>📐 세로 원본 100% 유지 + 블러 배경 (추천)</option>
+                                <option value="contain-black">🎬 세로 원본 100% 유지 + 블랙 여백</option>
+                                <option value="cover">🖼️ 화면 꽉 채우기 (상하 일부 크롭)</option>
+                            </select>
                         </div>
                     </section>
 
@@ -1706,6 +1719,87 @@
         </div>
     </div>
 
+        <!-- 모달: 동영상 말소리 대사·구간 자막 싱크 스튜디오 -->
+    <div id="speech-subtitle-modal" class="fixed inset-0 bg-stone-900/65 backdrop-blur-sm z-[175] hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl p-4 sm:p-6 shadow-2xl animate-fade-up border-2 border-emerald-600 flex flex-col max-h-[90vh]">
+            <div class="flex items-start justify-between gap-3 pb-3 border-b border-stone-200">
+                <div>
+                    <h3 id="speech-modal-title" class="text-base sm:text-lg lg:text-xl font-extrabold text-zinc-950 flex items-center gap-2">
+                        <i data-lucide="mic" class="w-5 h-5 text-emerald-700 shrink-0"></i> 동영상 말소리 대사·구간 자막 편집기
+                    </h3>
+                    <p class="text-xs font-bold text-zinc-600 mt-0.5">영상 속 말하는 소리를 들으면서 [현재 시점 찍기]를 누르거나, 대본을 여러 줄 붙여넣어 시간대별 자막을 손쉽게 입히세요.</p>
+                </div>
+                <button id="close-speech-modal-btn" type="button" class="text-zinc-500 hover:text-zinc-950 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- 상단: 미니 오디오/동영상 컨트롤 바 (실시간 재생 위치 확인 & 말 시작/끝 바로 찍기) -->
+            <div class="mt-3 bg-stone-100 rounded-xl p-3 border border-stone-300 space-y-2.5 shrink-0">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button id="speech-play-toggle-btn" type="button" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-black text-white text-xs font-extrabold flex items-center gap-1 transition shadow-sm whitespace-nowrap">
+                            ▶️ 이 장면 소리 들어보기
+                        </button>
+                        <button id="speech-step-back-05-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 text-xs font-mono font-extrabold text-zinc-900 transition">-0.5s</button>
+                        <button id="speech-step-back-01-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 text-xs font-mono font-extrabold text-zinc-900 transition">-0.1s</button>
+                        <button id="speech-step-fwd-01-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 text-xs font-mono font-extrabold text-zinc-900 transition">+0.1s</button>
+                        <button id="speech-step-fwd-05-btn" type="button" class="px-2 py-1 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 text-xs font-mono font-extrabold text-zinc-900 transition">+0.5s</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-extrabold text-zinc-700">현재 장면 위치:</span>
+                        <span id="speech-current-elapsed-badge" class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-950 border border-emerald-300 font-mono text-xs sm:text-sm font-extrabold">0.0초 / 0.0초</span>
+                    </div>
+                </div>
+
+                <!-- 빠른 대사 추가 입력줄 (들으면서 바로 치고 엔터/추가) -->
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
+                    <button id="speech-stamp-start-btn" type="button" class="px-2.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-extrabold whitespace-nowrap transition shadow-sm" title="현재 재생 위치를 새 대사의 시작 시간으로 찍습니다">
+                        📍 시작 찍기 (<span id="speech-Quick-start-val">0.0</span>초~)
+                    </button>
+                    <input id="speech-quick-text-input" type="text" placeholder="들리는 말소리를 입력 후 Enter 또는 [대사 추가]를 누르세요" class="flex-1 min-w-[160px] bg-white border-2 border-stone-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-bold text-zinc-950 focus:outline-none focus:border-zinc-900">
+                    <button id="speech-add-line-btn" type="button" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-black text-white text-xs font-extrabold whitespace-nowrap transition shadow-sm">
+                        + 대사 추가
+                    </button>
+                    <button id="speech-voice-dictate-btn" type="button" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-extrabold whitespace-nowrap transition flex items-center gap-1" title="브라우저 음성 인식으로 말소리를 실시간 받아씁니다">
+                        🎤 음성 받아쓰기
+                    </button>
+                </div>
+
+                <!-- 대본 여러 줄 붙여넣어 시간 자동 배분 (접이식) -->
+                <details class="group pt-1 border-t border-stone-200">
+                    <summary class="text-xs font-extrabold text-emerald-900 cursor-pointer select-none flex items-center justify-between py-1">
+                        <span>📝 대본 여러 줄을 한 번에 붙여넣고 시간 자동 배분하기 (클릭)</span>
+                        <span class="group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="pt-2 space-y-2">
+                        <textarea id="speech-bulk-script-textarea" rows="3" placeholder="한 줄에 한 문장씩 대사를 붙여넣으세요.&#10;예: 안녕하세요 국립장성숲체원입니다.&#10;오늘은 편백숲에서 오감 산책을 진행했습니다.&#10;모두 함께 숲에서 건강한 내일을 만들어 봐요!" class="w-full bg-white border border-stone-300 rounded-lg p-2.5 text-xs font-bold text-zinc-950 focus:outline-none focus:border-zinc-900"></textarea>
+                        <div class="flex justify-end">
+                            <button id="speech-bulk-distribute-btn" type="button" class="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold transition shadow-sm">
+                                ✨ 글자 수 비례로 영상 시간에 맞춰 자동 배분하기
+                            </button>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <!-- 중단: 시간대별 대사 자막 리스트 -->
+            <div class="flex-1 overflow-y-auto my-3 pr-1 space-y-2 min-h-[160px]" id="speech-lines-list-container">
+                <!-- JS 동적 렌더링 -->
+            </div>
+
+            <!-- 하단: 전체 비우기 & 닫기 -->
+            <div class="pt-3 border-t border-stone-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <button id="speech-clear-all-btn" type="button" class="px-3 py-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-extrabold transition">
+                    구간 대사 전체 비우기
+                </button>
+                <div class="flex items-center gap-2">
+                    <button id="done-speech-modal-btn" type="button" class="px-5 py-2 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs sm:text-sm font-extrabold transition shadow-md">
+                        적용 완료 및 닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
@@ -2313,6 +2407,10 @@
             projectId: null,
             projectTitle: null,
             aspectRatio: 'vertical',
+            autoSwitchRatioOnVideo: true,
+            defaultVideoFitMode: 'auto',
+            activeSpeechSlideIndex: null,
+            speechStampStartSec: 0,
             fontFamily: 'Gowun Dodum',
             introFontFamily: 'same',
             subtitleColorStyle: 'white',
@@ -2904,6 +3002,13 @@
                         effect: img.effect,
                         phrase: img.phrase,
                         duration: img.duration,
+                        fitMode: img.fitMode || 'auto',
+                        timedSubtitles: Array.isArray(img.timedSubtitles) ? img.timedSubtitles.map(ts => ({
+                            id: ts.id || `ts_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                            startSec: Number(ts.startSec) || 0,
+                            endSec: Number(ts.endSec) || 3,
+                            text: ts.text || ''
+                        })) : [],
                         videoMuted: Boolean(img.videoMuted),
                         bgmPaused: Boolean(img.bgmPaused),
                         subtitlePos: img.subtitlePos ? { ...img.subtitlePos } : null
@@ -2924,6 +3029,13 @@
                 effect: img.effect || 'zoom-in',
                 phrase: img.phrase || '',
                 duration: Number(img.duration) || 4,
+                fitMode: img.fitMode || 'auto',
+                timedSubtitles: Array.isArray(img.timedSubtitles) ? img.timedSubtitles.map(ts => ({
+                    id: String(ts.id || ''),
+                    startSec: Number(ts.startSec) || 0,
+                    endSec: Number(ts.endSec) || 3,
+                    text: String(ts.text || '')
+                })) : [],
                 videoMuted: Boolean(img.videoMuted),
                 bgmPaused: Boolean(img.bgmPaused),
                 subtitlePos: img.subtitlePos ? { x: Number(img.subtitlePos.x), y: Number(img.subtitlePos.y) } : null
@@ -3770,6 +3882,8 @@
                     effect: meta.effect || 'zoom-in',
                     phrase: meta.phrase !== undefined ? meta.phrase : '',
                     duration: Number(meta.duration) || 4,
+                    fitMode: meta.fitMode || (matchedLocal && matchedLocal.fitMode) || 'auto',
+                    timedSubtitles: Array.isArray(meta.timedSubtitles) ? meta.timedSubtitles : (matchedLocal && Array.isArray(matchedLocal.timedSubtitles) ? matchedLocal.timedSubtitles : []),
                     videoMuted: Boolean(meta.videoMuted),
                     bgmPaused: Boolean(meta.bgmPaused !== undefined ? meta.bgmPaused : (matchedLocal && matchedLocal.bgmPaused)),
                     subtitlePos: meta.subtitlePos || null
@@ -5774,9 +5888,10 @@
             return { boxW, boxH, isDesktop, normRatio, targetAspect };
         }
 
-        function updatePreviewStageLayout() {
+        function updatePreviewStageLayout(overrideRatio = null) {
             if (!elements.previewWrapper || !elements.canvas) return;
-            const ratio = state.aspectRatio === 'horizontal' ? 'horizontal' : 'vertical';
+            const activeRatio = overrideRatio || state.aspectRatio;
+            const ratio = activeRatio === 'horizontal' ? 'horizontal' : 'vertical';
             const stageCenter = document.getElementById('preview-stage-center');
             const playerCard = document.getElementById('player-control-card');
             const quickBar = document.getElementById('canvas-quick-overlay-bar');
@@ -6009,7 +6124,7 @@
                             vid._hasScrubSeekListener = true;
                             vid.addEventListener('seeked', () => {
                                 if (!state.isPlaying && !state.isRecording && state.images.length > 0) {
-                                    drawStyledArtFrame(elements.ctx, mediaObj, elements.canvas.width, elements.canvas.height);
+                                    drawFrame(state.currentTime);
                                 }
                             });
                         }
@@ -6025,8 +6140,23 @@
                 }
             }
 
-            if (state.frameStyle !== 'cinema') {
-                drawBlurredBackdrop(ctx, mediaObj, cw, ch, alpha, 'slide');
+            const mediaEl = mediaObj.mediaElement;
+            const mW = (mediaEl && (mediaEl.videoWidth || mediaEl.naturalWidth || mediaEl.width)) || cw;
+            const mH = (mediaEl && (mediaEl.videoHeight || mediaEl.naturalHeight || mediaEl.height)) || ch;
+            const isPortraitMediaInLandscape = (cw > ch) && (mH > mW * 0.95);
+            const isLandscapeMediaInPortrait = (ch > cw) && (mW > mH * 1.15);
+            const effFitMode = mediaObj.fitMode || (mediaObj.type === 'video' ? (state.defaultVideoFitMode || 'auto') : 'auto');
+            const needsContainBackdrop = (effFitMode !== 'cover') && (isPortraitMediaInLandscape || isLandscapeMediaInPortrait || mediaObj.type === 'video');
+
+            if (state.frameStyle !== 'cinema' || needsContainBackdrop) {
+                if (effFitMode === 'contain-black') {
+                    ctx.save();
+                    ctx.fillStyle = '#090b0e';
+                    ctx.fillRect(0, 0, cw, ch);
+                    ctx.restore();
+                } else {
+                    drawBlurredBackdrop(ctx, mediaObj, cw, ch, alpha, 'slide');
+                }
             }
             
             const p = Math.max(0, elapsed / (mediaObj.duration + 1.2));
@@ -6071,8 +6201,58 @@
 
         function drawStyledArtFrame(ctx, mediaObj, cw, ch) {
             const media = mediaObj.mediaElement;
+            if (!media) return;
             const isVertical = ch > cw;
             const style = state.frameStyle || 'gallery';
+            const mediaW = media.videoWidth || media.naturalWidth || media.width || cw;
+            const mediaH = media.videoHeight || media.naturalHeight || media.height || ch;
+            const mediaRatio = mediaW / Math.max(1, mediaH);
+            const canvasRatio = cw / Math.max(1, ch);
+            const effFitMode = mediaObj.fitMode || (mediaObj.type === 'video' ? (state.defaultVideoFitMode || 'auto') : 'auto');
+
+            // 사용자가 명시적으로 '화면 꽉 채우기(cover)'를 선택한 경우
+            if (effFitMode === 'cover') {
+                drawCoverImage(ctx, media, cw, ch, 0, 0);
+                return;
+            }
+
+            // 가로형(16:9) 작업 중 세로형(9:16) 동영상(또는 세로형 작업 중 가로형 동영상)이 나올 때:
+            // 영상이 일부라도 잘리지 않도록 세로형 상태 그대로 화면 전체 높이(95~100%)에 맞춰 선명하게 렌더링!
+            const isOrientationMismatch = (cw > ch && mediaH > mediaW * 0.92) || (ch > cw && mediaW > mediaH * 1.15);
+            if ((mediaObj.type === 'video' || isOrientationMismatch) && (effFitMode === 'auto' || effFitMode === 'contain-black')) {
+                const maxH = effFitMode === 'contain-black' ? ch : Math.round(ch * 0.95);
+                const maxW = effFitMode === 'contain-black' ? cw : Math.round(cw * 0.95);
+                let drawW = maxW;
+                let drawH = Math.round(drawW / mediaRatio);
+                if (drawH > maxH) {
+                    drawH = maxH;
+                    drawW = Math.round(drawH * mediaRatio);
+                }
+                const offsetX = Math.round((cw - drawW) / 2);
+                const offsetY = Math.round((ch - drawH) / 2);
+
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.42)';
+                ctx.shadowBlur = 32;
+                ctx.shadowOffsetY = 14;
+                const rad = effFitMode === 'contain-black' ? 0 : (isVertical ? 28 : 24);
+                if (rad > 0) {
+                    drawRoundedRectPath(ctx, offsetX, offsetY, drawW, drawH, rad);
+                    ctx.clip();
+                }
+                ctx.drawImage(media, offsetX, offsetY, drawW, drawH);
+                ctx.restore();
+
+                if (rad > 0) {
+                    ctx.save();
+                    drawRoundedRectPath(ctx, offsetX, offsetY, drawW, drawH, rad);
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                return;
+            }
 
             if (style === 'cinema') {
                 drawCoverImage(ctx, media, cw, ch, 0, 0);
@@ -6084,9 +6264,6 @@
             const paddingBottom = style === 'polaroid' ? (isVertical ? 520 : 280) : (isVertical ? 430 : 240);
             const availW = cw - (paddingX * 2);
             const availH = ch - paddingTop - paddingBottom;
-            const mediaW = media.videoWidth || media.width || cw;
-            const mediaH = media.videoHeight || media.height || ch;
-            const mediaRatio = mediaW / mediaH;
             const availRatio = availW / availH;
             
             let drawW = availW, drawH = availH;
@@ -7059,7 +7236,341 @@
             });
         }
 
+        
+        // === 동영상 말소리 시간대별 대사 자막(timedSubtitles) 헬퍼 및 스튜디오 함수 ===
+        function getActiveTimedSubtitleForSlide(slideObj, elapsedSec) {
+            if (!slideObj || !Array.isArray(slideObj.timedSubtitles) || slideObj.timedSubtitles.length === 0) {
+                return null;
+            }
+            const t = Math.max(0, Number(elapsedSec) || 0);
+            for (let i = 0; i < slideObj.timedSubtitles.length; i++) {
+                const sub = slideObj.timedSubtitles[i];
+                const s = Math.max(0, Number(sub.startSec) || 0);
+                const e = Math.max(s + 0.1, Number(sub.endSec) || (s + 2.5));
+                if (t >= s && t <= e && (sub.text || '').trim().length > 0) {
+                    return sub;
+                }
+            }
+            return null;
+        }
+
+        function getSlideStartTimeInTimeline(slideIndex) {
+            let acc = Number(state.intro.duration) || 3.5;
+            for (let i = 0; i < slideIndex && i < state.images.length; i++) {
+                acc += Number(state.images[i].duration) || 4;
+            }
+            return acc;
+        }
+
+        function getActiveSpeechSlideCurrentElapsed() {
+            const idx = state.activeSpeechSlideIndex;
+            if (idx === null || idx === undefined || !state.images[idx]) return 0;
+            const slideStart = getSlideStartTimeInTimeline(idx);
+            const slideDur = Number(state.images[idx].duration) || 4;
+            const rel = state.currentTime - slideStart;
+            return Number(Math.max(0, Math.min(slideDur, rel)).toFixed(1));
+        }
+
+        function updateSpeechModalHeaderUI() {
+            const idx = state.activeSpeechSlideIndex;
+            if (idx === null || idx === undefined || !state.images[idx]) return;
+            const slide = state.images[idx];
+            const curElapsed = getActiveSpeechSlideCurrentElapsed();
+            const badge = document.getElementById('speech-current-elapsed-badge');
+            if (badge) {
+                badge.textContent = `${curElapsed.toFixed(1)}초 / ${(Number(slide.duration) || 4).toFixed(1)}초`;
+            }
+            const playBtn = document.getElementById('speech-play-toggle-btn');
+            if (playBtn) {
+                playBtn.textContent = state.isPlaying ? '⏸️ 일시정지' : '▶️ 이 장면 소리 들어보기';
+            }
+        }
+
+        function openSpeechSubtitleModal(slideIndex) {
+            const slide = state.images[slideIndex];
+            if (!slide) return;
+            state.activeSpeechSlideIndex = slideIndex;
+            if (!Array.isArray(slide.timedSubtitles)) {
+                slide.timedSubtitles = [];
+                // 기존 단일 문구가 있었다면 첫 대사 줄로 편리하게 가져올 수 있도록 안내
+            }
+            // 해당 슬라이드 시작 위치로 플레이어 이동
+            seekToSegment('slide', slideIndex);
+            state.speechStampStartSec = 0;
+            const quickStartSpan = document.getElementById('speech-Quick-start-val');
+            if (quickStartSpan) quickStartSpan.textContent = '0.0';
+
+            const titleEl = document.getElementById('speech-modal-title');
+            if (titleEl) {
+                const dispName = slide.fileName || `장면 #${slideIndex + 1}`;
+                titleEl.innerHTML = `<i data-lucide="mic" class="w-5 h-5 text-emerald-700 shrink-0"></i> #${String(slideIndex + 1).padStart(2, '0')} (${dispName}) 말소리 대사 자막 편집`;
+            }
+
+            renderSpeechLinesListUI();
+            updateSpeechModalHeaderUI();
+
+            const modal = document.getElementById('speech-subtitle-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+            lucide.createIcons();
+        }
+
+        function closeSpeechSubtitleModal() {
+            const modal = document.getElementById('speech-subtitle-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            if (state.isPlaying) togglePlay();
+            renderStoryboard();
+            if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+        }
+
+        function renderSpeechLinesListUI() {
+            const container = document.getElementById('speech-lines-list-container');
+            const idx = state.activeSpeechSlideIndex;
+            if (!container || idx === null || idx === undefined || !state.images[idx]) return;
+            const slide = state.images[idx];
+            if (!Array.isArray(slide.timedSubtitles)) slide.timedSubtitles = [];
+
+            slide.timedSubtitles.sort((a, b) => (Number(a.startSec) || 0) - (Number(b.startSec) || 0));
+            container.innerHTML = '';
+
+            if (slide.timedSubtitles.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-300 text-xs sm:text-sm font-bold text-zinc-600 space-y-1">
+                        <p class="font-extrabold text-zinc-800">아직 등록된 시간대별 대사 자막이 없습니다.</p>
+                        <p>위에서 <b>[▶️ 이 장면 소리 들어보기]</b>를 누른 뒤, 사람이 말하는 시점에 대사를 입력해 추가하거나 대본 여러 줄을 붙여넣어 보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            slide.timedSubtitles.forEach((line, lIdx) => {
+                const row = document.createElement('div');
+                row.className = 'bg-stone-50 border-2 border-stone-300 rounded-xl p-2.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-sm';
+
+                const timeGroup = document.createElement('div');
+                timeGroup.className = 'flex items-center gap-1 shrink-0 flex-wrap';
+
+                const numBadge = document.createElement('span');
+                numBadge.className = 'px-1.5 py-0.5 rounded bg-zinc-900 text-white font-mono text-[11px] font-extrabold';
+                numBadge.textContent = `${lIdx + 1}`;
+
+                const startInput = document.createElement('input');
+                startInput.type = 'number';
+                startInput.min = '0';
+                startInput.max = String(slide.duration || 300);
+                startInput.step = '0.1';
+                startInput.value = Number(line.startSec || 0).toFixed(1);
+                startInput.className = 'w-14 bg-white border border-stone-300 rounded-lg px-1.5 py-1 text-center font-mono text-xs font-extrabold text-zinc-950';
+                startInput.title = '대사 시작 시간(초)';
+                startInput.addEventListener('change', (e) => {
+                    line.startSec = Math.max(0, Number(parseFloat(e.target.value).toFixed(1)) || 0);
+                    markUnsavedChanges();
+                    renderSpeechLinesListUI();
+                    if (!state.isPlaying) drawFrame(state.currentTime);
+                });
+
+                const tilde = document.createElement('span');
+                tilde.className = 'text-xs font-extrabold text-zinc-600';
+                tilde.textContent = '~';
+
+                const endInput = document.createElement('input');
+                endInput.type = 'number';
+                endInput.min = '0.1';
+                endInput.max = String(slide.duration || 300);
+                endInput.step = '0.1';
+                endInput.value = Number(line.endSec || 3).toFixed(1);
+                endInput.className = 'w-14 bg-white border border-stone-300 rounded-lg px-1.5 py-1 text-center font-mono text-xs font-extrabold text-zinc-950';
+                endInput.title = '대사 종료 시간(초)';
+                endInput.addEventListener('change', (e) => {
+                    line.endSec = Math.max((line.startSec || 0) + 0.2, Number(parseFloat(e.target.value).toFixed(1)) || 2);
+                    markUnsavedChanges();
+                    renderSpeechLinesListUI();
+                    if (!state.isPlaying) drawFrame(state.currentTime);
+                });
+
+                const stampEndHereBtn = document.createElement('button');
+                stampEndHereBtn.type = 'button';
+                stampEndHereBtn.className = 'px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 text-[11px] font-extrabold whitespace-nowrap transition';
+                stampEndHereBtn.textContent = '🏁 끝=현재위치';
+                stampEndHereBtn.title = '현재 영상 재생 시점을 이 대사의 끝 시간으로 찍고, 다음 대사 시작 시점으로 이어줍니다';
+                stampEndHereBtn.addEventListener('click', () => {
+                    const curEl = getActiveSpeechSlideCurrentElapsed();
+                    if (curEl <= line.startSec) {
+                        showToast('종료 시점은 시작 시점보다 뒤여야 합니다.', 'error');
+                        return;
+                    }
+                    line.endSec = curEl;
+                    state.speechStampStartSec = curEl;
+                    const quickStartSpan = document.getElementById('speech-Quick-start-val');
+                    if (quickStartSpan) quickStartSpan.textContent = curEl.toFixed(1);
+                    markUnsavedChanges();
+                    renderSpeechLinesListUI();
+                    showToast(`${lIdx + 1}번 대사 종료 시점을 ${curEl.toFixed(1)}초로 설정했습니다.`);
+                });
+
+                timeGroup.appendChild(numBadge);
+                timeGroup.appendChild(startInput);
+                timeGroup.appendChild(tilde);
+                timeGroup.appendChild(endInput);
+                timeGroup.appendChild(stampEndHereBtn);
+
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.value = line.text || '';
+                textInput.placeholder = '대사 자막 내용 입력';
+                textInput.className = 'flex-1 bg-white border border-stone-300 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-bold text-zinc-950 focus:outline-none focus:border-zinc-900';
+                textInput.addEventListener('input', (e) => {
+                    line.text = e.target.value;
+                    markUnsavedChanges();
+                    if (!state.isPlaying) drawFrame(state.currentTime);
+                });
+
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'flex items-center gap-1 shrink-0 justify-end';
+
+                const previewLineBtn = document.createElement('button');
+                previewLineBtn.type = 'button';
+                previewLineBtn.className = 'px-2 py-1 rounded-lg bg-white hover:bg-stone-200 border border-stone-300 text-[11px] font-extrabold text-zinc-900 whitespace-nowrap transition';
+                previewLineBtn.textContent = '🔊 구간듣기';
+                previewLineBtn.title = '이 대사가 나오는 구간으로 이동해 소리와 자막을 확인합니다';
+                previewLineBtn.addEventListener('click', () => {
+                    const slideStart = getSlideStartTimeInTimeline(idx);
+                    seekToExactTime(slideStart + (Number(line.startSec) || 0) + 0.05);
+                    updateSpeechModalHeaderUI();
+                    if (!state.isPlaying) togglePlay();
+                });
+
+                const delLineBtn = document.createElement('button');
+                delLineBtn.type = 'button';
+                delLineBtn.className = 'p-1 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50 transition';
+                delLineBtn.title = '이 대사 삭제';
+                delLineBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
+                delLineBtn.addEventListener('click', () => {
+                    slide.timedSubtitles.splice(lIdx, 1);
+                    markUnsavedChanges();
+                    renderSpeechLinesListUI();
+                    if (!state.isPlaying) drawFrame(state.currentTime);
+                });
+
+                btnGroup.appendChild(previewLineBtn);
+                btnGroup.appendChild(delLineBtn);
+
+                row.appendChild(timeGroup);
+                row.appendChild(textInput);
+                row.appendChild(btnGroup);
+                container.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function addSpeechSubtitleLineFromQuickInput() {
+            const idx = state.activeSpeechSlideIndex;
+            if (idx === null || idx === undefined || !state.images[idx]) return;
+            const slide = state.images[idx];
+            if (!Array.isArray(slide.timedSubtitles)) slide.timedSubtitles = [];
+
+            const inputEl = document.getElementById('speech-quick-text-input');
+            const text = inputEl ? inputEl.value.trim() : '';
+            if (!text) {
+                showToast('추가할 대사 내용을 입력해 주세요.', 'error');
+                return;
+            }
+            const slideDur = Number(slide.duration) || 4;
+            const curElapsed = getActiveSpeechSlideCurrentElapsed();
+            let startSec = Number(state.speechStampStartSec || 0);
+            if (curElapsed > startSec + 0.3 && slide.timedSubtitles.length === 0 && startSec === 0) {
+                startSec = 0;
+            }
+            let endSec = (curElapsed > startSec + 0.4)
+                ? curElapsed
+                : Math.min(slideDur, Number((startSec + Math.max(2.0, Math.min(4.5, text.length * 0.18))).toFixed(1)));
+            if (endSec <= startSec) endSec = Math.min(slideDur, startSec + 2.0);
+
+            slide.timedSubtitles.push({
+                id: `ts_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                startSec: Number(startSec.toFixed(1)),
+                endSec: Number(endSec.toFixed(1)),
+                text
+            });
+
+            state.speechStampStartSec = Number(endSec.toFixed(1));
+            const quickStartSpan = document.getElementById('speech-Quick-start-val');
+            if (quickStartSpan) quickStartSpan.textContent = state.speechStampStartSec.toFixed(1);
+            if (inputEl) inputEl.value = '';
+
+            markUnsavedChanges();
+            renderSpeechLinesListUI();
+            if (!state.isPlaying) drawFrame(state.currentTime);
+        }
+
+        function distributeBulkScriptToTimedSubtitles() {
+            const idx = state.activeSpeechSlideIndex;
+            if (idx === null || idx === undefined || !state.images[idx]) return;
+            const slide = state.images[idx];
+            const bulkArea = document.getElementById('speech-bulk-script-textarea');
+            if (!bulkArea) return;
+            const lines = (bulkArea.value || '')
+                .split(/\r?\n/)
+                .map(s => s.trim())
+                .filter(Boolean);
+            if (lines.length === 0) {
+                showToast('줄 단위로 대본을 먼저 입력해 주세요.', 'error');
+                return;
+            }
+            const totalDur = Math.max(1.5, Number(slide.duration) || 4);
+            const weights = lines.map(l => Math.max(4, l.length));
+            const sumWeights = weights.reduce((a, b) => a + b, 0);
+
+            let cursor = 0;
+            slide.timedSubtitles = lines.map((lineText, i) => {
+                const segDur = (i === lines.length - 1)
+                    ? Math.max(0.4, totalDur - cursor)
+                    : Math.max(0.6, (weights[i] / sumWeights) * totalDur);
+                const s = Number(cursor.toFixed(1));
+                const e = Number(Math.min(totalDur, cursor + segDur).toFixed(1));
+                cursor = e;
+                return {
+                    id: `ts_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 5)}`,
+                    startSec: s,
+                    endSec: Math.max(s + 0.3, e),
+                    text: lineText
+                };
+            });
+
+            markUnsavedChanges();
+            renderSpeechLinesListUI();
+            if (!state.isPlaying) drawFrame(state.currentTime);
+            showToast(`총 ${lines.length}줄의 대사를 영상 길이(${totalDur.toFixed(1)}초)에 맞춰 자동 배분했습니다!`);
+        }
+
         function drawFrame(timeInSeconds) {
+            const sceneForRatio = (state.images.length > 0) ? getSceneContext(timeInSeconds) : null;
+            if (!state.isRecording && state.autoSwitchRatioOnVideo && sceneForRatio) {
+                let effectiveRatio = state.aspectRatio || 'vertical';
+                if (sceneForRatio.type === 'slide') {
+                    const curSlide = state.images[sceneForRatio.index];
+                    if (curSlide && curSlide.type === 'video' && curSlide.mediaElement) {
+                        const vw = curSlide.mediaElement.videoWidth || 0;
+                        const vh = curSlide.mediaElement.videoHeight || 0;
+                        if (vw > 0 && vh > 0) {
+                            if (vh > vw * 1.05) effectiveRatio = 'vertical';
+                            else if (vw > vh * 1.05 && state.aspectRatio === 'horizontal') effectiveRatio = 'horizontal';
+                        }
+                    }
+                }
+                const targetW = effectiveRatio === 'vertical' ? 1080 : 1920;
+                const targetH = effectiveRatio === 'vertical' ? 1920 : 1080;
+                if (elements.canvas.width !== targetW || elements.canvas.height !== targetH) {
+                    elements.canvas.width = targetW;
+                    elements.canvas.height = targetH;
+                    updatePreviewStageLayout(effectiveRatio);
+                }
+            }
             const ctx = elements.ctx;
             const width = elements.canvas.width;
             const height = elements.canvas.height;
@@ -7433,11 +7944,14 @@
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const currentPhrase = (imgObj.phrase || "").trim();
-                const prevPhrase = scene.index > 0 ? (state.images[scene.index - 1].phrase || "").trim() : "";
-                const nextPhrase = scene.index < state.images.length - 1 ? (state.images[scene.index + 1].phrase || "").trim() : "";
-                const isSameAsPrev = scene.index > 0 && currentPhrase.length > 0 && currentPhrase === prevPhrase;
-                const isSameAsNext = scene.index < state.images.length - 1 && currentPhrase.length > 0 && currentPhrase === nextPhrase;
+                // 동영상 말소리 구간별 대사 자막(timedSubtitles) 확인: 현재 경과 시간(scene.elapsed)에 해당하는 대사가 있으면 우선 표시!
+                const activeTimedSub = getActiveTimedSubtitleForSlide(imgObj, scene.elapsed);
+                const hasTimedSubs = Array.isArray(imgObj.timedSubtitles) && imgObj.timedSubtitles.length > 0;
+                const currentPhrase = activeTimedSub ? (activeTimedSub.text || "").trim() : (hasTimedSubs ? "" : (imgObj.phrase || "").trim());
+                const prevPhrase = (!hasTimedSubs && scene.index > 0) ? (state.images[scene.index - 1].phrase || "").trim() : "";
+                const nextPhrase = (!hasTimedSubs && scene.index < state.images.length - 1) ? (state.images[scene.index + 1].phrase || "").trim() : "";
+                const isSameAsPrev = !hasTimedSubs && scene.index > 0 && currentPhrase.length > 0 && currentPhrase === prevPhrase;
+                const isSameAsNext = !hasTimedSubs && scene.index < state.images.length - 1 && currentPhrase.length > 0 && currentPhrase === nextPhrase;
                 const defaultTextY = height - (state.frameStyle === 'cinema' ? (isVertical ? 250 : 185) : (isVertical ? 215 : 155));
                 const customSubPos = state.syncSubtitlePosAcrossSlides ? state.globalSubtitlePos : (imgObj.subtitlePos || state.globalSubtitlePos);
                 const textX = customSubPos && customSubPos.x !== undefined ? customSubPos.x * width : (width / 2);
@@ -7454,8 +7968,8 @@
 
                 // 사진이 먼저 시선을 끈 뒤 자막이 자연스럽게 뒤따라 나오는 시간차(Delay) 계산
                 // (슬라이드 길이가 짧은 경우에도 읽을 시간이 부족하지 않도록 최대 슬라이드 길이의 22% 이내로 자동 보정)
-                const rawSubDelay = state.subtitleDelaySec !== undefined ? Math.max(0, Number(state.subtitleDelaySec)) : 0.4;
-                const effSubDelay = Math.min(rawSubDelay, Math.max(0, (scene.duration || 4) * 0.22));
+                const rawSubDelay = activeTimedSub ? 0 : (state.subtitleDelaySec !== undefined ? Math.max(0, Number(state.subtitleDelaySec)) : 0.4);
+                const effSubDelay = activeTimedSub ? 0 : Math.min(rawSubDelay, Math.max(0, (scene.duration || 4) * 0.22));
                 const revealDur = 0.38;
                 const isEditingMainSubWhilePaused = (!state.isPlaying && !state.isRecording && state.selectedOverlayId === '__main_subtitle__');
 
@@ -7809,6 +8323,10 @@
         let _lastRenderedTotalStr = '';
         let _lastRenderedSceneStr = '';
         function updateTimelineProgressUI(timeInSeconds = state.currentTime) {
+            const speechModal = document.getElementById('speech-subtitle-modal');
+            if (speechModal && !speechModal.classList.contains('hidden')) {
+                updateSpeechModalHeaderUI();
+            }
             const total = Math.max(0.001, state.totalDuration || 0);
             const clamped = Math.max(0, Math.min(timeInSeconds, state.totalDuration || 0));
             const pct = state.totalDuration > 0 ? Math.max(0, Math.min(100, (clamped / total) * 100)) : 0;
@@ -8178,6 +8696,7 @@
                         
                         video.onloadedmetadata = () => {
                             clearTimeout(fallbackTimer);
+                            const fullDur = Number(Math.min(300, Math.max(1.5, Number(video.duration || 4))).toFixed(1));
                             resolve({
                                 id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
                                 type: 'video',
@@ -8185,9 +8704,11 @@
                                 mediaElement: video,
                                 src: dataUrl,
                                 rawFile: file,
-                                effect: 'zoom-in',
-                                phrase: getRandomPhrase(),
-                                duration: Math.min(15, Math.max(3, Math.floor(video.duration || 4)))
+                                effect: 'none',
+                                fitMode: state.defaultVideoFitMode || 'auto',
+                                timedSubtitles: [],
+                                phrase: '',
+                                duration: fullDur
                             });
                         };
                         video.onerror = () => {
@@ -9133,6 +9654,22 @@
                 });
                 quickBtnGroup.appendChild(bgmPauseBtn);
 
+                // 동영상 및 슬라이드용 [🎙️ 말소리·구간 대사 자막 편집] 버튼
+                const timedCount = Array.isArray(data.timedSubtitles) ? data.timedSubtitles.length : 0;
+                const speechSubBtn = document.createElement('button');
+                speechSubBtn.type = 'button';
+                speechSubBtn.className = timedCount > 0
+                    ? 'px-2 py-0.5 rounded-md bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-extrabold flex items-center gap-1 transition whitespace-nowrap shadow-sm'
+                    : (data.type === 'video'
+                        ? 'px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 text-[11px] font-extrabold flex items-center gap-1 transition whitespace-nowrap shadow-sm'
+                        : 'px-2 py-0.5 rounded-md bg-white hover:bg-stone-200 text-zinc-800 border border-stone-300 text-[11px] font-extrabold flex items-center gap-1 transition whitespace-nowrap');
+                speechSubBtn.title = '동영상 속 말하는 사람의 목소리 타이밍에 맞춰 시간대별로 여러 줄의 대사 자막을 넣습니다';
+                speechSubBtn.innerHTML = timedCount > 0
+                    ? `<i data-lucide="mic" class="w-3 h-3"></i><span>🎙️ 대사자막 ${timedCount}줄</span>`
+                    : `<i data-lucide="mic" class="w-3 h-3 text-emerald-800"></i><span>🎙️ 말소리 대사자막</span>`;
+                speechSubBtn.addEventListener('click', () => openSpeechSubtitleModal(index));
+                quickBtnGroup.appendChild(speechSubBtn);
+
                 metaRow.appendChild(quickBtnGroup);
                 contentWrap.appendChild(metaRow);
 
@@ -9212,6 +9749,46 @@
                     updateState('slide', index, 'effect', e.target.value);
                 });
                 leftControlGroup.appendChild(effectSelect);
+
+                const fitSelect = document.createElement('select');
+                fitSelect.className = 'bg-white border-2 border-stone-300 rounded-lg px-2 py-1 text-xs font-extrabold text-emerald-950 focus:outline-none focus:border-zinc-900 cursor-pointer';
+                fitSelect.title = '가로 화면에 세로 영상·사진을 넣을 때 화면이 잘리지 않도록 표시 방식을 지정합니다';
+                const fitOptions = [
+                    ['auto', '📐 원본비율(짤림없음·블러배경)'],
+                    ['contain-black', '🎬 원본비율(블랙여백)'],
+                    ['cover', '🖼️ 화면 꽉채우기(크롭)']
+                ];
+                const curFit = data.fitMode || 'auto';
+                fitOptions.forEach(([val, lbl]) => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = lbl;
+                    if (curFit === val) opt.selected = true;
+                    fitSelect.appendChild(opt);
+                });
+                fitSelect.addEventListener('change', (e) => {
+                    data.fitMode = e.target.value;
+                    markUnsavedChanges();
+                    if (!state.isPlaying) seekToSegment('slide', index);
+                });
+                leftControlGroup.appendChild(fitSelect);
+
+                if (data.type === 'video' && data.mediaElement && data.mediaElement.duration) {
+                    const origDur = Number(data.mediaElement.duration.toFixed(1));
+                    if (Math.abs((data.duration || 0) - origDur) > 0.2) {
+                        const fullDurBtn = document.createElement('button');
+                        fullDurBtn.type = 'button';
+                        fullDurBtn.className = 'px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-[11px] font-extrabold whitespace-nowrap transition';
+                        fullDurBtn.textContent = `🔄 영상 전체길이(${origDur}초)`;
+                        fullDurBtn.title = '동영상 원본 전체 재생 시간으로 이 컷의 길이를 맞춥니다';
+                        fullDurBtn.addEventListener('click', () => {
+                            updateState('slide', index, 'duration', origDur);
+                            renderStoryboard();
+                            showToast(`동영상 원본 전체 길이(${origDur}초)로 설정되었습니다.`);
+                        });
+                        leftControlGroup.appendChild(fullDurBtn);
+                    }
+                }
             }
 
             controlsRow.appendChild(leftControlGroup);
@@ -11176,6 +11753,177 @@
                     if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
                 }).catch(() => {});
             }
+            
+            const autoVertCheckbox = document.getElementById('auto-vertical-on-video-checkbox');
+            if (autoVertCheckbox) {
+                autoVertCheckbox.checked = Boolean(state.autoSwitchRatioOnVideo);
+                autoVertCheckbox.addEventListener('change', (e) => {
+                    state.autoSwitchRatioOnVideo = e.target.checked;
+                    if (!state.autoSwitchRatioOnVideo) {
+                        setAspectRatio(state.aspectRatio);
+                    } else if (!state.isPlaying && state.images.length > 0) {
+                        drawFrame(state.currentTime);
+                    }
+                    showToast(state.autoSwitchRatioOnVideo
+                        ? '세로 동영상 재생 시 세로형 화면으로 자동 전환됩니다.'
+                        : '고정된 화면 비율로 유지됩니다 (세로 영상은 원본 비율로 중앙 표시).');
+                });
+            }
+
+            const defVidFitSelect = document.getElementById('default-video-fit-select');
+            if (defVidFitSelect) {
+                defVidFitSelect.addEventListener('change', (e) => {
+                    state.defaultVideoFitMode = e.target.value;
+                    state.images.forEach(img => {
+                        if (img.type === 'video' || (img.mediaElement && (img.mediaElement.videoHeight || img.mediaElement.height) > (img.mediaElement.videoWidth || img.mediaElement.width))) {
+                            img.fitMode = e.target.value;
+                        }
+                    });
+                    markUnsavedChanges();
+                    renderStoryboard();
+                    if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                    showToast('동영상 및 세로 미디어의 화면 맞춤 방식이 일괄 변경되었습니다.');
+                });
+            }
+
+            const closeSpeechBtn = document.getElementById('close-speech-modal-btn');
+            const doneSpeechBtn = document.getElementById('done-speech-modal-btn');
+            if (closeSpeechBtn) closeSpeechBtn.addEventListener('click', closeSpeechSubtitleModal);
+            if (doneSpeechBtn) doneSpeechBtn.addEventListener('click', closeSpeechSubtitleModal);
+
+            const speechPlayBtn = document.getElementById('speech-play-toggle-btn');
+            if (speechPlayBtn) {
+                speechPlayBtn.addEventListener('click', () => {
+                    togglePlay();
+                    updateSpeechModalHeaderUI();
+                });
+            }
+            const stepSpeech = (delta) => {
+                const idx = state.activeSpeechSlideIndex;
+                if (idx === null || idx === undefined || !state.images[idx]) return;
+                const slideStart = getSlideStartTimeInTimeline(idx);
+                const slideDur = Number(state.images[idx].duration) || 4;
+                const curRel = getActiveSpeechSlideCurrentElapsed();
+                const nextRel = Math.max(0, Math.min(slideDur - 0.05, curRel + delta));
+                seekToExactTime(slideStart + nextRel);
+                updateSpeechModalHeaderUI();
+            };
+            const sb05 = document.getElementById('speech-step-back-05-btn');
+            const sb01 = document.getElementById('speech-step-back-01-btn');
+            const sf01 = document.getElementById('speech-step-fwd-01-btn');
+            const sf05 = document.getElementById('speech-step-fwd-05-btn');
+            if (sb05) sb05.addEventListener('click', () => stepSpeech(-0.5));
+            if (sb01) sb01.addEventListener('click', () => stepSpeech(-0.1));
+            if (sf01) sf01.addEventListener('click', () => stepSpeech(0.1));
+            if (sf05) sf05.addEventListener('click', () => stepSpeech(0.5));
+
+            const stampStartBtn = document.getElementById('speech-stamp-start-btn');
+            if (stampStartBtn) {
+                stampStartBtn.addEventListener('click', () => {
+                    const curEl = getActiveSpeechSlideCurrentElapsed();
+                    state.speechStampStartSec = curEl;
+                    const quickStartSpan = document.getElementById('speech-Quick-start-val');
+                    if (quickStartSpan) quickStartSpan.textContent = curEl.toFixed(1);
+                    const inputEl = document.getElementById('speech-quick-text-input');
+                    if (inputEl) inputEl.focus();
+                    showToast(`새 대사 시작 시점이 ${curEl.toFixed(1)}초로 지정되었습니다.`);
+                });
+            }
+
+            const addLineBtn = document.getElementById('speech-add-line-btn');
+            const quickTextInput = document.getElementById('speech-quick-text-input');
+            if (addLineBtn) addLineBtn.addEventListener('click', addSpeechSubtitleLineFromQuickInput);
+            if (quickTextInput) {
+                quickTextInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSpeechSubtitleLineFromQuickInput();
+                    }
+                });
+            }
+
+            const bulkDistBtn = document.getElementById('speech-bulk-distribute-btn');
+            if (bulkDistBtn) bulkDistBtn.addEventListener('click', distributeBulkScriptToTimedSubtitles);
+
+            const clearAllSpeechBtn = document.getElementById('speech-clear-all-btn');
+            if (clearAllSpeechBtn) {
+                clearAllSpeechBtn.addEventListener('click', () => {
+                    const idx = state.activeSpeechSlideIndex;
+                    if (idx === null || idx === undefined || !state.images[idx]) return;
+                    state.images[idx].timedSubtitles = [];
+                    state.speechStampStartSec = 0;
+                    markUnsavedChanges();
+                    renderSpeechLinesListUI();
+                    if (!state.isPlaying) drawFrame(state.currentTime);
+                    showToast('이 장면의 구간 대사 자막을 모두 비웠습니다.');
+                });
+            }
+
+            const dictateBtn = document.getElementById('speech-voice-dictate-btn');
+            if (dictateBtn) {
+                let recognition = null;
+                let isDictating = false;
+                dictateBtn.addEventListener('click', () => {
+                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRec) {
+                        showToast('이 브라우저는 실시간 음성 인식(Web Speech API)을 지원하지 않습니다. 크롬/엣지를 이용해 주세요.', 'error');
+                        return;
+                    }
+                    if (isDictating && recognition) {
+                        recognition.stop();
+                        return;
+                    }
+                    recognition = new SpeechRec();
+                    recognition.lang = 'ko-KR';
+                    recognition.continuous = true;
+                    recognition.interimResults = false;
+                    let phraseStartSec = getActiveSpeechSlideCurrentElapsed();
+
+                    recognition.onstart = () => {
+                        isDictating = true;
+                        phraseStartSec = getActiveSpeechSlideCurrentElapsed();
+                        dictateBtn.textContent = '🔴 음성 인식 중 (클릭 시 종료)';
+                        dictateBtn.classList.add('bg-red-100', 'border-red-400', 'text-red-900');
+                        if (!state.isPlaying) togglePlay();
+                        showToast('말소리를 듣고 있습니다. 문장이 끝날 때마다 타임라인에 자동 추가됩니다!');
+                    };
+                    recognition.onresult = (event) => {
+                        const idx = state.activeSpeechSlideIndex;
+                        if (idx === null || idx === undefined || !state.images[idx]) return;
+                        const slide = state.images[idx];
+                        if (!Array.isArray(slide.timedSubtitles)) slide.timedSubtitles = [];
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            if (event.results[i].isFinal) {
+                                const transcript = (event.results[i][0].transcript || '').trim();
+                                if (transcript) {
+                                    const endSec = Math.max(phraseStartSec + 0.8, getActiveSpeechSlideCurrentElapsed());
+                                    slide.timedSubtitles.push({
+                                        id: `ts_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                                        startSec: Number(phraseStartSec.toFixed(1)),
+                                        endSec: Number(endSec.toFixed(1)),
+                                        text: transcript
+                                    });
+                                    phraseStartSec = endSec;
+                                    markUnsavedChanges();
+                                    renderSpeechLinesListUI();
+                                }
+                            }
+                        }
+                    };
+                    recognition.onend = () => {
+                        isDictating = false;
+                        dictateBtn.textContent = '🎤 음성 받아쓰기';
+                        dictateBtn.classList.remove('bg-red-100', 'border-red-400', 'text-red-900');
+                    };
+                    recognition.onerror = () => {
+                        isDictating = false;
+                        dictateBtn.textContent = '🎤 음성 받아쓰기';
+                        dictateBtn.classList.remove('bg-red-100', 'border-red-400', 'text-red-900');
+                    };
+                    recognition.start();
+                });
+            }
+
             setAspectRatio('vertical');
             requestAnimationFrame(() => updatePreviewStageLayout());
             setTimeout(() => updatePreviewStageLayout(), 150);
