@@ -223,6 +223,8 @@
 
     <!-- 자체 제작 토스트 및 확인 모달 -->
     <div id="toast-container" class="fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+    <!-- PC 크롬/엣지 하드웨어 비디오 디코더(D3D11/MediaFoundation)가 백그라운드 최적화로 영상 트랙을 끄지 않도록 뷰포트 내에 유지하는 투명 디코더 마운트 -->
+    <div id="hidden-video-decoder-stage" aria-hidden="true" style="position:fixed; left:0; bottom:0; width:4px; height:4px; opacity:0.002; pointer-events:none; overflow:hidden; z-index:-10;"></div>
 
     <div id="confirm-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-[150] hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-md p-6 lg:p-7 shadow-2xl animate-fade-up border border-stone-300">
@@ -3669,13 +3671,43 @@
 
         // Google Drive 보관소 폴더에서 현재 프로젝트의 배경음 파일을 직접 검색하여 복원 (메타데이터에 driveFileId가 누락된 경우까지 완벽 대비)
         
-        // 동영상 요소를 생성하고 첫 프레임(readyState >= 2)까지 실제로 디코딩하여 캔버스에서 검은 화면이나 깨짐 없이 즉시 보이게 하는 헬퍼
-        function createPrimedVideoElement(fileOrBlob, fallbackUrl = null, fileName = 'video.mp4', timeoutMs = 10000) {
+        function mountVideoInDecoderStage(video) {
+            if (!video) return;
+            const stage = document.getElementById('hidden-video-decoder-stage') || document.body;
+            if (stage && video.parentNode !== stage) {
+                video.style.width = '64px';
+                video.style.height = '64px';
+                video.style.objectFit = 'contain';
+                stage.appendChild(video);
+            }
+        }
+
+        function updateVideoFrameCacheCanvas(mediaObj) {
+            if (!mediaObj || mediaObj.type !== 'video' || !mediaObj.mediaElement) return;
+            const vid = mediaObj.mediaElement;
+            if (!vid.videoWidth || !vid.videoHeight || vid.readyState < 2) return;
+            try {
+                if (!mediaObj._frameCacheCanvas) {
+                    mediaObj._frameCacheCanvas = document.createElement('canvas');
+                }
+                const fc = mediaObj._frameCacheCanvas;
+                if (fc.width !== vid.videoWidth || fc.height !== vid.videoHeight) {
+                    fc.width = vid.videoWidth;
+                    fc.height = vid.videoHeight;
+                }
+                const fCtx = fc.getContext('2d');
+                fCtx.drawImage(vid, 0, 0, fc.width, fc.height);
+                mediaObj._hasCachedFrame = true;
+            } catch (e) {}
+        }
+
+        // 동영상 요소를 DOM 디코더 스테이지에 마운트하고 실제 GPU 비디오 프레임(readyState >= 2)을 활성화하는 헬퍼
+        function createPrimedVideoElement(fileOrBlob, fallbackUrl = null, fileName = 'video.mp4', timeoutMs = 12000) {
             return new Promise((resolve) => {
                 let finalBlob = (fileOrBlob instanceof Blob) ? fileOrBlob : null;
                 if (finalBlob) {
                     const rawType = (finalBlob.type || '').toLowerCase();
-                    if (!rawType || rawType === 'application/octet-stream' || rawType === 'binary/octet-stream' || rawType === 'video/quicktime') {
+                    if (!rawType || rawType === 'application/octet-stream' || rawType === 'binary/octet-stream') {
                         const fixedMime = inferMimeTypeFromFileName(fileName || finalBlob.name || 'video.mp4', 'video/mp4');
                         finalBlob = new File([finalBlob], fileName || finalBlob.name || 'video.mp4', { type: fixedMime });
                     }
@@ -3700,6 +3732,7 @@
                 video.setAttribute('playsinline', '');
                 video.setAttribute('webkit-playsinline', '');
                 video.preload = 'auto';
+                mountVideoInDecoderStage(video);
 
                 let settled = false;
                 const finish = (ok) => {
@@ -3710,26 +3743,29 @@
                         resolve(null);
                         return;
                     }
+                    const isAudioOnlyCodecIssue = (video.duration > 0 && (!video.videoWidth || !video.videoHeight));
+                    if (isAudioOnlyCodecIssue) {
+                        showToast('⚠️ 이 동영상은 스마트폰 고효율 코덱(HEVC/H.265) 등 현재 PC 브라우저에 비디오 코덱이 없어 소리만 재생될 수 있습니다.', 'error');
+                    }
                     resolve({
                         video,
                         src: mediaUrl,
                         rawFile: finalBlob,
                         duration: Number(Math.min(300, Math.max(1.5, Number(video.duration || 4))).toFixed(1)),
                         width: video.videoWidth || 1080,
-                        height: video.videoHeight || 1920
+                        height: video.videoHeight || 1920,
+                        codecVideoMissing: isAudioOnlyCodecIssue
                     });
                 };
 
                 const timer = setTimeout(() => {
-                    // 메타데이터라도 로드되었다면 성공으로 처리
-                    if (video.readyState >= 1 || video.videoWidth > 0) {
+                    if (video.readyState >= 1 || video.duration > 0 || video.videoWidth > 0) {
                         finish(true);
                     } else {
                         finish(false);
                     }
                 }, timeoutMs);
 
-                // 일시정지 상태에서 탐색/로드 완료 시 캔버스를 즉시 다시 그려 화면이 비어 보이지 않게 보장
                 video._hasScrubSeekListener = true;
                 const redrawWhenPaused = () => {
                     if (!state.isPlaying && !state.isRecording && state.images && state.images.length > 0) {
@@ -3738,26 +3774,29 @@
                 };
                 video.addEventListener('seeked', redrawWhenPaused);
                 video.addEventListener('loadeddata', redrawWhenPaused);
-                video.addEventListener('canplay', redrawWhenPaused);
 
-                video.addEventListener('loadedmetadata', () => {
-                    // 첫 프레임을 강제로 디코딩하기 위해 0.05초로 살짝 이동 (readyState가 1에 머물러 drawImage가 빈 화면을 그리는 현상 원천 차단)
+                // loadeddata 발생 시 무음 상태로 짧게 play() -> pause()를 호출하여 PC 크롬/엣지 하드웨어 비디오 디코더가 첫 프레임을 확실히 깨우도록 처리
+                let warmupStarted = false;
+                const runDecoderWarmup = async () => {
+                    if (warmupStarted) return;
+                    warmupStarted = true;
                     try {
-                        const targetT = Math.min(0.08, Math.max(0.01, (video.duration || 1) * 0.02));
-                        video.currentTime = targetT;
+                        video.muted = true;
+                        const playPromise = video.play();
+                        if (playPromise !== undefined) {
+                            await playPromise;
+                        }
+                        await new Promise(r => setTimeout(r, 45));
+                        video.pause();
+                        video.currentTime = 0;
                     } catch (e) {
-                        finish(true);
+                        // 자동재생 정책 등으로 play()가 거절된 경우 currentTime만 0으로 유지
                     }
-                }, { once: true });
-
-                video.addEventListener('loadeddata', () => {
                     finish(true);
-                }, { once: true });
+                };
 
-                video.addEventListener('seeked', () => {
-                    finish(true);
-                }, { once: true });
-
+                video.addEventListener('loadeddata', runDecoderWarmup, { once: true });
+                video.addEventListener('canplay', runDecoderWarmup, { once: true });
                 video.addEventListener('error', () => {
                     finish(false);
                 }, { once: true });
@@ -6549,14 +6588,16 @@
             
             if (mediaObj.type === 'video' && isPlayableVideoElement(mediaObj.mediaElement)) {
                 const vid = mediaObj.mediaElement;
+                mountVideoInDecoderStage(vid);
                 const vidDur = Math.max(0.5, vid.duration || mediaObj.duration || 4);
+                const targetVidT = elapsed % vidDur;
                 if (!state.isPlaying && !state.isRecording) {
-                    const rawMod = elapsed % vidDur;
-                    const targetVidT = rawMod < 0.04 ? Math.min(0.06, vidDur * 0.05) : rawMod;
-                    if (Math.abs((vid.currentTime || 0) - targetVidT) > 0.03 || vid.readyState < 2) {
+                    if (!vid.paused) vid.pause();
+                    if (!vid.seeking && Math.abs((vid.currentTime || 0) - targetVidT) > 0.06) {
                         if (!vid._hasScrubSeekListener) {
                             vid._hasScrubSeekListener = true;
                             vid.addEventListener('seeked', () => {
+                                updateVideoFrameCacheCanvas(mediaObj);
                                 if (!state.isPlaying && !state.isRecording && state.images.length > 0) {
                                     requestAnimationFrame(() => drawFrame(state.currentTime));
                                 }
@@ -6564,13 +6605,15 @@
                         }
                         try { vid.currentTime = targetVidT; } catch (e) {}
                     }
-                    if (!vid.paused) vid.pause();
                 } else {
                     if (vid.paused) vid.play().catch(() => {});
-                    const threshold = state.isRecording ? 0.2 : 0.4;
-                    if (Math.abs(vid.currentTime - (elapsed % vidDur)) > threshold) {
-                        vid.currentTime = elapsed % vidDur;
+                    const threshold = state.isRecording ? 0.35 : 0.6;
+                    if (!vid.seeking && Math.abs(vid.currentTime - targetVidT) > threshold) {
+                        try { vid.currentTime = targetVidT; } catch (e) {}
                     }
+                }
+                if (vid.readyState >= 2 && vid.videoWidth > 0) {
+                    updateVideoFrameCacheCanvas(mediaObj);
                 }
             }
 
@@ -6634,16 +6677,45 @@
         }
 
         function drawStyledArtFrame(ctx, mediaObj, cw, ch) {
-            const media = mediaObj.mediaElement;
-            if (!media) return;
-            // 비디오가 아직 첫 프레임 디코딩 전(videoWidth === 0)이면 잘못된 비율로 늘려서 그리지 않도록 보호
-            if (media.tagName === 'VIDEO' && (!media.videoWidth || !media.videoHeight || media.readyState < 1)) {
-                return;
-            }
+            const rawMedia = mediaObj.mediaElement;
+            if (!rawMedia) return;
             const isVertical = ch > cw;
             const style = state.frameStyle || 'gallery';
-            const mediaW = media.videoWidth || media.naturalWidth || media.width || cw;
-            const mediaH = media.videoHeight || media.naturalHeight || media.height || ch;
+
+            // PC 브라우저에서 스마트폰 HEVC(H.265) 코덱 미지원 등으로 오디오만 디코딩되고 videoWidth가 0인 경우 안내 화면 표시
+            if (rawMedia.tagName === 'VIDEO' && (!rawMedia.videoWidth || !rawMedia.videoHeight) && rawMedia.readyState >= 1) {
+                const boxW = Math.round(cw * 0.78);
+                const boxH = Math.round(ch * 0.42);
+                const bx = Math.round((cw - boxW) / 2);
+                const by = Math.round((ch - boxH) / 2);
+                ctx.save();
+                drawRoundedRectPath(ctx, bx, by, boxW, boxH, 28);
+                ctx.fillStyle = 'rgba(15, 23, 20, 0.88)';
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(110, 231, 183, 0.6)';
+                ctx.stroke();
+                ctx.fillStyle = '#6ee7b7';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = `800 ${isVertical ? 34 : 36}px "Pretendard", sans-serif`;
+                ctx.fillText('🎬 동영상 소리 재생 중 (비디오 코덱 안내)', cw / 2, by + boxH * 0.28);
+                ctx.fillStyle = '#fafaf9';
+                ctx.font = `700 ${isVertical ? 26 : 28}px "Pretendard", sans-serif`;
+                ctx.fillText(mediaObj.fileName || '업로드된 동영상', cw / 2, by + boxH * 0.48);
+                ctx.fillStyle = '#d6d3d1';
+                ctx.font = `600 ${isVertical ? 22 : 24}px "Pretendard", sans-serif`;
+                ctx.fillText('스마트폰 고효율(HEVC/H.265) 영상은 일부 PC 윈도우에서 소리만 나올 수 있습니다.', cw / 2, by + boxH * 0.68);
+                ctx.fillText('카톡 [일반 화질] 전송본 또는 H.264 MP4 파일을 넣으면 PC에서도 화면이 표시됩니다.', cw / 2, by + boxH * 0.82);
+                ctx.restore();
+                return;
+            }
+
+            // 시크(탐색) 중이거나 디코딩 전환 순간에는 직전 캐시된 프레임을 사용하여 깜빡임이나 빈 화면 원천 방지
+            const useCachedFrame = (rawMedia.tagName === 'VIDEO' && (rawMedia.readyState < 2 || rawMedia.seeking) && mediaObj._hasCachedFrame && mediaObj._frameCacheCanvas);
+            const media = useCachedFrame ? mediaObj._frameCacheCanvas : rawMedia;
+            const mediaW = rawMedia.videoWidth || rawMedia.naturalWidth || media.width || cw;
+            const mediaH = rawMedia.videoHeight || rawMedia.naturalHeight || media.height || ch;
             const mediaRatio = mediaW / Math.max(1, mediaH);
             const effFitMode = mediaObj.fitMode || (mediaObj.type === 'video' ? (state.defaultVideoFitMode || 'auto') : 'auto');
             const isPortraitMediaInLandscape = (!isVertical && mediaH > mediaW * 0.95);
@@ -9152,7 +9224,12 @@
                 renderSessionManagerUI();
                 renderStoryboard();
                 updateUI();
-                if (!state.isPlaying && state.images.length > 0) drawFrame(state.currentTime);
+                const firstAddedVideoIdx = state.images.findIndex((item, i) => i >= (state.images.length - loadedItems.length) && item.type === 'video');
+                if (!state.isPlaying && firstAddedVideoIdx !== -1) {
+                    seekToSegment('slide', firstAddedVideoIdx);
+                } else if (!state.isPlaying && state.images.length > 0) {
+                    drawFrame(state.currentTime);
+                }
                 
                 if (failCount > 0) showToast(`지원하지 않는 포맷이나 오류로 ${failCount}개가 제외되었습니다.`, 'error');
                 else if (loadedItems.length > 0) {
@@ -9872,10 +9949,14 @@
                 thumbWrap.className = isGrid ? 'w-full h-32 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner border border-stone-300' : 'w-full sm:w-20 lg:w-24 h-36 sm:h-28 lg:h-32 shrink-0 rounded-lg overflow-hidden bg-stone-200 relative cursor-grab shadow-inner border border-stone-300';
                 if (data.type === 'video' && !data.isPlaceholder) {
                     const vid = document.createElement('video');
-                    vid.src = `${data.src}#t=0.5`;
                     vid.className = 'w-full h-full object-cover';
                     vid.muted = true;
+                    vid.playsInline = true;
                     vid.preload = 'metadata';
+                    vid.addEventListener('loadedmetadata', () => {
+                        try { vid.currentTime = Math.min(0.2, (vid.duration || 1) * 0.05); } catch (e) {}
+                    }, { once: true });
+                    vid.src = data.src;
                     thumbWrap.appendChild(vid);
 
                     const badge = document.createElement('div');
