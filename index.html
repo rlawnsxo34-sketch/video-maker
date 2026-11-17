@@ -2865,7 +2865,19 @@
             const projId = projectData.id;
             const mediaEntriesToPut = [];
 
-            // प्रोजेक्ट 복사본(경량화 대상) 생성
+            let existingLocalProj = null;
+            try {
+                existingLocalProj = await new Promise((resolve) => {
+                    const rtx = db.transaction(STORE_NAME, 'readonly');
+                    const req = rtx.objectStore(STORE_NAME).get(projId);
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => resolve(null);
+                });
+            } catch (e) {}
+            const existingLocalSlides = (existingLocalProj && existingLocalProj.data && Array.isArray(existingLocalProj.data.images))
+                ? existingLocalProj.data.images
+                : [];
+
             const lightProject = {
                 ...projectData,
                 data: {
@@ -2875,48 +2887,66 @@
 
             if (db.objectStoreNames.contains(MEDIA_STORE_NAME)) {
                 // 1) 커스텀 배경음 분리
-                if (projectData.data.customBgmFile instanceof Blob) {
-                    const bgmKey = `${projId}__customBgm`;
-                    const sig = `${projectData.data.customBgmFile.size}_${projectData.data.customBgmFile.name || ''}`;
+                const bgmKey = `${projId}__customBgm`;
+                const bgmBlobObj = (projectData.data.customBgmFile instanceof Blob)
+                    ? projectData.data.customBgmFile
+                    : serializedToFile(projectData.data.customBgmFile);
+                if (bgmBlobObj) {
+                    const sig = `${bgmBlobObj.size}_${bgmBlobObj.name || ''}`;
                     if (savedMediaAssetCache.get(bgmKey) !== sig) {
                         mediaEntriesToPut.push({
                             key: bgmKey,
                             projectId: projId,
-                            blob: projectData.data.customBgmFile,
-                            name: projectData.data.customBgmFileName || projectData.data.customBgmFile.name || 'custom_bgm.mp3',
-                            type: projectData.data.customBgmFile.type || 'audio/mpeg'
+                            blob: bgmBlobObj,
+                            name: projectData.data.customBgmFileName || bgmBlobObj.name || 'custom_bgm.mp3',
+                            type: bgmBlobObj.type || 'audio/mpeg'
                         });
                         savedMediaAssetCache.set(bgmKey, sig);
                     }
                     lightProject.data.customBgmAssetKey = bgmKey;
                     lightProject.data.customBgmFile = null;
+                } else {
+                    lightProject.data.customBgmAssetKey = projectData.data.customBgmAssetKey
+                        || existingLocalProj?.data?.customBgmAssetKey
+                        || bgmKey;
                 }
 
                 // 2) 커스텀 배경 이미지 분리
-                if (projectData.data.customBgFile instanceof Blob) {
-                    const bgKey = `${projId}__customBg`;
-                    const sig = `${projectData.data.customBgFile.size}_${projectData.data.customBgFile.name || ''}`;
+                const bgKey = `${projId}__customBg`;
+                const bgBlobObj = (projectData.data.customBgFile instanceof Blob)
+                    ? projectData.data.customBgFile
+                    : serializedToFile(projectData.data.customBgFile);
+                if (bgBlobObj) {
+                    const sig = `${bgBlobObj.size}_${bgBlobObj.name || ''}`;
                     if (savedMediaAssetCache.get(bgKey) !== sig) {
                         mediaEntriesToPut.push({
                             key: bgKey,
                             projectId: projId,
-                            blob: projectData.data.customBgFile,
-                            name: projectData.data.customBgFileName || projectData.data.customBgFile.name || 'custom_bg.jpg',
-                            type: projectData.data.customBgFile.type || 'image/jpeg'
+                            blob: bgBlobObj,
+                            name: projectData.data.customBgFileName || bgBlobObj.name || 'custom_bg.jpg',
+                            type: bgBlobObj.type || 'image/jpeg'
                         });
                         savedMediaAssetCache.set(bgKey, sig);
                     }
                     lightProject.data.customBgAssetKey = bgKey;
                     lightProject.data.customBgFile = null;
+                } else {
+                    lightProject.data.customBgAssetKey = projectData.data.customBgAssetKey
+                        || existingLocalProj?.data?.customBgAssetKey
+                        || bgKey;
                 }
 
-                // 3) 슬라이드별 미디어(동영상/사진) 분리
+                // 3) 슬라이드별 미디어(동영상/사진) 분리 (죽은 blob: URL은 절대 IndexedDB에 저장하지 않음)
                 if (Array.isArray(projectData.data.images)) {
                     lightProject.data.images = projectData.data.images.map((img, idx) => {
                         const slideCopy = { ...img };
                         const slideId = String(img.id || `slide_${idx}`);
-                        const assetKey = `${projId}__slide__${slideId}`;
-                        const blobObj = (img.rawFile instanceof Blob) ? img.rawFile : null;
+                        const matchedPrev = existingLocalSlides.find(li => String(li.id) === slideId)
+                            || existingLocalSlides.find(li => li.fileName && img.fileName && li.fileName === img.fileName);
+                        const assetKey = img.mediaAssetKey || (matchedPrev && matchedPrev.mediaAssetKey) || `${projId}__slide__${slideId}`;
+                        const blobObj = (!img.isPlaceholder && img.rawFile instanceof Blob)
+                            ? img.rawFile
+                            : (!img.isPlaceholder ? serializedToFile(img.rawFile) : null);
 
                         if (blobObj) {
                             const sig = `${blobObj.size}_${blobObj.type}_${img.fileName || ''}`;
@@ -2932,17 +2962,21 @@
                             }
                             slideCopy.mediaAssetKey = assetKey;
                             slideCopy.hasLocalAsset = true;
-                            // projects 스토어에는 수십 MB의 rawFile이나 중복 Base64 src를 넣지 않고 첫 장 썸네일만 남김
                             slideCopy.rawFile = null;
-                            if (idx > 0 && typeof slideCopy.src === 'string' && slideCopy.src.startsWith('data:')) {
-                                slideCopy.src = null;
-                            }
-                        } else if (typeof img.src === 'string' && img.src.startsWith('data:') && idx > 0) {
+                            slideCopy.src = null;
+                        } else if (!img.isPlaceholder && typeof img.src === 'string' && img.src.startsWith('data:')) {
                             const strSig = `dataurl_${img.src.length}`;
                             if (savedMediaAssetCache.get(assetKey) !== strSig) {
+                                const convertedBlob = serializedToFile({
+                                    __isSerializedFile: true,
+                                    name: img.fileName || `slide_${idx + 1}.jpg`,
+                                    type: 'image/jpeg',
+                                    dataUrl: img.src
+                                });
                                 mediaEntriesToPut.push({
                                     key: assetKey,
                                     projectId: projId,
+                                    blob: convertedBlob || null,
                                     dataUrl: img.src,
                                     name: img.fileName || `slide_${idx + 1}.jpg`,
                                     type: 'image/jpeg'
@@ -2951,6 +2985,19 @@
                             }
                             slideCopy.mediaAssetKey = assetKey;
                             slideCopy.hasLocalAsset = true;
+                            slideCopy.rawFile = null;
+                            slideCopy.src = null;
+                        } else {
+                            // 플레이스홀더 상태이거나 blob: URL만 남아있는 경우에도 기존 mediaAssetKey 연결 고리를 절대 끊지 않고 보존
+                            slideCopy.mediaAssetKey = assetKey;
+                            slideCopy.hasLocalAsset = Boolean(img.hasLocalAsset || (matchedPrev && matchedPrev.hasLocalAsset));
+                            slideCopy.rawFile = null;
+                            slideCopy.src = (matchedPrev && typeof matchedPrev.src === 'string' && matchedPrev.src.startsWith('data:'))
+                                ? matchedPrev.src
+                                : null;
+                        }
+
+                        if (typeof slideCopy.src === 'string' && slideCopy.src.startsWith('blob:')) {
                             slideCopy.src = null;
                         }
                         return slideCopy;
@@ -2972,6 +3019,10 @@
                 }
             }
 
+            try {
+                if (projId) localStorage.setItem('fowi_last_active_project_id', projId);
+            } catch (e) {}
+
             // 경량화된 프로젝트 메타데이터를 projects 스토어에 저장
             await new Promise((resolve, reject) => {
                 const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -2982,15 +3033,17 @@
             return lightProject;
         }
 
-        // 프로젝트를 불러올 때 media_assets 스토어에 분리 저장된 동영상·사진·음원 Blob을 원래 프로젝트 객체로 재결합
+        // 프로젝트를 불러올 때 media_assets 스토어(및 이전 로컬 프로젝트 스토어)에 저장된 동영상·사진·음원 Blob을 4단계 다중 매칭으로 완벽히 재결합
         async function rehydrateProjectMediaFromIDB(project) {
             if (!project || !project.data) return project;
             try {
                 const db = await initDB();
-                if (!db.objectStoreNames.contains(MEDIA_STORE_NAME)) return project;
+                const hasMediaStore = db.objectStoreNames.contains(MEDIA_STORE_NAME);
+                const projId = String(project.id || '');
+                const baseProjId = projId.replace(/_acct_[^_]+$/, '').replace(/_copy$/, '');
 
                 const getAsset = (key) => new Promise((resolve) => {
-                    if (!key) return resolve(null);
+                    if (!key || !hasMediaStore) return resolve(null);
                     try {
                         const tx = db.transaction(MEDIA_STORE_NAME, 'readonly');
                         const req = tx.objectStore(MEDIA_STORE_NAME).get(key);
@@ -3001,37 +3054,181 @@
                     }
                 });
 
+                // 직접 키 조회로 못 찾은 항목이 있을 때만 media_assets 전체를 커서로 스캔하여 파일명·프로젝트ID로 복구
+                let cachedAllMediaAssets = null;
+                const getAllMediaAssetsViaCursor = async () => {
+                    if (cachedAllMediaAssets !== null) return cachedAllMediaAssets;
+                    if (!hasMediaStore) {
+                        cachedAllMediaAssets = [];
+                        return cachedAllMediaAssets;
+                    }
+                    cachedAllMediaAssets = await new Promise((resolve) => {
+                        const list = [];
+                        try {
+                            const tx = db.transaction(MEDIA_STORE_NAME, 'readonly');
+                            const req = tx.objectStore(MEDIA_STORE_NAME).openCursor();
+                            req.onsuccess = (e) => {
+                                const cursor = e.target.result;
+                                if (cursor) {
+                                    if (cursor.value) list.push(cursor.value);
+                                    cursor.continue();
+                                } else {
+                                    resolve(list);
+                                }
+                            };
+                            req.onerror = () => resolve(list);
+                        } catch (err) {
+                            resolve(list);
+                        }
+                    });
+                    return cachedAllMediaAssets;
+                };
+
                 const d = { ...project.data };
 
-                if (!d.customBgmFile && d.customBgmAssetKey) {
-                    const bgmAsset = await getAsset(d.customBgmAssetKey);
-                    if (bgmAsset && bgmAsset.blob) {
-                        d.customBgmFile = bgmAsset.blob;
-                    }
+                // 1) 커스텀 배경음(BGM) 복원: customBgmAssetKey가 누락된 경우에도 기본 키 및 파일명으로 복구
+                if (d.customBgmFile && !(d.customBgmFile instanceof Blob)) {
+                    d.customBgmFile = serializedToFile(d.customBgmFile);
                 }
-                if (!d.customBgFile && d.customBgAssetKey) {
-                    const bgAsset = await getAsset(d.customBgAssetKey);
-                    if (bgAsset && bgAsset.blob) {
-                        d.customBgFile = bgAsset.blob;
+                if (!(d.customBgmFile instanceof Blob)) {
+                    const candidateBgmKeys = Array.from(new Set([
+                        d.customBgmAssetKey,
+                        projId ? `${projId}__customBgm` : null,
+                        baseProjId ? `${baseProjId}__customBgm` : null
+                    ].filter(Boolean)));
+                    for (const k of candidateBgmKeys) {
+                        const bgmAsset = await getAsset(k);
+                        if (bgmAsset && bgmAsset.blob instanceof Blob) {
+                            d.customBgmFile = bgmAsset.blob;
+                            d.customBgmAssetKey = k;
+                            break;
+                        }
+                    }
+                    if (!(d.customBgmFile instanceof Blob) && (d.customBgmFileName || d.customBgmDriveFileId || d.bgmSelectValue === 'custom')) {
+                        const allAssets = await getAllMediaAssetsViaCursor();
+                        const matchedBgm = allAssets.find(a =>
+                            a && a.blob instanceof Blob && (
+                                (a.projectId === projId && String(a.key).endsWith('__customBgm')) ||
+                                (baseProjId && a.projectId === baseProjId && String(a.key).endsWith('__customBgm')) ||
+                                (d.customBgmFileName && a.name === d.customBgmFileName) ||
+                                String(a.key).endsWith('__customBgm')
+                            )
+                        );
+                        if (matchedBgm && matchedBgm.blob instanceof Blob) {
+                            d.customBgmFile = matchedBgm.blob;
+                            d.customBgmAssetKey = matchedBgm.key;
+                        }
                     }
                 }
 
+                // 2) 커스텀 배경 이미지 복원
+                if (d.customBgFile && !(d.customBgFile instanceof Blob)) {
+                    d.customBgFile = serializedToFile(d.customBgFile);
+                }
+                if (!(d.customBgFile instanceof Blob)) {
+                    const candidateBgKeys = Array.from(new Set([
+                        d.customBgAssetKey,
+                        projId ? `${projId}__customBg` : null,
+                        baseProjId ? `${baseProjId}__customBg` : null
+                    ].filter(Boolean)));
+                    for (const k of candidateBgKeys) {
+                        const bgAsset = await getAsset(k);
+                        if (bgAsset && bgAsset.blob instanceof Blob) {
+                            d.customBgFile = bgAsset.blob;
+                            d.customBgAssetKey = k;
+                            break;
+                        }
+                    }
+                }
+
+                // 3) 슬라이드별 미디어 복원 (이전 세션의 죽은 blob: URL은 즉시 제거하고 media_assets에서 항상 원본 Blob 복원)
                 if (Array.isArray(d.images)) {
                     const rehydratedSlides = [];
+                    const usedAssetKeys = new Set();
+
                     for (let i = 0; i < d.images.length; i++) {
                         const slide = { ...d.images[i] };
                         const slideId = String(slide.id || `slide_${i}`);
-                        const assetKey = slide.mediaAssetKey || `${project.id}__slide__${slideId}`;
-                        if (!slide.rawFile && (!slide.src || slide.type === 'video')) {
-                            const asset = await getAsset(assetKey);
-                            if (asset) {
-                                if (asset.blob) {
-                                    slide.rawFile = asset.blob;
-                                } else if (asset.dataUrl) {
-                                    slide.src = asset.dataUrl;
+
+                        // 이전 페이지 세션에서 저장된 죽은 blob: URL이 남아 있으면 제거하여 media_assets 조회가 절대 건너뛰어지지 않도록 보장
+                        if (typeof slide.src === 'string' && slide.src.startsWith('blob:')) {
+                            slide.src = null;
+                        }
+                        if (slide.rawFile && !(slide.rawFile instanceof Blob)) {
+                            slide.rawFile = serializedToFile(slide.rawFile);
+                        }
+
+                        const candidateKeys = Array.from(new Set([
+                            slide.mediaAssetKey,
+                            projId ? `${projId}__slide__${slideId}` : null,
+                            baseProjId ? `${baseProjId}__slide__${slideId}` : null,
+                            projId ? `${projId}__slide__slide_${i}` : null
+                        ].filter(Boolean)));
+
+                        let foundAsset = null;
+                        if (!(slide.rawFile instanceof Blob)) {
+                            for (const ck of candidateKeys) {
+                                const asset = await getAsset(ck);
+                                if (asset && (asset.blob instanceof Blob || (typeof asset.dataUrl === 'string' && asset.dataUrl.startsWith('data:')))) {
+                                    foundAsset = asset;
+                                    usedAssetKeys.add(asset.key || ck);
+                                    break;
                                 }
                             }
+
+                            // 직접 키로 못 찾은 경우 media_assets 전체에서 프로젝트 ID + 파일명(또는 동일 파일명)으로 지능형 복구
+                            if (!foundAsset) {
+                                const allAssets = await getAllMediaAssetsViaCursor();
+                                const targetName = String(slide.fileName || '').trim().toLowerCase();
+                                if (targetName) {
+                                    foundAsset = allAssets.find(a =>
+                                        a && !usedAssetKeys.has(a.key) &&
+                                        (a.projectId === projId || (baseProjId && a.projectId === baseProjId)) &&
+                                        String(a.name || '').trim().toLowerCase() === targetName &&
+                                        (a.blob instanceof Blob || (typeof a.dataUrl === 'string' && a.dataUrl.startsWith('data:')))
+                                    ) || allAssets.find(a =>
+                                        a &&
+                                        String(a.name || '').trim().toLowerCase() === targetName &&
+                                        (a.blob instanceof Blob || (typeof a.dataUrl === 'string' && a.dataUrl.startsWith('data:')))
+                                    );
+                                }
+                                if (!foundAsset) {
+                                    foundAsset = allAssets.find(a =>
+                                        a && !usedAssetKeys.has(a.key) &&
+                                        (a.projectId === projId || (baseProjId && a.projectId === baseProjId)) &&
+                                        String(a.key || '').includes('__slide__') &&
+                                        (a.blob instanceof Blob || (typeof a.dataUrl === 'string' && a.dataUrl.startsWith('data:')))
+                                    );
+                                }
+                                if (foundAsset && foundAsset.key) {
+                                    usedAssetKeys.add(foundAsset.key);
+                                }
+                            }
+
+                            if (foundAsset) {
+                                if (foundAsset.blob instanceof Blob) {
+                                    slide.rawFile = foundAsset.blob;
+                                    slide.isPlaceholder = false;
+                                    slide.hasLocalAsset = true;
+                                    slide.mediaAssetKey = foundAsset.key || candidateKeys[0];
+                                } else if (typeof foundAsset.dataUrl === 'string' && foundAsset.dataUrl.startsWith('data:')) {
+                                    slide.src = foundAsset.dataUrl;
+                                    slide.rawFile = serializedToFile({
+                                        __isSerializedFile: true,
+                                        name: slide.fileName || foundAsset.name || `slide_${i + 1}.jpg`,
+                                        type: foundAsset.type || 'image/jpeg',
+                                        dataUrl: foundAsset.dataUrl
+                                    });
+                                    slide.isPlaceholder = false;
+                                    slide.hasLocalAsset = true;
+                                    slide.mediaAssetKey = foundAsset.key || candidateKeys[0];
+                                }
+                            }
+                        } else {
+                            slide.isPlaceholder = false;
+                            slide.hasLocalAsset = true;
                         }
+
                         rehydratedSlides.push(slide);
                     }
                     d.images = rehydratedSlides;
@@ -3087,9 +3284,64 @@
             };
         }
 
+        const GDRIVE_TOKEN_CACHE_KEY = 'fowi_gdrive_token_cache_v1';
+
+        function saveGdriveTokenToCache() {
+            if (!state.googleAccessToken) return;
+            try {
+                localStorage.setItem(GDRIVE_TOKEN_CACHE_KEY, JSON.stringify({
+                    accessToken: state.googleAccessToken,
+                    expiresAt: state.googleTokenExpiresAt || (Date.now() + 3300 * 1000),
+                    email: state.gdriveEmail || (currentUser && currentUser.email) || '',
+                    folderId: state.gdriveFolderId || null
+                }));
+            } catch (e) {}
+        }
+
+        function clearGdriveTokenCache() {
+            try {
+                localStorage.removeItem(GDRIVE_TOKEN_CACHE_KEY);
+            } catch (e) {}
+        }
+
+        function restoreCachedDriveTokenIfValid() {
+            if (state.googleAccessToken && (!state.googleTokenExpiresAt || Date.now() < state.googleTokenExpiresAt)) {
+                return true;
+            }
+            try {
+                const raw = localStorage.getItem(GDRIVE_TOKEN_CACHE_KEY);
+                if (!raw) return false;
+                const cached = JSON.parse(raw);
+                if (!cached || !cached.accessToken || !cached.expiresAt) return false;
+                if (Date.now() >= Number(cached.expiresAt) - 30000) {
+                    localStorage.removeItem(GDRIVE_TOKEN_CACHE_KEY);
+                    return false;
+                }
+                const activeEmail = (currentUser && currentUser.email ? currentUser.email : '').toLowerCase().trim();
+                const cachedEmail = String(cached.email || '').toLowerCase().trim();
+                if (activeEmail && cachedEmail && activeEmail !== cachedEmail) {
+                    return false;
+                }
+                state.googleAccessToken = cached.accessToken;
+                state.googleTokenExpiresAt = Number(cached.expiresAt);
+                if (cached.email) state.gdriveEmail = cached.email;
+                if (cached.folderId && !state.gdriveFolderId) state.gdriveFolderId = cached.folderId;
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         function isDriveTokenValid() {
+            if (!state.googleAccessToken) {
+                restoreCachedDriveTokenIfValid();
+            }
             if (!state.googleAccessToken) return false;
-            if (state.googleTokenExpiresAt && Date.now() > state.googleTokenExpiresAt) return false;
+            if (state.googleTokenExpiresAt && Date.now() > state.googleTokenExpiresAt) {
+                state.googleAccessToken = null;
+                clearGdriveTokenCache();
+                return false;
+            }
             return true;
         }
 
@@ -3304,8 +3556,11 @@
                         index: idx,
                         type: img.type,
                         fileName: img.fileName || (img.rawFile && img.rawFile.name) || `장면_${idx + 1}`,
-                        src: img.type === 'video' ? null : (img.isPlaceholder ? null : img.src),
+                        src: img.type === 'video' ? null : (img.isPlaceholder ? null : (typeof img.src === 'string' && img.src.startsWith('blob:') ? null : img.src)),
                         rawFile: img.isPlaceholder ? null : img.rawFile,
+                        isPlaceholder: Boolean(img.isPlaceholder),
+                        mediaAssetKey: img.mediaAssetKey || (state.projectId ? `${state.projectId}__slide__${img.id || `slide_${idx}`}` : null),
+                        hasLocalAsset: Boolean(!img.isPlaceholder && (img.rawFile || img.src || img.hasLocalAsset)),
                         driveFileId: img.driveFileId || null,
                         effect: img.effect,
                         phrase: img.phrase,
@@ -4044,8 +4299,16 @@
             const folderId = await ensureGdriveFolder();
             const tasks = [];
 
-            // 1) 슬라이드 사진·영상 중 driveFileId가 없는 항목
+            // 1) 슬라이드 사진·영상 중 driveFileId가 없는 항목 (rawFile 또는 data: URL 보유 시 모두 업로드)
             state.images.forEach((img, idx) => {
+                if (!img.rawFile && !img.isPlaceholder && typeof img.src === 'string' && img.src.startsWith('data:')) {
+                    img.rawFile = serializedToFile({
+                        __isSerializedFile: true,
+                        name: img.fileName || `사진_${idx + 1}.jpg`,
+                        type: 'image/jpeg',
+                        dataUrl: img.src
+                    });
+                }
                 if (!img.driveFileId && img.rawFile && !img.isPlaceholder) {
                     tasks.push({
                         kind: 'slide',
@@ -4928,39 +5191,104 @@
             }
             const rawSlides = project.data.images || [];
 
-            // Drive에 저장된 슬라이드 파일(특히 모바일에서 추가한 동영상·사진)이 있고 로컬 파일이 없는 경우 순차적으로 다운로드
+            // Drive에 저장된 슬라이드 파일이 있고 로컬 파일이 없는 경우 폴더 목록 일괄 조회 + 4개씩 병렬 고속 다운로드
+            const slidesNeedingDrive = [];
             for (let i = 0; i < rawSlides.length; i++) {
                 const sItem = rawSlides[i];
                 const hasLocal = Boolean(serializedToFile(sItem.rawFile) || (typeof sItem.src === 'string' && sItem.src.startsWith('data:')));
-                if (!hasLocal && isDriveTokenValid()) {
-                    let targetDriveId = sItem.driveFileId || null;
-                    if (!targetDriveId) {
-                        const foundSlideFile = await findProjectSlideFileInDrive(state.projectId, i, sItem.fileName);
-                        if (foundSlideFile && foundSlideFile.id) {
-                            targetDriveId = foundSlideFile.id;
-                            sItem.driveFileId = targetDriveId;
-                        }
+                if (!hasLocal) {
+                    slidesNeedingDrive.push({ sItem, index: i });
+                }
+            }
+
+            if (slidesNeedingDrive.length > 0 && isDriveTokenValid()) {
+                let folderFilesCache = [];
+                try {
+                    const folderId = await ensureGdriveFolder();
+                    const q = encodeURIComponent(folderId
+                        ? `'${folderId}' in parents and trashed=false`
+                        : `trashed=false`);
+                    const listRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=500&orderBy=modifiedTime desc&fields=files(id,name,mimeType)`, {
+                        headers: { Authorization: `Bearer ${state.googleAccessToken}` }
+                    });
+                    if (listRes.ok) {
+                        const listData = await listRes.json();
+                        folderFilesCache = Array.isArray(listData.files) ? listData.files : [];
                     }
-                    if (targetDriveId) {
-                        elements.loadingTitle.textContent = `Google Drive에서 미디어 복원 중 (${i + 1}/${rawSlides.length})`;
-                        elements.loadingSubtitle.textContent = `'${sItem.fileName || `장면 #${i + 1}`}' 파일을 내려받고 있습니다...`;
-                        elements.renderProgress.classList.remove('animate-pulse');
-                        elements.renderProgress.style.width = `${Math.round(((i + 1) / rawSlides.length) * 100)}%`;
-                        elements.renderTimeText.textContent = `${i + 1} / ${rawSlides.length}`;
-                        try {
-                            const dlFile = await downloadDriveFileAsBlob(
-                                targetDriveId,
-                                sItem.fileName || `slide_${i + 1}.${sItem.type === 'video' ? 'mp4' : 'jpg'}`,
-                                sItem.type === 'video' ? 'video/mp4' : 'image/jpeg'
-                            );
+                } catch (listErr) {
+                    console.warn('Drive folder prefetch warning:', listErr);
+                }
+
+                const baseProjId = String(state.projectId || '').replace(/_acct_[^_]+$/, '').replace(/_copy$/, '');
+                const findInFolderCache = (slideIndex, originalFileName) => {
+                    const prefix1 = `slide_${state.projectId}_${slideIndex + 1}_`;
+                    const prefix2 = baseProjId ? `slide_${baseProjId}_${slideIndex + 1}_` : null;
+                    const cleanName = String(originalFileName || '').trim().toLowerCase();
+                    return folderFilesCache.find(f => f.name && f.name.startsWith(prefix1))
+                        || (prefix2 ? folderFilesCache.find(f => f.name && f.name.startsWith(prefix2)) : null)
+                        || (cleanName ? folderFilesCache.find(f => f.name && f.name.toLowerCase().endsWith(cleanName)) : null)
+                        || (cleanName ? folderFilesCache.find(f => f.name && f.name.toLowerCase().includes(cleanName)) : null)
+                        || null;
+                };
+
+                let doneDriveCount = 0;
+                const totalToDownload = slidesNeedingDrive.length;
+                const BATCH_SIZE = 4;
+
+                for (let b = 0; b < slidesNeedingDrive.length; b += BATCH_SIZE) {
+                    const batch = slidesNeedingDrive.slice(b, b + BATCH_SIZE);
+                    await Promise.all(batch.map(async ({ sItem, index: i }) => {
+                        let targetDriveId = sItem.driveFileId || null;
+                        if (!targetDriveId) {
+                            const cachedHit = findInFolderCache(i, sItem.fileName);
+                            if (cachedHit && cachedHit.id) {
+                                targetDriveId = cachedHit.id;
+                                sItem.driveFileId = targetDriveId;
+                            } else {
+                                const foundSlideFile = await findProjectSlideFileInDrive(state.projectId, i, sItem.fileName);
+                                if (foundSlideFile && foundSlideFile.id) {
+                                    targetDriveId = foundSlideFile.id;
+                                    sItem.driveFileId = targetDriveId;
+                                }
+                            }
+                        }
+
+                        if (targetDriveId) {
+                            let dlFile = null;
+                            try {
+                                dlFile = await downloadDriveFileAsBlob(
+                                    targetDriveId,
+                                    sItem.fileName || `slide_${i + 1}.${sItem.type === 'video' ? 'mp4' : 'jpg'}`,
+                                    sItem.type === 'video' ? 'video/mp4' : 'image/jpeg'
+                                );
+                            } catch (dlErr) {
+                                console.warn(`Slide #${i + 1} direct Drive ID download failed, trying folder search fallback:`, dlErr);
+                                const fallbackHit = findInFolderCache(i, sItem.fileName) || await findProjectSlideFileInDrive(state.projectId, i, sItem.fileName);
+                                if (fallbackHit && fallbackHit.id && fallbackHit.id !== targetDriveId) {
+                                    try {
+                                        dlFile = await downloadDriveFileAsBlob(
+                                            fallbackHit.id,
+                                            sItem.fileName || `slide_${i + 1}.${sItem.type === 'video' ? 'mp4' : 'jpg'}`,
+                                            sItem.type === 'video' ? 'video/mp4' : 'image/jpeg'
+                                        );
+                                        if (dlFile) sItem.driveFileId = fallbackHit.id;
+                                    } catch (e2) {}
+                                }
+                            }
                             if (dlFile) {
                                 sItem.rawFile = dlFile;
+                                sItem.isPlaceholder = false;
                                 downloadedFromDriveCount++;
                             }
-                        } catch (dlErr) {
-                            console.warn(`Slide #${i + 1} Drive download failed:`, dlErr);
                         }
-                    }
+
+                        doneDriveCount++;
+                        elements.loadingTitle.textContent = `Google Drive에서 미디어 복원 중 (${doneDriveCount}/${totalToDownload})`;
+                        elements.loadingSubtitle.textContent = `'${sItem.fileName || `장면 #${i + 1}`}' 파일을 내려받고 있습니다...`;
+                        elements.renderProgress.classList.remove('animate-pulse');
+                        elements.renderProgress.style.width = `${Math.round((doneDriveCount / totalToDownload) * 100)}%`;
+                        elements.renderTimeText.textContent = `${doneDriveCount} / ${totalToDownload}`;
+                    }));
                 }
             }
 
@@ -5057,13 +5385,14 @@
 
             elements.renderProgress.classList.remove('animate-pulse');
             elements.loadingOverlay.style.display = 'none';
-            if (downloadedFromDriveCount > 0) {
-                try {
+            try {
+                if (state.projectId) localStorage.setItem('fowi_last_active_project_id', state.projectId);
+                if (downloadedFromDriveCount > 0 || placeholderCount === 0) {
                     const cachedObj = buildCurrentProjectObject(project.type || 'draft', state.projectVersion);
                     await saveProjectWithSeparatedMediaToIDB(cachedObj);
-                } catch (cErr) {
-                    console.warn("Local cache update after Drive download skipped:", cErr);
                 }
+            } catch (cErr) {
+                console.warn("Local cache update after project load skipped:", cErr);
             }
 
             state.hasUnsavedChanges = false;
@@ -5080,7 +5409,7 @@
             const summary = getProjectMediaSyncSummary();
             const needsDriveBgmRestore = Boolean(bgmValue === 'custom' && !state.customBgmFile && (state.customBgmDriveFileId || state.customBgmFileName));
             const needsDriveBgRestore = Boolean(state.bgMode === 'custom' && !state.customBgFile && state.customBgDriveFileId);
-            const hasRemoteDrivePlaceholders = (placeholderCount > 0 && state.images.some(i => i.isPlaceholder && i.driveFileId))
+            const hasRemoteDrivePlaceholders = placeholderCount > 0
                 || needsDriveBgmRestore
                 || needsDriveBgRestore;
             const missingTotalCount = placeholderCount + (needsDriveBgmRestore ? 1 : 0) + (needsDriveBgRestore ? 1 : 0);
@@ -5126,20 +5455,42 @@
                     }
                 });
 
+                if (!targetProj && currentUser && currentUser.uid && firestoreDb) {
+                    try {
+                        const snap = await firestoreDb.collection('users').doc(currentUser.uid).collection('projects').doc(id).get();
+                        if (snap && snap.exists) {
+                            targetProj = convertFirestoreDocToProjectObject(snap.data(), localRecord);
+                        }
+                    } catch (fErr) {
+                        console.warn('Firestore direct doc lookup skipped:', fErr);
+                    }
+                }
+
                 if (!targetProj && localRecord) {
                     targetProj = localRecord;
-                } else if (targetProj && localRecord && localRecord.data && Array.isArray(localRecord.data.images)) {
-                    // 캐시된 프로젝트에 로컬 파일 참조가 비어 있다면 localRecord의 미디어 참조를 병합
-                    const localImgs = localRecord.data.images;
-                    if (targetProj.data && Array.isArray(targetProj.data.images)) {
+                } else if (targetProj && localRecord && localRecord.data) {
+                    if (!targetProj.data) targetProj.data = {};
+                    targetProj.data.customBgmFile = targetProj.data.customBgmFile || localRecord.data.customBgmFile || null;
+                    targetProj.data.customBgmAssetKey = targetProj.data.customBgmAssetKey || localRecord.data.customBgmAssetKey || `${id}__customBgm`;
+                    targetProj.data.customBgFile = targetProj.data.customBgFile || localRecord.data.customBgFile || null;
+                    targetProj.data.customBgAssetKey = targetProj.data.customBgAssetKey || localRecord.data.customBgAssetKey || `${id}__customBg`;
+
+                    const localImgs = Array.isArray(localRecord.data.images) ? localRecord.data.images : [];
+                    if (Array.isArray(targetProj.data.images)) {
                         targetProj.data.images = targetProj.data.images.map((item, idx) => {
-                            const m = localImgs.find(li => String(li.id) === String(item.id)) || localImgs[idx];
+                            const m = localImgs.find(li => String(li.id) === String(item.id))
+                                || localImgs.find(li => li.fileName && item.fileName && li.fileName === item.fileName)
+                                || localImgs[idx];
                             if (!m) return item;
+                            const cleanItemSrc = (typeof item.src === 'string' && !item.src.startsWith('blob:')) ? item.src : null;
+                            const cleanLocalSrc = (typeof m.src === 'string' && !m.src.startsWith('blob:')) ? m.src : null;
                             return {
                                 ...item,
-                                src: item.src || m.src || null,
+                                src: cleanItemSrc || cleanLocalSrc || null,
                                 rawFile: item.rawFile || m.rawFile || null,
+                                driveFileId: item.driveFileId || m.driveFileId || null,
                                 mediaAssetKey: item.mediaAssetKey || m.mediaAssetKey || `${id}__slide__${item.id || `slide_${idx}`}`,
+                                hasLocalAsset: Boolean(item.hasLocalAsset || m.hasLocalAsset),
                                 thumbDataUrl: item.thumbDataUrl || m.thumbDataUrl || null
                             };
                         });
@@ -5548,8 +5899,8 @@
                             const accountMatched = await verifyDriveAccountMatchesCurrentUser();
                             if (!accountMatched) return;
                             await ensureGdriveFolder();
+                            saveGdriveTokenToCache();
                             updateGdriveUiStatus();
-                            updateSyncStatusDisplay(state.hasUnsavedChanges ? 'unsaved' : (getProjectMediaSyncSummary().allSynced ? 'all_synced' : 'metadata_synced'));
                             elements.loginModal.style.display = 'none';
                             showToast("Google Drive와 성공적으로 연결되었습니다!");
 
@@ -5557,26 +5908,32 @@
                                 renderWorkspaceTab('cloud');
                             }
 
-                            // Drive 연결 직후 대기 중이던 업로드('save') 또는 원본 미디어/음원 복원('restore') 자동 이어하기
+                            // Drive 연결 직후 원본 미디어/음원 복원이 필요한 항목이 있으면 'save'보다 항상 먼저 복원 실행!
                             const pendingAction = state.pendingResumeActionAfterDriveAuth;
                             state.pendingResumeActionAfterDriveAuth = null;
-                            const hasPendingDriveRestore = state.images.some(i => i.isPlaceholder && i.driveFileId)
+                            const hasPendingDriveRestore = state.images.some(i => i.isPlaceholder || (!i.rawFile && (!i.src || i.src.startsWith('blob:'))))
                                 || Boolean((elements.bgmSelect.value === 'custom' || state.customBgmDriveFileId || state.customBgmFileName) && !state.customBgmFile)
-                                || Boolean(state.bgMode === 'custom' && state.customBgDriveFileId && !state.customBgFile);
-                            if (pendingAction === 'save' && state.images.length > 0) {
-                                await saveProjectToDB('draft', { silent: false });
-                            } else if (pendingAction === 'restore' || hasPendingDriveRestore) {
+                                || Boolean(state.bgMode === 'custom' && (state.customBgDriveFileId || state.customBgFileName) && !state.customBgFile);
+
+                            if (pendingAction === 'restore' || hasPendingDriveRestore) {
                                 const currentProjObj = buildCurrentProjectObject('draft', state.projectVersion || 1);
                                 if (state.customBgmDriveFileId || state.customBgmFileName) {
                                     currentProjObj.data.bgmSelectValue = 'custom';
                                 }
                                 currentProjObj._isCloudSynced = true;
                                 await applyProjectObjectToState(currentProjObj);
+                                if (pendingAction === 'save' && state.images.length > 0 && state.images.some(i => !i.driveFileId && !i.isPlaceholder)) {
+                                    await saveProjectToDB('draft', { silent: false });
+                                }
+                            } else if (pendingAction === 'save' && state.images.length > 0) {
+                                await saveProjectToDB('draft', { silent: false });
+                            } else {
+                                updateSyncStatusDisplay(state.hasUnsavedChanges ? 'unsaved' : (getProjectMediaSyncSummary().allSynced ? 'all_synced' : 'metadata_synced'));
                             }
                         }
                     }
                 });
-                googleTokenClient.requestAccessToken({ prompt: 'consent' });
+                googleTokenClient.requestAccessToken({ prompt: '' });
             } catch (err) {
                 console.error("Google OAuth init error:", err);
                 showToast("Google Drive 인증 초기화에 실패했습니다. 설정값을 확인해 주세요.", "error");
@@ -9576,8 +9933,12 @@
                 const maxDuration = 300;
                 const currentDuration = state.totalDuration || 0;
 
+                const existingPlaceholdersCount = state.images.filter(img => img && img.isPlaceholder).length;
                 for (const file of files) {
-                    if (currentDuration + (addedCount + 1) * 4 > maxDuration) {
+                    const isReplacingPlaceholder = addedCount < existingPlaceholdersCount || state.images.some(img =>
+                        img && img.isPlaceholder && img.fileName && img.fileName.toLowerCase() === file.name.toLowerCase()
+                    );
+                    if (!isReplacingPlaceholder && currentDuration + (addedCount - existingPlaceholdersCount + 1) * 4 > maxDuration) {
                         if (addedCount === 0) showToast("최대 5분 분량까지만 제작할 수 있습니다.", "error");
                         break;
                     }
@@ -9644,31 +10005,100 @@
                 }));
 
                 const loadedItems = (await Promise.all(loadPromises)).filter(item => item !== null);
-                let targetInsertIdx = state.images.length;
-                let insertedPositionLabel = '';
+                const nextImages = [...state.images];
+                const remainingNewItems = [];
+                let reconnectedPlaceholderCount = 0;
 
-                if (state.pendingInsertIndex !== null && state.pendingInsertIndex !== undefined) {
-                    targetInsertIdx = Math.max(0, Math.min(state.images.length, Number(state.pendingInsertIndex)));
-                    insertedPositionLabel = ` (#${targetInsertIdx + 1}번 위치에 끼워넣음)`;
-                    state.pendingInsertIndex = null;
-                } else {
-                    const insertModeEl = document.getElementById('upload-insert-mode-select');
-                    const insertCutInput = document.getElementById('upload-insert-cut-input');
-                    const mode = insertModeEl ? insertModeEl.value : 'end';
-                    if (mode === 'start') {
-                        targetInsertIdx = 0;
-                        insertedPositionLabel = ' (맨 앞 #1번 위치에 추가됨)';
-                    } else if (mode === 'custom' && insertCutInput) {
-                        const wantedCut = Math.max(1, parseInt(insertCutInput.value, 10) || 1);
-                        targetInsertIdx = Math.min(state.images.length, wantedCut - 1);
-                        insertedPositionLabel = ` (#${targetInsertIdx + 1}번 위치에 끼워넣음)`;
+                const normalizeBaseName = (name) => String(name || '').trim().toLowerCase().replace(/\.[^.]+$/, '');
+
+                // 1) 기존에 '원본 미디어 대기 중(isPlaceholder)' 상태인 슬라이드가 있으면 파일명(또는 순서)으로 먼저 제자리 연결!
+                for (const item of loadedItems) {
+                    const exactIdx = nextImages.findIndex(img =>
+                        img && img.isPlaceholder && img.fileName && item.fileName &&
+                        img.fileName.trim().toLowerCase() === item.fileName.trim().toLowerCase()
+                    );
+                    const baseIdx = exactIdx !== -1 ? exactIdx : nextImages.findIndex(img =>
+                        img && img.isPlaceholder && img.fileName && item.fileName &&
+                        normalizeBaseName(img.fileName) === normalizeBaseName(item.fileName)
+                    );
+                    const targetPhIdx = baseIdx;
+                    if (targetPhIdx !== -1) {
+                        const prevSlide = nextImages[targetPhIdx];
+                        nextImages[targetPhIdx] = {
+                            ...prevSlide,
+                            type: item.type,
+                            fileName: prevSlide.fileName || item.fileName,
+                            mediaElement: item.mediaElement,
+                            src: item.src,
+                            rawFile: item.rawFile,
+                            blurredBgCanvas: item.blurredBgCanvas || prevSlide.blurredBgCanvas || null,
+                            isPlaceholder: false,
+                            hasLocalAsset: true
+                        };
+                        reconnectedPlaceholderCount++;
+                    } else {
+                        remainingNewItems.push(item);
                     }
                 }
 
-                const nextImages = [...state.images];
-                nextImages.splice(targetInsertIdx, 0, ...loadedItems);
+                // 모든 슬라이드가 플레이스홀더였던 상태에서 파일들을 한꺼번에 선택한 경우 남은 플레이스홀더에도 순서대로 연결
+                if (remainingNewItems.length > 0 && nextImages.some(img => img && img.isPlaceholder) && state.pendingInsertIndex === null) {
+                    const stillUnmatched = [];
+                    for (const item of remainingNewItems) {
+                        const firstOpenPhIdx = nextImages.findIndex(img => img && img.isPlaceholder && img.type === item.type);
+                        if (firstOpenPhIdx !== -1) {
+                            const prevSlide = nextImages[firstOpenPhIdx];
+                            nextImages[firstOpenPhIdx] = {
+                                ...prevSlide,
+                                type: item.type,
+                                fileName: item.fileName || prevSlide.fileName,
+                                mediaElement: item.mediaElement,
+                                src: item.src,
+                                rawFile: item.rawFile,
+                                blurredBgCanvas: item.blurredBgCanvas || prevSlide.blurredBgCanvas || null,
+                                isPlaceholder: false,
+                                hasLocalAsset: true
+                            };
+                            reconnectedPlaceholderCount++;
+                        } else {
+                            stillUnmatched.push(item);
+                        }
+                    }
+                    remainingNewItems.length = 0;
+                    remainingNewItems.push(...stillUnmatched);
+                }
+
+                let targetInsertIdx = nextImages.length;
+                let insertedPositionLabel = '';
+
+                if (remainingNewItems.length > 0) {
+                    if (state.pendingInsertIndex !== null && state.pendingInsertIndex !== undefined) {
+                        targetInsertIdx = Math.max(0, Math.min(nextImages.length, Number(state.pendingInsertIndex)));
+                        insertedPositionLabel = ` (#${targetInsertIdx + 1}번 위치에 끼워넣음)`;
+                        state.pendingInsertIndex = null;
+                    } else {
+                        const insertModeEl = document.getElementById('upload-insert-mode-select');
+                        const insertCutInput = document.getElementById('upload-insert-cut-input');
+                        const mode = insertModeEl ? insertModeEl.value : 'end';
+                        if (mode === 'start') {
+                            targetInsertIdx = 0;
+                            insertedPositionLabel = ' (맨 앞 #1번 위치에 추가됨)';
+                        } else if (mode === 'custom' && insertCutInput) {
+                            const wantedCut = Math.max(1, parseInt(insertCutInput.value, 10) || 1);
+                            targetInsertIdx = Math.min(nextImages.length, wantedCut - 1);
+                            insertedPositionLabel = ` (#${targetInsertIdx + 1}번 위치에 끼워넣음)`;
+                        }
+                    }
+                    nextImages.splice(targetInsertIdx, 0, ...remainingNewItems);
+                } else {
+                    state.pendingInsertIndex = null;
+                }
+
                 state.images = nextImages;
                 handleSlidesOrderChanged();
+                if (reconnectedPlaceholderCount > 0) {
+                    try { await saveProjectLocallyOnly('draft'); } catch (e) {}
+                }
                 
                 updateDurations();
                 renderSessionManagerUI();
@@ -9682,9 +10112,12 @@
                 }
                 
                 if (failCount > 0) showToast(`지원하지 않는 포맷이나 오류로 ${failCount}개가 제외되었습니다.`, 'error');
-                else if (loadedItems.length > 0) {
+                else if (reconnectedPlaceholderCount > 0 && remainingNewItems.length === 0) {
+                    showToast(`✨ 기존 작업물의 빈 장면 ${reconnectedPlaceholderCount}개에 원본 사진·동영상이 완벽히 다시 연결되었습니다!`);
+                } else if (loadedItems.length > 0) {
                     const sortMsg = (shouldAutoSort && loadedItems.length > 1) ? " (파일명 번호순 자동 정렬됨)" : "";
-                    showToast(`${loadedItems.length}개의 미디어가 추가되었습니다.${insertedPositionLabel}${sortMsg}`);
+                    const reconMsg = reconnectedPlaceholderCount > 0 ? ` (기존 장면 ${reconnectedPlaceholderCount}개 자동 연결 포함)` : "";
+                    showToast(`${loadedItems.length}개의 미디어가 반영되었습니다.${insertedPositionLabel}${reconMsg}${sortMsg}`);
                 }
             } catch (err) {
                 console.error("미디어 처리 오류:", err);
@@ -11174,10 +11607,12 @@
                         previousUid = null;
                         currentUser = null;
                     }
+                    restoreCachedDriveTokenIfValid();
                     updateAuthHeaderUI();
                     if (elements.workspaceModal.style.display === 'flex') {
                         renderWorkspaceTab(currentTab);
                     }
+                    autoRestoreLastActiveProjectIfEmpty();
                 });
             } catch (err) {
                 console.error("Firebase init error:", err);
@@ -11261,8 +11696,43 @@
             }
         }
 
+        let startupAutoRestoreAttempted = false;
+        async function autoRestoreLastActiveProjectIfEmpty() {
+            if (startupAutoRestoreAttempted) return;
+            if (state.images.length > 0 || state.projectId) return;
+            startupAutoRestoreAttempted = true;
+            try {
+                let targetId = null;
+                try {
+                    targetId = localStorage.getItem('fowi_last_active_project_id');
+                } catch (e) {}
+
+                const allLocal = await readAllProjectsViaCursor();
+                if (!targetId && allLocal.length > 0) {
+                    const ownerKey = getActiveOwnerKey();
+                    const owned = allLocal.filter(p => p && getProjectOwnerKey(p) === ownerKey);
+                    const pool = owned.length > 0 ? owned : allLocal;
+                    pool.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                    if (pool[0] && pool[0].id) {
+                        targetId = pool[0].id;
+                    }
+                }
+
+                if (targetId && state.images.length === 0) {
+                    await restoreProject(targetId);
+                } else {
+                    startupAutoRestoreAttempted = false;
+                }
+            } catch (e) {
+                startupAutoRestoreAttempted = false;
+                console.warn('Startup auto-restore skipped:', e);
+            }
+        }
+
         function init() {
+            restoreCachedDriveTokenIfValid();
             initFirebaseAuthEngine();
+            setTimeout(() => { autoRestoreLastActiveProjectIfEmpty(); }, 650);
 
             elements.openInstallModalBtn.addEventListener('click', () => {
                 elements.installAppModal.style.display = 'flex';
@@ -11337,12 +11807,17 @@
 
             if (elements.newBlankProjectBtn) {
                 elements.newBlankProjectBtn.addEventListener('click', () => {
+                    const clearLastActive = () => {
+                        try { localStorage.removeItem('fowi_last_active_project_id'); } catch (e) {}
+                    };
                     if (state.images.length > 0 && state.hasUnsavedChanges) {
                         showConfirm("저장하지 않은 편집 내용이 있습니다. 새 프로젝트를 시작하시겠습니까?", () => {
+                            clearLastActive();
                             resetEditorWorkspaceForAccountChange();
                             showToast("새 프로젝트 작업 공간이 준비되었습니다.");
                         });
                     } else {
+                        clearLastActive();
                         resetEditorWorkspaceForAccountChange();
                         showToast("새 프로젝트 작업 공간이 준비되었습니다.");
                     }
@@ -11399,9 +11874,19 @@
                 }
             });
             if (elements.reconnectDriveSyncBtn) {
-                elements.reconnectDriveSyncBtn.addEventListener('click', () => {
-                    if (!state.pendingResumeActionAfterDriveAuth) {
-                        state.pendingResumeActionAfterDriveAuth = state.images.some(i => i.isPlaceholder && i.driveFileId) ? 'restore' : 'save';
+                elements.reconnectDriveSyncBtn.addEventListener('click', async () => {
+                    const needsRestore = state.images.some(i => i.isPlaceholder)
+                        || Boolean((elements.bgmSelect.value === 'custom' || state.customBgmDriveFileId || state.customBgmFileName) && !state.customBgmFile)
+                        || Boolean(state.bgMode === 'custom' && state.customBgDriveFileId && !state.customBgFile);
+                    state.pendingResumeActionAfterDriveAuth = needsRestore ? 'restore' : (state.pendingResumeActionAfterDriveAuth || 'save');
+                    if (isDriveTokenValid() && needsRestore) {
+                        const currentProjObj = buildCurrentProjectObject('draft', state.projectVersion || 1);
+                        if (state.customBgmDriveFileId || state.customBgmFileName) {
+                            currentProjObj.data.bgmSelectValue = 'custom';
+                        }
+                        currentProjObj._isCloudSynced = true;
+                        await applyProjectObjectToState(currentProjObj);
+                        return;
                     }
                     connectGoogleDriveAccount();
                 });
