@@ -1118,10 +1118,7 @@
                                 <option value="procedural-morning">🐤 새벽 숲의 새소리와 하프 (맑은 아침 숲)</option>
                                 <option value="procedural-bowl">🥣 치유의 싱잉볼과 시냇물 (깊은 명상 울림)</option>
                             </optgroup>
-                            <optgroup label="🎼 외부 스트리밍 및 내 음원">
-                                <option value="https://ia802508.us.archive.org/5/items/relaxing-piano-music-royalty-free/Relaxing%20Piano%20Music.mp3">🎼 평온한 편백숲 (외부 피아노 스트리밍)</option>
-                                <option value="https://ia802506.us.archive.org/16/items/nature-sounds-birds-singing-relaxing/nature-sounds-birds-singing.mp3">🌲 아침 숲의 소리 (외부 자연음 스트리밍)</option>
-                                <option value="https://ia801402.us.archive.org/20/items/free_music_archive_instrumental/FMA_Instrumental_Selection_-_01_-_Gillicuddy_-_Springish.mp3">🎸 숲속의 봄날 (외부 어쿠스틱 기타)</option>
+                            <optgroup label="🎧 내 음원 파일 및 무음 설정">
                                 <option value="custom">🎧 내 음원 직접 업로드...</option>
                                 <option value="">🔇 소리 없음</option>
                             </optgroup>
@@ -1224,7 +1221,7 @@
                                         <span class="text-xs font-extrabold text-zinc-800">초부터</span>
                                     </div>
                                 </div>
-                                <p class="text-[11px] font-bold text-zinc-600 leading-snug">업로드한 음원이나 외부 스트리밍 곡의 앞부분 전주를 건너뛰고 원하는 하이라이트 구간(예: 32.5초)부터 재생합니다.</p>
+                                <p class="text-[11px] font-bold text-zinc-600 leading-snug">업로드한 내 음원 파일의 앞부분 전주를 건너뛰고 원하는 하이라이트 구간(예: 32.5초)부터 재생합니다.</p>
                             </div>
 
                             <!-- ② 영상 내 배경음 시작 타이밍 -->
@@ -1342,14 +1339,30 @@
                             <span class="px-3 py-1.5 rounded-xl bg-zinc-900 text-white text-xs font-extrabold shrink-0 whitespace-nowrap shadow-sm">+ 파일 선택</span>
                             <input id="image-upload" type="file" multiple accept="image/*,video/*,.mp4,.mov,.avi,.mkv,.webm,.json" class="hidden" />
                         </label>
-                        <div class="flex flex-wrap items-center justify-between gap-2 bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5">
-                            <label for="auto-sort-filename-checkbox" class="flex items-center gap-1.5 cursor-pointer select-none text-xs font-extrabold text-zinc-800">
-                                <input id="auto-sort-filename-checkbox" type="checkbox" checked class="w-3.5 h-3.5 accent-emerald-800 rounded cursor-pointer">
-                                <span>파일명 번호순(1, 2, 10...) 자동 정렬</span>
-                            </label>
-                            <button id="sort-by-filename-btn" type="button" class="px-2.5 py-1 bg-white hover:bg-stone-100 text-zinc-900 border border-stone-300 rounded-lg text-xs font-extrabold transition flex items-center gap-1 whitespace-nowrap" title="현재 추가된 사진들을 파일 이름의 숫자 순서대로 즉시 다시 정렬합니다">
-                                <i data-lucide="arrow-down-0-1" class="w-3.5 h-3.5 text-emerald-800 shrink-0"></i> 파일명 번호순 정렬
-                            </button>
+                        <div class="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 space-y-1.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-xs font-extrabold text-zinc-800 whitespace-nowrap">📍 새 사진·영상 넣을 위치:</span>
+                                    <select id="upload-insert-mode-select" class="bg-white border border-stone-300 rounded-lg px-2 py-0.5 text-xs font-extrabold text-zinc-950 focus:outline-none cursor-pointer">
+                                        <option value="end" selected>맨 끝(아래)에 추가 (기본)</option>
+                                        <option value="start">맨 앞(1번 자리)에 추가</option>
+                                        <option value="custom">원하는 컷 번호 자리에 끼워넣기</option>
+                                    </select>
+                                    <div id="upload-insert-cut-wrap" class="hidden items-center gap-1">
+                                        <input id="upload-insert-cut-input" type="number" min="1" max="300" value="2" class="w-12 bg-emerald-50 border border-emerald-400 rounded-lg px-1.5 py-0.5 text-center font-mono text-xs font-extrabold text-zinc-950">
+                                        <span class="text-xs font-extrabold text-emerald-950">번 자리에 넣기</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-200/80">
+                                <label for="auto-sort-filename-checkbox" class="flex items-center gap-1.5 cursor-pointer select-none text-xs font-extrabold text-zinc-800">
+                                    <input id="auto-sort-filename-checkbox" type="checkbox" checked class="w-3.5 h-3.5 accent-emerald-800 rounded cursor-pointer">
+                                    <span>파일명 번호순(1, 2, 10...) 자동 정렬</span>
+                                </label>
+                                <button id="sort-by-filename-btn" type="button" class="px-2.5 py-1 bg-white hover:bg-stone-100 text-zinc-900 border border-stone-300 rounded-lg text-xs font-extrabold transition flex items-center gap-1 whitespace-nowrap" title="현재 추가된 사진들을 파일 이름의 숫자 순서대로 즉시 다시 정렬합니다">
+                                    <i data-lucide="arrow-down-0-1" class="w-3.5 h-3.5 text-emerald-800 shrink-0"></i> 파일명 번호순 정렬
+                                </button>
+                            </div>
                         </div>
                     </section>
 
@@ -1458,28 +1471,26 @@
                         </div>
                     </div>
 
-                    <!-- 2단: 시간·용량·화질 + 임시저장·영상추출 액션 바 -->
-                    <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-                        <div class="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1.5 rounded-xl border border-stone-200">
-                            <span id="estimated-time" class="text-sm sm:text-base font-extrabold text-zinc-950 font-mono">00:00</span>
-                            <span class="text-stone-300">|</span>
-                            <span id="estimated-size-badge" class="text-[11px] font-extrabold text-emerald-900 font-mono whitespace-nowrap" title="비트레이트×재생시간 즉시 계산">약 0.0 MB</span>
+                    <!-- 2단: 시간·용량·화질 + 고화질 영상 추출 액션 바 (상단 '지금 저장'으로 통합하여 임시저장 중복 버튼 제거 및 PC 잘림 원천 방지) -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5 w-full min-w-0">
+                        <div class="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1.5 rounded-xl border border-stone-200 min-w-0 shrink-0">
+                            <span id="estimated-time" class="text-xs sm:text-sm font-extrabold text-zinc-950 font-mono shrink-0">00:00</span>
+                            <span class="text-stone-300 shrink-0">|</span>
+                            <span id="estimated-size-badge" class="text-[11px] font-extrabold text-emerald-900 font-mono whitespace-nowrap shrink-0" title="비트레이트×재생시간 즉시 계산">약 0.0 MB</span>
                             <label for="export-quality-select" class="sr-only">추출 화질·용량</label>
-                            <select id="export-quality-select" class="bg-white border border-stone-300 rounded-lg px-2 py-0.5 text-[11px] font-extrabold text-zinc-900 focus:outline-none cursor-pointer" title="추출 화질 및 파일 용량 선택">
+                            <select id="export-quality-select" class="bg-white border border-stone-300 rounded-lg px-1.5 py-0.5 text-[11px] font-extrabold text-zinc-900 focus:outline-none cursor-pointer max-w-[118px] sm:max-w-[135px] truncate" title="추출 화질 및 파일 용량 선택">
                                 <option value="high" selected>최고화질 (8M)</option>
                                 <option value="standard">표준화질 (4.5M·카톡용)</option>
                                 <option value="light">저용량 (2.2M)</option>
                             </select>
                         </div>
 
-                        <div class="flex items-center gap-2 flex-1 min-w-[220px]">
-                            <button id="save-draft-btn" class="px-3.5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm text-zinc-900 bg-stone-100 border border-stone-300 hover:bg-stone-200 transition-all active:scale-95 flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                <i data-lucide="save" class="w-4 h-4 text-zinc-700 shrink-0"></i> 임시저장
-                            </button>
-                            <button id="export-btn" class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-extrabold text-sm sm:text-base text-white bg-zinc-900 hover:bg-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-                                <i data-lucide="download" class="w-4 h-4 shrink-0"></i> 고화질 영상 추출
-                            </button>
-                        </div>
+                        <!-- 하위 호환용 숨김 처리 (상단 '지금 저장' 및 자동 임시저장으로 일원화) -->
+                        <button id="save-draft-btn" type="button" class="hidden" aria-hidden="true">임시저장</button>
+
+                        <button id="export-btn" class="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-zinc-900 hover:bg-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                            <i data-lucide="download" class="w-4 h-4 shrink-0"></i> 고화질 영상 추출
+                        </button>
                     </div>
                 </div>
             </aside>
@@ -3729,6 +3740,64 @@
 
         // Google Drive 보관소 폴더에서 현재 프로젝트의 배경음 파일을 직접 검색하여 복원 (메타데이터에 driveFileId가 누락된 경우까지 완벽 대비)
         
+        
+        // 윈도우 PC에 HEVC(H.265) 코덱이 설치되지 않은 경우 브라우저 내 싱글스레드 WebAssembly FFmpeg로 H.264 MP4 자동 변환 시도
+        let ffmpegWasmInstance = null;
+        async function tryTranscodeHevcVideoInBrowser(sourceBlob, originalFileName = 'video.mp4') {
+            if (!sourceBlob || sourceBlob.size > 120 * 1024 * 1024) return null;
+            try {
+                if (elements.loadingOverlay) {
+                    elements.loadingOverlay.style.display = 'flex';
+                    elements.loadingTitle.textContent = '스마트폰 고효율(HEVC) 영상 자동 변환 중...';
+                    elements.loadingSubtitle.textContent = '윈도우 PC에서도 화면이 나오도록 브라우저 내에서 표준 H.264 포맷으로 변환하고 있습니다.';
+                }
+                if (!window.FFmpeg) {
+                    await new Promise((res, rej) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js';
+                        s.onload = () => res();
+                        s.onerror = () => rej(new Error('FFmpeg CDN load failed'));
+                        document.head.appendChild(s);
+                    });
+                }
+                if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) return null;
+                if (!ffmpegWasmInstance) {
+                    const { createFFmpeg } = window.FFmpeg;
+                    ffmpegWasmInstance = createFFmpeg({
+                        log: false,
+                        corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+                        mainName: 'main'
+                    });
+                    await ffmpegWasmInstance.load();
+                }
+                const inName = 'input_hevc.mp4';
+                const outName = 'output_h264.mp4';
+                const ab = await sourceBlob.arrayBuffer();
+                ffmpegWasmInstance.FS('writeFile', inName, new Uint8Array(ab));
+                await ffmpegWasmInstance.run(
+                    '-i', inName,
+                    '-c:v', 'libx264',
+                    '-preset', 'ultrafast',
+                    '-crf', '24',
+                    '-pix_fmt', 'yuv420p',
+                    '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+                    '-c:a', 'aac',
+                    '-b:a', '128k',
+                    '-movflags', '+faststart',
+                    outName
+                );
+                const outData = ffmpegWasmInstance.FS('readFile', outName);
+                try { ffmpegWasmInstance.FS('unlink', inName); } catch (e) {}
+                try { ffmpegWasmInstance.FS('unlink', outName); } catch (e) {}
+                if (outData && outData.length > 1000) {
+                    return new File([outData.buffer], originalFileName.replace(/\.[^.]+$/, '') + '_pc.mp4', { type: 'video/mp4' });
+                }
+            } catch (err) {
+                console.warn('In-browser HEVC transcode fallback skipped (COOP/COEP or network restriction):', err);
+            }
+            return null;
+        }
+
         function mountVideoInDecoderStage(video) {
             if (!video) return;
             const stage = document.getElementById('hidden-video-decoder-stage') || document.body;
@@ -3802,8 +3871,40 @@
                         return;
                     }
                     const isAudioOnlyCodecIssue = (video.duration > 0 && (!video.videoWidth || !video.videoHeight));
-                    if (isAudioOnlyCodecIssue) {
-                        showToast('⚠️ 이 동영상은 스마트폰 고효율 코덱(HEVC/H.265) 등 현재 PC 브라우저에 비디오 코덱이 없어 소리만 재생될 수 있습니다.', 'error');
+                    if (isAudioOnlyCodecIssue && finalBlob && !finalBlob._hevcTranscodeAttempted) {
+                        finalBlob._hevcTranscodeAttempted = true;
+                        tryTranscodeHevcVideoInBrowser(finalBlob, fileName).then((convertedBlob) => {
+                            if (convertedBlob) {
+                                createPrimedVideoElement(convertedBlob, null, fileName.replace(/\.[^.]+$/, '') + '_h264.mp4', 12000).then((rePrimed) => {
+                                    if (rePrimed && rePrimed.video && rePrimed.video.videoWidth > 0) {
+                                        showToast('✨ 스마트폰 고효율(HEVC) 영상을 PC 호환 표준 영상(H.264)으로 자동 변환하여 화면을 복원했습니다!');
+                                        resolve(rePrimed);
+                                        return;
+                                    }
+                                    resolve({
+                                        video,
+                                        src: mediaUrl,
+                                        rawFile: finalBlob,
+                                        duration: Number(Math.min(300, Math.max(1.5, Number(video.duration || 4))).toFixed(1)),
+                                        width: video.videoWidth || 1080,
+                                        height: video.videoHeight || 1920,
+                                        codecVideoMissing: true
+                                    });
+                                });
+                            } else {
+                                showToast('⚠️ 현재 PC 윈도우에 스마트폰 고효율(HEVC/H.265) 코덱이 없습니다. 화면의 원클릭 해결 안내를 확인해 주세요.', 'error');
+                                resolve({
+                                    video,
+                                    src: mediaUrl,
+                                    rawFile: finalBlob,
+                                    duration: Number(Math.min(300, Math.max(1.5, Number(video.duration || 4))).toFixed(1)),
+                                    width: video.videoWidth || 1080,
+                                    height: video.videoHeight || 1920,
+                                    codecVideoMissing: true
+                                });
+                            }
+                        });
+                        return;
                     }
                     resolve({
                         video,
@@ -4791,9 +4892,9 @@
                 }
             }
             state.customBgmFile = restoredBgmBlob;
-            const bgmValue = hasCustomBgmIntent
-                ? 'custom'
-                : (project.data.bgmSelectValue !== undefined ? project.data.bgmSelectValue : 'procedural');
+            const rawSavedBgmVal = project.data.bgmSelectValue !== undefined ? project.data.bgmSelectValue : 'procedural';
+            const cleanSavedBgmVal = (typeof rawSavedBgmVal === 'string' && /^https?:\/\//i.test(rawSavedBgmVal)) ? 'procedural' : rawSavedBgmVal;
+            const bgmValue = hasCustomBgmIntent ? 'custom' : cleanSavedBgmVal;
             elements.bgmSelect.value = bgmValue;
             state.lastValidBgmValue = bgmValue;
 
@@ -5788,7 +5889,7 @@
         function matchVideoDurationToBgm() {
             const playableBgm = getEffectiveBgmPlayableDurationSec();
             if (!playableBgm) {
-                showToast('먼저 내 음원이나 외부 스트리밍 음악을 선택해 주세요. (내장 자연음은 영상 길이에 자동 맞춰집니다)', 'error');
+                showToast('먼저 내 음원 파일을 업로드해 주세요. (내장 자연음은 영상 길이에 자동 맞춰집니다)', 'error');
                 return;
             }
             if (!state.images || state.images.length === 0) {
@@ -5851,7 +5952,7 @@
         // 원클릭 2: 사진 시간은 그대로 두고, 노래의 마지막 엔딩이 영상 종료 시점(또는 아웃트로 시작)에 딱 맞게 끝나도록 시작 위치를 자동 계산
         function alignBgmEndToVideoEnd() {
             if (!elements.bgmAudio || !elements.bgmAudio.duration || !isFinite(elements.bgmAudio.duration) || elements.bgmAudio.duration <= 0 || isProceduralBgm(elements.bgmSelect ? elements.bgmSelect.value : '')) {
-                showToast('먼저 내 음원이나 외부 스트리밍 음악을 선택해 주세요.', 'error');
+                showToast('먼저 내 음원 파일을 업로드해 주세요.', 'error');
                 return;
             }
             const audioDur = Number(elements.bgmAudio.duration);
@@ -9543,8 +9644,31 @@
                 }));
 
                 const loadedItems = (await Promise.all(loadPromises)).filter(item => item !== null);
-                state.images = [...state.images, ...loadedItems];
-                markUnsavedChanges();
+                let targetInsertIdx = state.images.length;
+                let insertedPositionLabel = '';
+
+                if (state.pendingInsertIndex !== null && state.pendingInsertIndex !== undefined) {
+                    targetInsertIdx = Math.max(0, Math.min(state.images.length, Number(state.pendingInsertIndex)));
+                    insertedPositionLabel = ` (#${targetInsertIdx + 1}번 위치에 끼워넣음)`;
+                    state.pendingInsertIndex = null;
+                } else {
+                    const insertModeEl = document.getElementById('upload-insert-mode-select');
+                    const insertCutInput = document.getElementById('upload-insert-cut-input');
+                    const mode = insertModeEl ? insertModeEl.value : 'end';
+                    if (mode === 'start') {
+                        targetInsertIdx = 0;
+                        insertedPositionLabel = ' (맨 앞 #1번 위치에 추가됨)';
+                    } else if (mode === 'custom' && insertCutInput) {
+                        const wantedCut = Math.max(1, parseInt(insertCutInput.value, 10) || 1);
+                        targetInsertIdx = Math.min(state.images.length, wantedCut - 1);
+                        insertedPositionLabel = ` (#${targetInsertIdx + 1}번 위치에 끼워넣음)`;
+                    }
+                }
+
+                const nextImages = [...state.images];
+                nextImages.splice(targetInsertIdx, 0, ...loadedItems);
+                state.images = nextImages;
+                handleSlidesOrderChanged();
                 
                 updateDurations();
                 renderSessionManagerUI();
@@ -9560,7 +9684,7 @@
                 if (failCount > 0) showToast(`지원하지 않는 포맷이나 오류로 ${failCount}개가 제외되었습니다.`, 'error');
                 else if (loadedItems.length > 0) {
                     const sortMsg = (shouldAutoSort && loadedItems.length > 1) ? " (파일명 번호순 자동 정렬됨)" : "";
-                    showToast(`${loadedItems.length}개의 미디어가 추가되었습니다.${sortMsg}`);
+                    showToast(`${loadedItems.length}개의 미디어가 추가되었습니다.${insertedPositionLabel}${sortMsg}`);
                 }
             } catch (err) {
                 console.error("미디어 처리 오류:", err);
@@ -10192,6 +10316,34 @@
             handleSlidesOrderChanged();
         }
 
+        // 드래그 없이 원하는 컷 번호(1~N) 자리로 즉시 점프 이동하는 함수
+        function moveSlideToExactPosition(fromIndex, targetOneBasedCutNum) {
+            if (fromIndex < 0 || fromIndex >= state.images.length) return;
+            const targetIndex = Math.max(0, Math.min(state.images.length - 1, Math.round(Number(targetOneBasedCutNum) || 1) - 1));
+            if (fromIndex === targetIndex) return;
+            const [movedItem] = state.images.splice(fromIndex, 1);
+            state.images.splice(targetIndex, 0, movedItem);
+            handleSlidesOrderChanged();
+            showToast(`#${fromIndex + 1}번 장면을 #${targetIndex + 1}번 자리로 바로 이동했습니다!`);
+        }
+
+        function promptAndJumpSlidePosition(fromIndex) {
+            const curNum = fromIndex + 1;
+            const total = state.images.length;
+            showPrompt(
+                `현재 #${curNum}번 장면을 몇 번 자리(1 ~ ${total})로 바로 이동할까요?\n(사진 순서가 바뀌어도 연결된 자막과 회기는 그대로 따라갑니다)`,
+                String(curNum),
+                (val) => {
+                    const parsed = parseInt(String(val || '').replace(/[^0-9]/g, ''), 10);
+                    if (isNaN(parsed) || parsed < 1 || parsed > total) {
+                        showToast(`1부터 ${total} 사이의 번호를 입력해 주세요.`, 'error');
+                        return;
+                    }
+                    moveSlideToExactPosition(fromIndex, parsed);
+                }
+            );
+        }
+
         function renderStoryboard() {
             if (!elements.storyboardContainer) return;
             const viewMode = state.storyboardViewMode || 'list';
@@ -10353,9 +10505,12 @@
 
                 const fileBadge = document.createElement('div');
                 fileBadge.className = 'flex items-center gap-1.5 min-w-0';
-                const numSpan = document.createElement('span');
-                numSpan.className = 'px-2 py-0.5 bg-zinc-900 text-white rounded-md text-xs font-extrabold font-mono shrink-0';
-                numSpan.textContent = `#${String(index + 1).padStart(2, '0')}`;
+                const numSpan = document.createElement('button');
+                numSpan.type = 'button';
+                numSpan.className = 'px-2 py-0.5 bg-zinc-900 hover:bg-emerald-800 text-white rounded-md text-xs font-extrabold font-mono shrink-0 transition cursor-pointer flex items-center gap-0.5 shadow-sm';
+                numSpan.title = '클릭하여 원하는 컷 번호(예: 5번 자리)로 한 번에 이동합니다';
+                numSpan.innerHTML = `#${String(index + 1).padStart(2, '0')}<span class="text-[10px] opacity-80 ml-0.5">↕</span>`;
+                numSpan.addEventListener('click', () => promptAndJumpSlidePosition(index));
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'text-xs font-extrabold text-zinc-800 truncate max-w-[140px] sm:max-w-[180px]';
                 const dispName = data.fileName || (data.rawFile && data.rawFile.name) || `장면 ${index + 1}`;
@@ -10624,6 +10779,25 @@
                 delBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
                 delBtn.addEventListener('click', () => removeImage(index));
 
+                const jumpPosBtn = document.createElement('button');
+                jumpPosBtn.type = 'button';
+                jumpPosBtn.className = 'px-2 py-1 rounded-lg bg-white hover:bg-emerald-50 text-zinc-900 border border-stone-300 text-[11px] font-extrabold transition whitespace-nowrap';
+                jumpPosBtn.title = '드래그하지 않고 원하는 번호 자리로 한 번에 이동합니다';
+                jumpPosBtn.textContent = '↕ 번호이동';
+                jumpPosBtn.addEventListener('click', () => promptAndJumpSlidePosition(index));
+
+                const insertAfterBtn = document.createElement('button');
+                insertAfterBtn.type = 'button';
+                insertAfterBtn.className = 'px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-[11px] font-extrabold transition whitespace-nowrap';
+                insertAfterBtn.title = `새 사진이나 동영상을 맨 아래가 아닌 이 장면 바로 다음(#${index + 2}번 자리)에 끼워넣습니다`;
+                insertAfterBtn.textContent = '+뒤에 추가';
+                insertAfterBtn.addEventListener('click', () => {
+                    state.pendingInsertIndex = index + 1;
+                    if (elements.imageUpload) elements.imageUpload.click();
+                });
+
+                actionGroup.appendChild(jumpPosBtn);
+                actionGroup.appendChild(insertAfterBtn);
                 actionGroup.appendChild(upBtn);
                 actionGroup.appendChild(downBtn);
                 actionGroup.appendChild(delBtn);
@@ -11423,7 +11597,7 @@
                     return;
                 }
                 if (!isProceduralBgm(elements.bgmSelect.value) && elements.bgmSelect.value !== '' && elements.bgmSelect.value !== 'custom') {
-                    showToast("외부 스트리밍 음원 연결이 원활하지 않아 내장 실시간 힐링 사운드로 자동 전환합니다.", "error");
+                    showToast("내 음원 파일을 읽을 수 없어 내장 실시간 힐링 사운드로 자동 전환합니다.", "error");
                     elements.bgmSelect.value = 'procedural';
                     state.lastValidBgmValue = 'procedural';
                     elements.customBgmInfo.classList.add('hidden');
@@ -12361,7 +12535,7 @@
                         return;
                     }
                     if (isProceduralBgm(bgmVal)) {
-                        showToast("내장 자연 합성음은 실시간 생성 사운드입니다. 외부 스트리밍 또는 내 음원 업로드 시 시작 위치를 미리 들을 수 있습니다.");
+                        showToast("내장 자연 합성음은 실시간 생성 사운드입니다. 내 음원을 업로드한 경우 시작 위치를 미리 들을 수 있습니다.");
                         return;
                     }
                     if (!elements.bgmAudio.src) {
@@ -12795,6 +12969,44 @@
             if (alignBgmEndBtn) {
                 alignBgmEndBtn.addEventListener('click', alignBgmEndToVideoEnd);
             }
+
+            
+            const uploadInsertModeSelect = document.getElementById('upload-insert-mode-select');
+            const uploadInsertCutWrap = document.getElementById('upload-insert-cut-wrap');
+            if (uploadInsertModeSelect && uploadInsertCutWrap) {
+                uploadInsertModeSelect.addEventListener('change', (e) => {
+                    const isCustom = e.target.value === 'custom';
+                    uploadInsertCutWrap.classList.toggle('hidden', !isCustom);
+                    uploadInsertCutWrap.classList.toggle('flex', isCustom);
+                });
+            }
+
+            // 스토리보드 카드를 마우스로 드래그할 때 상·하단 가장자리 근처에서 패널이 자동으로 부드럽게 위·아래 스크롤되도록 지원
+            const leftScrollContainer = document.getElementById('left-panel-scroll');
+            if (leftScrollContainer) {
+                leftScrollContainer.addEventListener('dragover', (e) => {
+                    if (state.draggedItemIndex === null || state.draggedItemIndex === undefined) return;
+                    const rect = leftScrollContainer.getBoundingClientRect();
+                    const relY = e.clientY - rect.top;
+                    const edgeZone = 85;
+                    const maxSpeed = 18;
+                    if (relY < edgeZone) {
+                        const factor = Math.max(0.15, (edgeZone - relY) / edgeZone);
+                        leftScrollContainer.scrollTop -= Math.round(maxSpeed * factor);
+                    } else if (relY > rect.height - edgeZone) {
+                        const factor = Math.max(0.15, (relY - (rect.height - edgeZone)) / edgeZone);
+                        leftScrollContainer.scrollTop += Math.round(maxSpeed * factor);
+                    }
+                });
+            }
+            window.addEventListener('dragover', (e) => {
+                if (state.draggedItemIndex === null || state.draggedItemIndex === undefined) return;
+                if (window.innerWidth < 1024) {
+                    const edgeZone = 90;
+                    if (e.clientY < edgeZone) window.scrollBy(0, -14);
+                    else if (e.clientY > window.innerHeight - edgeZone) window.scrollBy(0, 14);
+                }
+            });
 
             setAspectRatio('vertical');
             requestAnimationFrame(() => updatePreviewStageLayout());
