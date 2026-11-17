@@ -1146,7 +1146,56 @@
                                 <i data-lucide="x-circle" class="w-5 h-5"></i>
                             </button>
                         </div>
-                        <audio id="bgm-audio" crossorigin="anonymous" loop></audio>
+                        <audio id="bgm-audio" crossorigin="anonymous"></audio>
+
+                        <!-- 배경음 반복(루프) 제어 & 아웃트로 직전 어색한 재시작 방지 + 길이 자동 맞춤 -->
+                        <div class="bg-white rounded-xl p-3.5 border-2 border-emerald-600/70 space-y-2.5 shadow-sm">
+                            <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                <label for="bgm-loop-mode-select" class="text-xs sm:text-sm font-extrabold text-zinc-950 flex items-center gap-1.5">
+                                    <i data-lucide="repeat" class="w-4 h-4 text-emerald-800 shrink-0"></i> 배경음 끝까지 재생 후 반복 제어
+                                </label>
+                                <span id="bgm-vs-video-duration-badge" class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-950 border border-emerald-300 text-[11px] font-mono font-extrabold">음원·영상 길이 자동 비교</span>
+                            </div>
+
+                            <select id="bgm-loop-mode-select" class="w-full bg-stone-50 border-2 border-stone-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-zinc-950 font-extrabold focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                <option value="smart-no-tail" selected>✨ 스마트 제어: 아웃트로 근처(종료 18초 전 이내)에서 끝나면 반복 안 함 (추천)</option>
+                                <option value="once">🛑 1회만 재생 후 종료 (끝까지 재생되면 다시 반복 안 함 · 자연스러운 페이드아웃)</option>
+                                <option value="loop">🔁 끝까지 재생 후 처음(시작 위치)부터 계속 반복 (무한 루프)</option>
+                            </select>
+
+                            <div class="space-y-1.5 pt-1 border-t border-stone-200">
+                                <label for="bgm-stop-timing-select" class="text-xs font-extrabold text-zinc-800 block">
+                                    ⏹️ 배경음이 꺼지는 시점 (종료 구간 선택)
+                                </label>
+                                <select id="bgm-stop-timing-select" class="w-full bg-stone-50 border border-stone-300 rounded-xl px-3 py-1.5 text-xs font-extrabold text-zinc-950 focus:outline-none focus:border-zinc-900 cursor-pointer">
+                                    <option value="video-end" selected>🌅 영상 끝(아웃트로 끝)까지 재생 (기본)</option>
+                                    <option value="before-outro">🎬 아웃트로 시작 직전(마지막 사진 끝)까지만 재생하고 서서히 끄기</option>
+                                    <option value="custom-end">⏱️ 내가 지정한 영상 시간(초)까지만 재생하고 서서히 끄기</option>
+                                </select>
+                                <div id="bgm-custom-end-row" class="hidden items-center justify-between gap-2 bg-stone-100 px-2.5 py-1.5 rounded-lg border border-stone-300">
+                                    <span class="text-xs font-extrabold text-zinc-800">영상 시작 후 몇 초 지점에서 배경음을 끝낼까요?</span>
+                                    <div class="flex items-center gap-1">
+                                        <input id="bgm-custom-end-sec-input" type="number" min="1" max="600" step="0.5" value="30" class="w-16 bg-white border border-stone-300 rounded-lg px-2 py-0.5 text-center font-mono text-xs font-extrabold text-zinc-950">
+                                        <span class="text-xs font-extrabold text-zinc-800">초에 종료</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 음원 길이와 영상 길이가 애매하게 어긋날 때 원클릭으로 맞춰주는 도구 -->
+                            <div class="pt-1.5 border-t border-stone-200 space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-extrabold text-zinc-700">💡 아웃트로 직전에 배경음이 애매하게 끝나거나 남을 때 원클릭 해결:</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                    <button id="match-video-to-bgm-btn" type="button" class="py-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-[11px] font-extrabold transition flex items-center justify-center gap-1 whitespace-nowrap" title="사진 컷들의 표시 시간을 소수점 단위로 살짝 조정하여 전체 영상이 배경음이 끝나는 순간에 정확히 맞춰 끝나게 합니다">
+                                        🎯 영상 길이를 배경음 길이에 딱 맞추기
+                                    </button>
+                                    <button id="align-bgm-end-to-video-btn" type="button" class="py-1.5 px-2.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-zinc-900 border border-stone-300 text-[11px] font-extrabold transition flex items-center justify-center gap-1 whitespace-nowrap" title="배경음의 마지막 엔딩이 영상 끝(또는 아웃트로 시작)에 정확히 오도록 배경음 시작 위치를 자동 계산합니다">
+                                        ⏳ 배경음 엔딩을 영상 끝에 자동 정렬
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- 배경음(BGM) 세부 구간 연출 (접이식 아코디언으로 깔끔하게 수납) -->
                         <details class="group pt-3 border-t border-stone-300">
@@ -2462,6 +2511,9 @@
             bgmResumeMode: 'continue',
             bgmFadeInSec: 1.5,
             bgmFadeOutMode: 'outro-full',
+            bgmLoopMode: 'smart-no-tail',
+            bgmStopTiming: 'video-end',
+            bgmCustomEndSec: 30,
             isScrubbingTimeline: false,
             wasPlayingBeforeScrub: false,
             bgmPreviewStopTimer: null,
@@ -3174,6 +3226,9 @@
                     bgmResumeMode: state.bgmResumeMode || 'continue',
                     bgmFadeInSec: state.bgmFadeInSec !== undefined ? Number(state.bgmFadeInSec) : 1.5,
                     bgmFadeOutMode: state.bgmFadeOutMode || 'outro-full',
+                    bgmLoopMode: state.bgmLoopMode || 'smart-no-tail',
+                    bgmStopTiming: state.bgmStopTiming || 'video-end',
+                    bgmCustomEndSec: Number(state.bgmCustomEndSec) || 30,
                     videoAudioMode: state.videoAudioMode,
                     videoVolume: state.videoVolume,
                     duckingBgmRatio: state.duckingBgmRatio,
@@ -3334,6 +3389,9 @@
                     bgmResumeMode: d.bgmResumeMode || state.bgmResumeMode || 'continue',
                     bgmFadeInSec: d.bgmFadeInSec !== undefined ? Number(d.bgmFadeInSec) : 1.5,
                     bgmFadeOutMode: d.bgmFadeOutMode || state.bgmFadeOutMode || 'outro-full',
+                    bgmLoopMode: d.bgmLoopMode || state.bgmLoopMode || 'smart-no-tail',
+                    bgmStopTiming: d.bgmStopTiming || state.bgmStopTiming || 'video-end',
+                    bgmCustomEndSec: Number(d.bgmCustomEndSec || state.bgmCustomEndSec) || 30,
                     bgmSelectValue: d.bgmSelectValue !== undefined ? d.bgmSelectValue : 'procedural',
                     customBgmDriveFileId: d.customBgmDriveFileId || state.customBgmDriveFileId || null,
                     customBgmFileName: d.customBgmFileName || state.customBgmFileName || null,
@@ -4575,6 +4633,20 @@
             state.bgmResumeMode = project.data.bgmResumeMode || 'continue';
             state.bgmFadeInSec = project.data.bgmFadeInSec !== undefined ? Number(project.data.bgmFadeInSec) : 1.5;
             state.bgmFadeOutMode = project.data.bgmFadeOutMode || 'outro-full';
+            state.bgmLoopMode = project.data.bgmLoopMode || 'smart-no-tail';
+            state.bgmStopTiming = project.data.bgmStopTiming || 'video-end';
+            state.bgmCustomEndSec = Number(project.data.bgmCustomEndSec) || 30;
+            const loopSelEl = document.getElementById('bgm-loop-mode-select');
+            if (loopSelEl) loopSelEl.value = state.bgmLoopMode;
+            const stopSelEl = document.getElementById('bgm-stop-timing-select');
+            if (stopSelEl) stopSelEl.value = state.bgmStopTiming;
+            const customEndRowEl = document.getElementById('bgm-custom-end-row');
+            if (customEndRowEl) {
+                customEndRowEl.classList.toggle('hidden', state.bgmStopTiming !== 'custom-end');
+                customEndRowEl.classList.toggle('flex', state.bgmStopTiming === 'custom-end');
+            }
+            const customEndInputEl = document.getElementById('bgm-custom-end-sec-input');
+            if (customEndInputEl) customEndInputEl.value = String(state.bgmCustomEndSec);
             if (elements.bgmAudioOffsetSlider) elements.bgmAudioOffsetSlider.value = String(Math.min(240, state.bgmAudioOffsetSec));
             if (elements.bgmAudioOffsetInput) elements.bgmAudioOffsetInput.value = String(state.bgmAudioOffsetSec);
             if (elements.bgmStartTimingSelect) elements.bgmStartTimingSelect.value = state.bgmStartTiming;
@@ -5652,6 +5724,188 @@
         }
 
         // 특정 영상 시각(timeInSeconds)에서 배경음 상태(재생 여부, 누적 재생 시간, 음원 내 목표 currentTime, 재개 후 경과 시간)를 계산
+        
+        function getEffectiveBgmPlayableDurationSec() {
+            if (!elements.bgmAudio || !elements.bgmAudio.duration || !isFinite(elements.bgmAudio.duration) || elements.bgmAudio.duration <= 0) {
+                return null;
+            }
+            if (isProceduralBgm(elements.bgmSelect ? elements.bgmSelect.value : '') || (elements.bgmSelect && elements.bgmSelect.value === '')) {
+                return null;
+            }
+            const audioDur = Number(elements.bgmAudio.duration);
+            const offsetSec = Math.max(0, Number(state.bgmAudioOffsetSec) || 0);
+            return Math.max(0.5, offsetSec < audioDur ? (audioDur - offsetSec) : audioDur);
+        }
+
+        function getTargetBgmActiveWindowSec() {
+            const totalVideoDur = Math.max(0.5, state.totalDuration || 0);
+            const startThreshold = getBgmStartVideoTime();
+            const stopTiming = state.bgmStopTiming || 'video-end';
+            let stopThresholdSec = totalVideoDur;
+            if (stopTiming === 'before-outro') {
+                stopThresholdSec = Math.max(0.5, totalVideoDur - (Number(state.outro.duration) || 4));
+            } else if (stopTiming === 'custom-end') {
+                stopThresholdSec = Math.max(0.5, Math.min(totalVideoDur, Number(state.bgmCustomEndSec) || totalVideoDur));
+            }
+            let pausedSum = 0;
+            let cursor = Number(state.intro.duration) || 3.5;
+            (state.images || []).forEach(img => {
+                const sDur = Number(img.duration) || 4;
+                const segStart = Math.max(cursor, startThreshold);
+                const segEnd = Math.min(cursor + sDur, stopThresholdSec);
+                if (img.bgmPaused && segEnd > segStart) {
+                    pausedSum += (segEnd - segStart);
+                }
+                cursor += sDur;
+            });
+            return Math.max(0.5, (stopThresholdSec - startThreshold) - pausedSum);
+        }
+
+        function updateBgmVsVideoDurationUI() {
+            const badge = document.getElementById('bgm-vs-video-duration-badge');
+            if (!badge) return;
+            const playableBgm = getEffectiveBgmPlayableDurationSec();
+            const targetWindow = getTargetBgmActiveWindowSec();
+            if (!playableBgm) {
+                badge.textContent = `내장 자연음 (영상 ${targetWindow.toFixed(1)}초 자동 맞춤)`;
+                badge.className = 'px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-950 border border-emerald-300 text-[11px] font-mono font-extrabold';
+                return;
+            }
+            const diff = playableBgm - targetWindow;
+            if (Math.abs(diff) <= 0.4) {
+                badge.textContent = `✅ 음원 ${playableBgm.toFixed(1)}초 = 영상 구간 ${targetWindow.toFixed(1)}초 (딱 맞음!)`;
+                badge.className = 'px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-950 border border-emerald-400 text-[11px] font-mono font-extrabold';
+            } else if (diff < 0) {
+                badge.textContent = `음원 ${playableBgm.toFixed(1)}초 / 영상 ${targetWindow.toFixed(1)}초 (음원이 ${Math.abs(diff).toFixed(1)}초 짧음)`;
+                badge.className = 'px-2 py-0.5 rounded-md bg-amber-50 text-amber-950 border border-amber-300 text-[11px] font-mono font-extrabold';
+            } else {
+                badge.textContent = `음원 ${playableBgm.toFixed(1)}초 / 영상 ${targetWindow.toFixed(1)}초 (음원이 ${diff.toFixed(1)}초 여유)`;
+                badge.className = 'px-2 py-0.5 rounded-md bg-blue-50 text-blue-950 border border-blue-300 text-[11px] font-mono font-extrabold';
+            }
+        }
+
+        // 원클릭 1: 사진 컷들의 재생 시간을 균등 비례 조정하여 영상의 배경음 재생 구간이 노래 길이와 정확히 일치하도록 맞춤
+        function matchVideoDurationToBgm() {
+            const playableBgm = getEffectiveBgmPlayableDurationSec();
+            if (!playableBgm) {
+                showToast('먼저 내 음원이나 외부 스트리밍 음악을 선택해 주세요. (내장 자연음은 영상 길이에 자동 맞춰집니다)', 'error');
+                return;
+            }
+            if (!state.images || state.images.length === 0) {
+                showToast('먼저 사진이나 동영상을 추가해 주세요.', 'error');
+                return;
+            }
+            const startThreshold = getBgmStartVideoTime();
+            const introDur = Number(state.intro.duration) || 3.5;
+            const outroDur = Number(state.outro.duration) || 4.0;
+            const stopTiming = state.bgmStopTiming || 'video-end';
+
+            // 배경음이 재생되는 총 목표 영상 종료 시각 = startThreshold + playableBgm (일시정지 구간 제외)
+            const pausedSlidesDur = state.images
+                .filter(img => img.bgmPaused)
+                .reduce((acc, img) => acc + (Number(img.duration) || 4), 0);
+            const activePhotos = state.images.filter(img => !img.bgmPaused && img.type !== 'video');
+            const activeVideosDur = state.images
+                .filter(img => !img.bgmPaused && img.type === 'video')
+                .reduce((acc, img) => acc + (Number(img.duration) || 4), 0);
+
+            if (activePhotos.length === 0) {
+                showToast('시간을 조절할 사진 슬라이드가 없습니다.', 'error');
+                return;
+            }
+
+            // stopThresholdSec = introDur + pausedSlidesDur + activeVideosDur + sum(activePhotos) + (stopTiming === 'before-outro' ? 0 : outroDur)
+            // We want: stopThresholdSec - startThreshold - pausedSlidesDur = playableBgm
+            // Therefore: introDur + activeVideosDur + sum(activePhotos) + (stopTiming === 'before-outro' ? 0 : outroDur) - startThreshold = playableBgm
+            const fixedPart = introDur + activeVideosDur + (stopTiming === 'before-outro' ? 0 : outroDur) - startThreshold;
+            const neededPhotosSum = playableBgm - fixedPart;
+            const minPhotosSum = activePhotos.length * 1.0;
+
+            if (neededPhotosSum < minPhotosSum) {
+                showToast(`음원 길이(${playableBgm.toFixed(1)}초)가 너무 짧아 사진들을 줄일 수 없습니다. [배경음 엔딩을 영상 끝에 자동 정렬]을 사용해 보세요!`, 'error');
+                return;
+            }
+
+            const currentPhotosSum = activePhotos.reduce((acc, img) => acc + (Number(img.duration) || 4), 0);
+            let remainingToAssign = Number(neededPhotosSum.toFixed(1));
+            activePhotos.forEach((img, i) => {
+                if (i === activePhotos.length - 1) {
+                    img.duration = Math.max(0.8, Number(remainingToAssign.toFixed(1)));
+                } else {
+                    const weight = (Number(img.duration) || 4) / Math.max(0.1, currentPhotosSum);
+                    const d = Math.max(0.8, Number((neededPhotosSum * weight).toFixed(1)));
+                    img.duration = d;
+                    remainingToAssign = Number((remainingToAssign - d).toFixed(1));
+                }
+            });
+
+            markUnsavedChanges();
+            updateDurations();
+            renderSessionManagerUI();
+            renderStoryboard();
+            updateBgmVsVideoDurationUI();
+            if (!state.isPlaying) drawFrame(state.currentTime);
+            showToast(`사진 ${activePhotos.length}장의 표시 시간을 살짝 조정하여 영상과 배경음(${playableBgm.toFixed(1)}초)이 똑같이 끝나도록 맞췄습니다!`);
+        }
+
+        // 원클릭 2: 사진 시간은 그대로 두고, 노래의 마지막 엔딩이 영상 종료 시점(또는 아웃트로 시작)에 딱 맞게 끝나도록 시작 위치를 자동 계산
+        function alignBgmEndToVideoEnd() {
+            if (!elements.bgmAudio || !elements.bgmAudio.duration || !isFinite(elements.bgmAudio.duration) || elements.bgmAudio.duration <= 0 || isProceduralBgm(elements.bgmSelect ? elements.bgmSelect.value : '')) {
+                showToast('먼저 내 음원이나 외부 스트리밍 음악을 선택해 주세요.', 'error');
+                return;
+            }
+            const audioDur = Number(elements.bgmAudio.duration);
+            const totalVideoDur = Math.max(0.5, state.totalDuration || 0);
+            const stopTiming = state.bgmStopTiming || 'video-end';
+            let stopThresholdSec = totalVideoDur;
+            if (stopTiming === 'before-outro') {
+                stopThresholdSec = Math.max(0.5, totalVideoDur - (Number(state.outro.duration) || 4));
+            } else if (stopTiming === 'custom-end') {
+                stopThresholdSec = Math.max(0.5, Math.min(totalVideoDur, Number(state.bgmCustomEndSec) || totalVideoDur));
+            }
+
+            let pausedSum = 0;
+            state.images.forEach(img => {
+                if (img.bgmPaused) pausedSum += (Number(img.duration) || 4);
+            });
+            const effectiveVideoSpan = Math.max(1.0, stopThresholdSec - pausedSum);
+
+            if (audioDur >= effectiveVideoSpan) {
+                // 음원이 영상보다 긴 경우: 음원 앞부분(offsetSec)을 (audioDur - effectiveVideoSpan)으로 설정하면 음원 엔딩이 영상 끝에 정확히 도착!
+                const newOffset = Number(Math.max(0, audioDur - effectiveVideoSpan).toFixed(1));
+                state.bgmAudioOffsetSec = newOffset;
+                state.bgmStartTiming = 'intro';
+                state.bgmStartDelaySec = 0;
+                if (elements.bgmAudioOffsetSlider) elements.bgmAudioOffsetSlider.value = String(Math.min(240, newOffset));
+                if (elements.bgmAudioOffsetInput) elements.bgmAudioOffsetInput.value = String(newOffset);
+                if (elements.bgmStartTimingSelect) elements.bgmStartTimingSelect.value = 'intro';
+                if (elements.bgmStartDelayRow) {
+                    elements.bgmStartDelayRow.classList.add('hidden');
+                    elements.bgmStartDelayRow.classList.remove('flex');
+                }
+                markUnsavedChanges();
+                updateBgmVsVideoDurationUI();
+                showToast(`음원 시작 위치를 ${newOffset.toFixed(1)}초 지점으로 맞춰 노래 엔딩이 영상 끝에 정확히 끝나도록 정렬했습니다!`);
+            } else {
+                // 음원이 영상보다 짧은 경우: 영상 시작 후 (effectiveVideoSpan - audioDur)초 뒤에 배경음이 켜지도록 설정하면 노래 엔딩이 영상 끝에 정확히 도착!
+                const delaySec = Number(Math.max(0, effectiveVideoSpan - audioDur).toFixed(1));
+                state.bgmAudioOffsetSec = 0;
+                state.bgmStartTiming = 'custom-sec';
+                state.bgmStartDelaySec = delaySec;
+                if (elements.bgmAudioOffsetSlider) elements.bgmAudioOffsetSlider.value = '0';
+                if (elements.bgmAudioOffsetInput) elements.bgmAudioOffsetInput.value = '0';
+                if (elements.bgmStartTimingSelect) elements.bgmStartTimingSelect.value = 'custom-sec';
+                if (elements.bgmStartDelayRow) {
+                    elements.bgmStartDelayRow.classList.remove('hidden');
+                    elements.bgmStartDelayRow.classList.add('flex');
+                }
+                if (elements.bgmStartDelayInput) elements.bgmStartDelayInput.value = String(delaySec);
+                markUnsavedChanges();
+                updateBgmVsVideoDurationUI();
+                showToast(`배경음이 영상 ${delaySec.toFixed(1)}초 지점부터 켜지도록 맞춰 노래가 반복 없이 영상 끝에 정확히 끝나도록 정렬했습니다!`);
+            }
+        }
+
         function computeBgmTimelineState(timeInSeconds) {
             const t = Math.max(0, Math.min(timeInSeconds, state.totalDuration || 0));
             const startThreshold = getBgmStartVideoTime();
@@ -5718,22 +5972,91 @@
                 }
             }
 
+            // 배경음이 꺼지는 목표 영상 시점(stopThresholdSec) 계산
+            const totalVideoDur = Math.max(0.5, state.totalDuration || 0);
+            const stopTiming = state.bgmStopTiming || 'video-end';
+            let stopThresholdSec = totalVideoDur;
+            if (stopTiming === 'before-outro') {
+                stopThresholdSec = Math.max(0.5, totalVideoDur - (Number(state.outro.duration) || 4));
+            } else if (stopTiming === 'custom-end') {
+                stopThresholdSec = Math.max(0.5, Math.min(totalVideoDur, Number(state.bgmCustomEndSec) || totalVideoDur));
+            }
+
+            if (t >= stopThresholdSec) {
+                return {
+                    isMutedBySchedule: true,
+                    isEndedByLoopRule: true,
+                    trackTimeSec: offsetSec,
+                    remainingUntilStopSec: 0,
+                    elapsedSinceActiveStart: 0,
+                    wasJustResumed: false
+                };
+            }
+
             const audioDur = (elements.bgmAudio && elements.bgmAudio.duration && isFinite(elements.bgmAudio.duration) && elements.bgmAudio.duration > 0)
                 ? elements.bgmAudio.duration
                 : null;
+            const loopMode = state.bgmLoopMode || 'smart-no-tail';
             let targetTrackTime = offsetSec + activeAccumulated;
-            if (audioDur && audioDur > 0.5) {
-                if (offsetSec < audioDur) {
-                    const playableSpan = Math.max(0.5, audioDur - offsetSec);
-                    targetTrackTime = offsetSec + (activeAccumulated % playableSpan);
+            let remainingUntilTrackEnd = Infinity;
+            let isEndedByLoopRule = false;
+
+            if (audioDur && audioDur > 0.5 && !isProceduralBgm(elements.bgmSelect ? elements.bgmSelect.value : '')) {
+                const effOffset = offsetSec < audioDur ? offsetSec : 0;
+                const playableSpan = Math.max(0.5, audioDur - effOffset);
+                const loopIndex = Math.floor(activeAccumulated / playableSpan);
+                const posInLoop = activeAccumulated - (loopIndex * playableSpan);
+                const remInCurrentLoop = Math.max(0, playableSpan - posInLoop);
+
+                if (loopMode === 'once') {
+                    if (activeAccumulated >= playableSpan - 0.05) {
+                        isEndedByLoopRule = true;
+                        isCurrentlyPaused = true;
+                        targetTrackTime = Math.max(effOffset, audioDur - 0.05);
+                        remainingUntilTrackEnd = 0;
+                    } else {
+                        targetTrackTime = effOffset + activeAccumulated;
+                        remainingUntilTrackEnd = remInCurrentLoop;
+                    }
+                } else if (loopMode === 'smart-no-tail') {
+                    // 스마트 제어: 곡이 1바퀴(이상) 끝난 시점에 남은 영상 재생 시간(stopThresholdSec까지)이
+                    // 아웃트로 길이 + 14초(기본 약 18초) 이내라면, 아웃트로 직전에 어색하게 다시 시작하지 않고 그대로 종료!
+                    const noRestartWindowSec = Math.max(15, (Number(state.outro.duration) || 4) + 12);
+                    if (loopIndex >= 1) {
+                        const remainingVideoWhenLoopStarted = (stopThresholdSec - t) + posInLoop;
+                        if (remainingVideoWhenLoopStarted <= noRestartWindowSec) {
+                            isEndedByLoopRule = true;
+                            isCurrentlyPaused = true;
+                            targetTrackTime = Math.max(effOffset, audioDur - 0.05);
+                            remainingUntilTrackEnd = 0;
+                        } else {
+                            targetTrackTime = effOffset + posInLoop;
+                            const nextLoopStartRemVideo = (stopThresholdSec - t) - remInCurrentLoop;
+                            if (nextLoopStartRemVideo <= noRestartWindowSec) {
+                                remainingUntilTrackEnd = remInCurrentLoop;
+                            }
+                        }
+                    } else {
+                        targetTrackTime = effOffset + posInLoop;
+                        const nextLoopStartRemVideo = (stopThresholdSec - t) - remInCurrentLoop;
+                        if (nextLoopStartRemVideo <= noRestartWindowSec) {
+                            remainingUntilTrackEnd = remInCurrentLoop;
+                        }
+                    }
                 } else {
-                    targetTrackTime = targetTrackTime % audioDur;
+                    // loopMode === 'loop' (무한 반복)
+                    targetTrackTime = effOffset + posInLoop;
                 }
             }
 
+            const remainingUntilScheduleStop = Math.max(0, stopThresholdSec - t);
+            const effectiveRemainingSec = Math.min(remainingUntilScheduleStop, remainingUntilTrackEnd);
+
             return {
                 isMutedBySchedule: isCurrentlyPaused,
+                isEndedByLoopRule,
                 trackTimeSec: targetTrackTime,
+                remainingUntilStopSec: effectiveRemainingSec,
                 elapsedSinceActiveStart: elapsedInCurrentActiveRun,
                 wasJustResumed: hadPausedSegmentSinceStart && !isCurrentlyPaused
             };
@@ -5787,9 +6110,12 @@
                 if (bgmState.wasJustResumed && bgmState.elapsedSinceActiveStart < 0.45) {
                     env = Math.min(env, Math.max(0.05, bgmState.elapsedSinceActiveStart / 0.45));
                 }
-                const remainingTotal = Math.max(0, state.totalDuration - timeInSeconds);
-                if (fadeOutDur > 0 && remainingTotal < fadeOutDur) {
-                    const ratio = Math.max(0, Math.min(1, remainingTotal / fadeOutDur));
+                const remainingTotal = (bgmState.remainingUntilStopSec !== undefined && isFinite(bgmState.remainingUntilStopSec))
+                    ? Math.max(0, bgmState.remainingUntilStopSec)
+                    : Math.max(0, state.totalDuration - timeInSeconds);
+                const effFadeOut = fadeOutDur > 0 ? fadeOutDur : (bgmState.remainingUntilStopSec < state.totalDuration - timeInSeconds ? 2.0 : 0);
+                if (effFadeOut > 0 && remainingTotal < effFadeOut) {
+                    const ratio = Math.max(0, Math.min(1, remainingTotal / effFadeOut));
                     // 부드러운 여운을 남기며 서서히 작아지는 곡선 적용
                     env = Math.min(env, Math.max(0.0005, Math.pow(ratio, 1.35)));
                 }
@@ -10338,6 +10664,7 @@
             elements.totalTimeDisplay.textContent = formatTimePrecise(state.totalDuration);
             elements.estimatedTimeDisplay.textContent = formatTime(state.totalDuration);
             updateEstimatedFileSizeDisplay();
+            if (typeof updateBgmVsVideoDurationUI === 'function') updateBgmVsVideoDurationUI();
             updateSessionDurationSummaryUI();
             renderTimelineSceneMarkers();
             updateTimelineProgressUI(state.currentTime);
@@ -12400,6 +12727,73 @@
                     };
                     recognition.start();
                 });
+            }
+
+            
+            if (elements.bgmAudio) {
+                elements.bgmAudio.addEventListener('loadedmetadata', () => {
+                    updateBgmVsVideoDurationUI();
+                });
+            }
+            const bgmLoopModeSelect = document.getElementById('bgm-loop-mode-select');
+            if (bgmLoopModeSelect) {
+                bgmLoopModeSelect.value = state.bgmLoopMode || 'smart-no-tail';
+                bgmLoopModeSelect.addEventListener('change', (e) => {
+                    state.bgmLoopMode = e.target.value;
+                    markUnsavedChanges();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                    const msgMap = {
+                        'smart-no-tail': '스마트 반복 제어: 아웃트로 근처에서 곡이 끝나면 다시 시작하지 않고 자연스럽게 마무리됩니다.',
+                        'once': '1회 재생 모드: 배경음이 끝까지 재생되면 반복하지 않고 서서히 작아지며 종료됩니다.',
+                        'loop': '무한 반복 모드: 배경음이 끝나면 시작 위치부터 다시 반복됩니다.'
+                    };
+                    showToast(msgMap[state.bgmLoopMode] || '배경음 반복 설정이 변경되었습니다.');
+                });
+            }
+            const bgmStopTimingSelect = document.getElementById('bgm-stop-timing-select');
+            const bgmCustomEndRow = document.getElementById('bgm-custom-end-row');
+            const bgmCustomEndInput = document.getElementById('bgm-custom-end-sec-input');
+            if (bgmStopTimingSelect) {
+                bgmStopTimingSelect.value = state.bgmStopTiming || 'video-end';
+                bgmStopTimingSelect.addEventListener('change', (e) => {
+                    state.bgmStopTiming = e.target.value;
+                    if (bgmCustomEndRow) {
+                        bgmCustomEndRow.classList.toggle('hidden', state.bgmStopTiming !== 'custom-end');
+                        bgmCustomEndRow.classList.toggle('flex', state.bgmStopTiming === 'custom-end');
+                    }
+                    if (state.bgmStopTiming === 'custom-end' && bgmCustomEndInput) {
+                        const suggested = Math.max(3, Number(((state.totalDuration || 30) - (Number(state.outro.duration) || 4)).toFixed(1)));
+                        state.bgmCustomEndSec = suggested;
+                        bgmCustomEndInput.value = String(suggested);
+                    }
+                    markUnsavedChanges();
+                    updateBgmVsVideoDurationUI();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                    showToast(
+                        state.bgmStopTiming === 'before-outro'
+                            ? '아웃트로 시작 직전(마지막 사진 끝)에 배경음이 서서히 작아지며 종료됩니다.'
+                            : (state.bgmStopTiming === 'custom-end'
+                                ? `영상 ${state.bgmCustomEndSec}초 지점에서 배경음이 서서히 종료됩니다.`
+                                : '영상 끝(아웃트로 끝)까지 배경음이 재생됩니다.')
+                    );
+                });
+            }
+            if (bgmCustomEndInput) {
+                bgmCustomEndInput.addEventListener('change', (e) => {
+                    state.bgmCustomEndSec = Math.max(1, parseFloat(e.target.value) || 30);
+                    e.target.value = String(state.bgmCustomEndSec);
+                    markUnsavedChanges();
+                    updateBgmVsVideoDurationUI();
+                    if (state.isPlaying) updateMasterAudioEnvelope(state.currentTime);
+                });
+            }
+            const matchVideoToBgmBtn = document.getElementById('match-video-to-bgm-btn');
+            if (matchVideoToBgmBtn) {
+                matchVideoToBgmBtn.addEventListener('click', matchVideoDurationToBgm);
+            }
+            const alignBgmEndBtn = document.getElementById('align-bgm-end-to-video-btn');
+            if (alignBgmEndBtn) {
+                alignBgmEndBtn.addEventListener('click', alignBgmEndToVideoEnd);
             }
 
             setAspectRatio('vertical');
